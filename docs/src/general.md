@@ -2,8 +2,8 @@ ChargeTransport.jl -- Simulating charge transport in semiconductors
 ================================
 
 [![Build status](https://github.com/PatricioFarrell/ChargeTransport.jl/workflows/linux-macos-windows/badge.svg)](https://github.com/PatricioFarrell/ChargeTransport.jl/actions)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://PatricioFarrell.github.io/ChargeTransport.jl/stable)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://PatricioFarrell.github.io/ChargeTransport.jl/dev)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/dev)
 
 
 `ChargeTransport.jl` simulates charge transport in semiconductors. To this end, it discretizes
