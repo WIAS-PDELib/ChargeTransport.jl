@@ -23,22 +23,22 @@ using PyPlot
 function grading_parameter!(physicalParameter, coord, regionTransportLayers, regionJunctions, h, heightLayers, lengthLayers, values)
     for ireg in regionTransportLayers
 
-        xcoord                     = lengthLayers[ireg]:lengthLayers[ireg+1]
+        xcoord = lengthLayers[ireg]:lengthLayers[ireg + 1]
         physicalParameter[xcoord] .= values[ireg]
 
     end
 
     for ireg in regionJunctions
 
-        xcoord   = lengthLayers[ireg]:lengthLayers[ireg+1]
-        left     = lengthLayers[ireg]-3
+        xcoord = lengthLayers[ireg]:lengthLayers[ireg + 1]
+        left = lengthLayers[ireg] - 3
         junction = h[ireg]
-        right    = lengthLayers[ireg+2]-3
+        right = lengthLayers[ireg + 2] - 3
 
-        gradient = ( physicalParameter[right] - physicalParameter[left] ) / junction
+        gradient = (physicalParameter[right] - physicalParameter[left]) / junction
 
         for index in xcoord
-            physicalParameter[index] = physicalParameter[left] + (coord[index] - heightLayers[ireg-1]) * gradient
+            physicalParameter[index] = physicalParameter[left] + (coord[index] - heightLayers[ireg - 1]) * gradient
         end
 
     end
@@ -47,7 +47,7 @@ function grading_parameter!(physicalParameter, coord, regionTransportLayers, reg
 end
 
 # you can also use other Plotters, if you add them to the example file
-function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage=:sparse)
+function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
     if plotting
         Plotter.close("all")
@@ -59,68 +59,86 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     ## region numbers
-    regionDonor           = 1          # n doped region
-    regionJunction1       = 2
-    regionIntrinsic       = 3          # intrinsic region
-    regionJunction2       = 4
-    regionAcceptor        = 5          # p doped region
-    regions               = [regionDonor, regionJunction1, regionIntrinsic, regionJunction2, regionAcceptor]
+    regionDonor = 1          # n doped region
+    regionJunction1 = 2
+    regionIntrinsic = 3          # intrinsic region
+    regionJunction2 = 4
+    regionAcceptor = 5          # p doped region
+    regions = [regionDonor, regionJunction1, regionIntrinsic, regionJunction2, regionAcceptor]
     regionTransportLayers = [regionDonor, regionIntrinsic, regionAcceptor]
-    regionJunctions       = [regionJunction1, regionJunction2]
-    numberOfRegions       = length(regions)
+    regionJunctions = [regionJunction1, regionJunction2]
+    numberOfRegions = length(regions)
 
     ## boundary region numbers
-    bregionDonor          = 1
-    bregionAcceptor       = 2
-    bregionDJ1            = 3
-    bregionJ1I            = 4
-    bregionIJ2            = 5
-    bregionJ2A            = 6
+    bregionDonor = 1
+    bregionAcceptor = 2
+    bregionDJ1 = 3
+    bregionJ1I = 4
+    bregionIJ2 = 5
+    bregionJ2A = 6
 
     ## grid
-    h_ndoping             = 9.90e-6 * cm
-    h_junction1           = 1.0e-7  * cm
-    h_intrinsic           = 4.00e-5 * cm
-    h_junction2           = 1.0e-7  * cm
-    h_pdoping             = 1.99e-5 * cm
-    h_total               = h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping
-    h                     = [h_ndoping, h_junction1, h_intrinsic, h_junction2, h_pdoping]
-    heightLayers          = [h_ndoping,
-                             h_ndoping + h_junction1,
-                             h_ndoping + h_junction1 + h_intrinsic,
-                             h_ndoping + h_junction1 + h_intrinsic + h_junction2,
-                             h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping]
-    refinementfactor      = 2^(n-1)
+    h_ndoping = 9.9e-6 * cm
+    h_junction1 = 1.0e-7 * cm
+    h_intrinsic = 4.0e-5 * cm
+    h_junction2 = 1.0e-7 * cm
+    h_pdoping = 1.99e-5 * cm
+    h_total = h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping
+    h = [h_ndoping, h_junction1, h_intrinsic, h_junction2, h_pdoping]
+    heightLayers = [
+        h_ndoping,
+        h_ndoping + h_junction1,
+        h_ndoping + h_junction1 + h_intrinsic,
+        h_ndoping + h_junction1 + h_intrinsic + h_junction2,
+        h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping,
+    ]
+    refinementfactor = 2^(n - 1)
 
-    coord_ndoping         = collect(range(0.0, stop = h_ndoping, length = 4 * refinementfactor))
-    length_n              = length(coord_ndoping)
-    coord_junction1       = collect(range(h_ndoping,
-                                         stop = h_ndoping + h_junction1,
-                                         length = 3 * refinementfactor))
-    coord_intrinsic       = collect(range(h_ndoping + h_junction1,
-                                         stop = (h_ndoping + h_junction1 + h_intrinsic),
-                                         length = 10 * refinementfactor))
-    coord_junction2       = collect(range(h_ndoping + h_junction1 + h_intrinsic,
-                                         stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
-                                         length = 3 * refinementfactor))
-    coord_pdoping         = collect(range((h_ndoping + h_junction1 + h_intrinsic + h_junction2),
-                                          stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping),
-                                          length = 4 * refinementfactor))
+    coord_ndoping = collect(range(0.0, stop = h_ndoping, length = 4 * refinementfactor))
+    length_n = length(coord_ndoping)
+    coord_junction1 = collect(
+        range(
+            h_ndoping,
+            stop = h_ndoping + h_junction1,
+            length = 3 * refinementfactor
+        )
+    )
+    coord_intrinsic = collect(
+        range(
+            h_ndoping + h_junction1,
+            stop = (h_ndoping + h_junction1 + h_intrinsic),
+            length = 10 * refinementfactor
+        )
+    )
+    coord_junction2 = collect(
+        range(
+            h_ndoping + h_junction1 + h_intrinsic,
+            stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
+            length = 3 * refinementfactor
+        )
+    )
+    coord_pdoping = collect(
+        range(
+            (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
+            stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping),
+            length = 4 * refinementfactor
+        )
+    )
 
-    coord                 = glue(coord_ndoping, coord_junction1)
-    length_j1             = length(coord)
-    coord                 = glue(coord, coord_intrinsic)
-    length_i              = length(coord)
-    coord                 = glue(coord, coord_junction2)
-    length_j2             = length(coord)
-    coord                 = glue(coord, coord_pdoping)
+    coord = glue(coord_ndoping, coord_junction1)
+    length_j1 = length(coord)
+    coord = glue(coord, coord_intrinsic)
+    length_i = length(coord)
+    coord = glue(coord, coord_junction2)
+    length_j2 = length(coord)
+    coord = glue(coord, coord_pdoping)
 
-    grid                  = simplexgrid(coord)
-    numberOfNodes         = length(coord)
-    lengthLayers          = [1, length_n, length_j1, length_i, length_j2, numberOfNodes]
+    grid = simplexgrid(coord)
+    numberOfNodes = length(coord)
+    lengthLayers = [1, length_n, length_j1, length_i, length_j2, numberOfNodes]
 
     ## set different regions in grid
-    cellmask!(grid, [0.0 * μm],        [heightLayers[1]], regionDonor)      # n-doped region   = 1
+    cellmask!(grid, [0.0 * μm], [heightLayers[1]], regionDonor)      # n-doped region   = 1
     cellmask!(grid, [heightLayers[1]], [heightLayers[2]], regionJunction1)  # first junction   = 2
     cellmask!(grid, [heightLayers[2]], [heightLayers[3]], regionIntrinsic)  # intrinsic region = 3
     cellmask!(grid, [heightLayers[3]], [heightLayers[4]], regionJunction2)  # sec. junction    = 4
@@ -133,7 +151,7 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     bfacemask!(grid, [heightLayers[4]], [heightLayers[4]], bregionJ2A)
 
     if plotting
-        gridplot(grid, Plotter = Plotter, legend=:lt)
+        gridplot(grid, Plotter = Plotter, legend = :lt)
         Plotter.title("Grid")
     end
 
@@ -148,94 +166,94 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     ## set indices of the quasi Fermi potentials
-    iphin            = 2 # electron quasi Fermi potential
-    iphip            = 1 # hole quasi Fermi potential
+    iphin = 2 # electron quasi Fermi potential
+    iphip = 1 # hole quasi Fermi potential
     numberOfCarriers = 2
 
     ## temperature
-    T                = 300.0                 *  K
+    T = 300.0 * K
 
     ## band edge energies
-    Ec_d             = -4.0                  *  eV
-    Ev_d             = -6.0                  *  eV
+    Ec_d = -4.0 * eV
+    Ev_d = -6.0 * eV
 
-    Ec_i             = -3.7                  *  eV
-    Ev_i             = -5.4                  *  eV
+    Ec_i = -3.7 * eV
+    Ev_i = -5.4 * eV
 
-    Ec_a             = -3.1                  *  eV
-    Ev_a             = -5.1                  *  eV
+    Ec_a = -3.1 * eV
+    Ev_a = -5.1 * eV
 
     ## these parameters at the junctions for E_\alpha and N_\alpha will be overwritten.
-    Ec_j1            = Ec_d;     Ec_j2     = Ec_i
-    Ev_j1            = Ev_d;     Ev_j2     = Ev_i
+    Ec_j1 = Ec_d;     Ec_j2 = Ec_i
+    Ev_j1 = Ev_d;     Ev_j2 = Ev_i
 
-    EC               = [Ec_d, Ec_j1, Ec_i, Ec_j2, Ec_a]
-    EV               = [Ev_d, Ev_j1, Ev_i, Ev_j2, Ev_a]
+    EC = [Ec_d, Ec_j1, Ec_i, Ec_j2, Ec_a]
+    EV = [Ev_d, Ev_j1, Ev_i, Ev_j2, Ev_a]
 
     ## effective densities of state
-    Nc_d             = 5.0e19                / (cm^3)
-    Nv_d             = 5.0e19                / (cm^3)
+    Nc_d = 5.0e19 / (cm^3)
+    Nv_d = 5.0e19 / (cm^3)
 
-    Nc_i             = 8.1e18                / (cm^3)
-    Nv_i             = 5.8e18                / (cm^3)
+    Nc_i = 8.1e18 / (cm^3)
+    Nv_i = 5.8e18 / (cm^3)
 
-    Nc_a             = 5.0e19                / (cm^3)
-    Nv_a             = 5.0e19                / (cm^3)
+    Nc_a = 5.0e19 / (cm^3)
+    Nv_a = 5.0e19 / (cm^3)
 
-    Nc_j1            = Nc_d;     Nc_j2      = Nc_i
-    Nv_j1            = Nv_d;     Nv_j2      = Nv_i
+    Nc_j1 = Nc_d;     Nc_j2 = Nc_i
+    Nv_j1 = Nv_d;     Nv_j2 = Nv_i
 
-    NC               = [Nc_d, Nc_j1, Nc_i, Nc_j2, Nc_a]
-    NV               = [Nv_d, Nv_j1, Nv_i, Nv_j2, Nv_a]
+    NC = [Nc_d, Nc_j1, Nc_i, Nc_j2, Nc_a]
+    NV = [Nv_d, Nv_j1, Nv_i, Nv_j2, Nv_a]
 
     ## mobilities
-    μn_d             = 3.89                  * (cm^2) / (V * s)
-    μp_d             = 3.89                  * (cm^2) / (V * s)
+    μn_d = 3.89 * (cm^2) / (V * s)
+    μp_d = 3.89 * (cm^2) / (V * s)
 
-    μn_i             = 6.62e1                * (cm^2) / (V * s)
-    μp_i             = 6.62e1                * (cm^2) / (V * s)
+    μn_i = 6.62e1 * (cm^2) / (V * s)
+    μp_i = 6.62e1 * (cm^2) / (V * s)
 
-    μn_a             = 3.89e-1               * (cm^2) / (V * s)
-    μp_a             = 3.89e-1               * (cm^2) / (V * s)
+    μn_a = 3.89e-1 * (cm^2) / (V * s)
+    μp_a = 3.89e-1 * (cm^2) / (V * s)
 
-    μn_j1            = μn_d;     μn_j2      = μn_i
-    μp_j1            = μp_d;     μp_j2      = μp_i
+    μn_j1 = μn_d;     μn_j2 = μn_i
+    μp_j1 = μp_d;     μp_j2 = μp_i
 
-    μn               = [μn_d, μn_j1, μn_i, μn_j2, μn_a]
-    μp               = [μp_d, μp_j1, μp_i, μp_j2, μp_a]
+    μn = [μn_d, μn_j1, μn_i, μn_j2, μn_a]
+    μp = [μp_d, μp_j1, μp_i, μp_j2, μp_a]
 
     ## relative dielectric permittivity
-    ε_d              = 10.0                  *  1.0
-    ε_i              = 24.1                  *  1.0
-    ε_a              = 3.0                   *  1.0
+    ε_d = 10.0 * 1.0
+    ε_i = 24.1 * 1.0
+    ε_a = 3.0 * 1.0
 
-    ε_j1             = ε_d;       ε_j2      = ε_a
+    ε_j1 = ε_d;       ε_j2 = ε_a
 
-    ε                = [ε_d, ε_j1, ε_i, ε_j2, ε_a]
+    ε = [ε_d, ε_j1, ε_i, ε_j2, ε_a]
 
     ## radiative recombination
-    r0_d             = 0.0e+0               * cm^3 / s
-    r0_i             = 1.0e-12              * cm^3 / s
-    r0_a             = 0.0e+0               * cm^3 / s
+    r0_d = 0.0e+0 * cm^3 / s
+    r0_i = 1.0e-12 * cm^3 / s
+    r0_a = 0.0e+0 * cm^3 / s
 
-    r0_j1            = r0_i;      r0_j2     = r0_i
+    r0_j1 = r0_i;      r0_j2 = r0_i
 
-    r0               = [r0_d, r0_j1, r0_i, r0_j2, r0_a]
+    r0 = [r0_d, r0_j1, r0_i, r0_j2, r0_a]
 
     ## life times and trap densities
-    τn_d             = 1.0e100              * s
-    τp_d             = 1.0e100              * s
+    τn_d = 1.0e100 * s
+    τp_d = 1.0e100 * s
 
-    τn_i             = 3.0e-10              * s
-    τp_i             = 3.0e-8               * s
-    τn_a             = τn_d
-    τp_a             = τp_d
+    τn_i = 3.0e-10 * s
+    τp_i = 3.0e-8 * s
+    τn_a = τn_d
+    τp_a = τp_d
 
-    τn_j1            = τn_i;     τn_j2      = τn_a
-    τp_j1            = τp_i;     τp_j2      = τp_a
+    τn_j1 = τn_i;     τn_j2 = τn_a
+    τp_j1 = τp_i;     τp_j2 = τp_a
 
-    τn               = [τn_d, τn_j1, τn_i, τn_j2, τn_a]
-    τp               = [τp_d, τp_j1, τp_i, τp_j2, τp_a]
+    τn = [τn_d, τn_j1, τn_i, τn_j2, τn_a]
+    τp = [τp_d, τp_j1, τp_i, τp_j2, τp_a]
 
     ## SRH trap energies (needed for calculation of trap_density! (SRH))
     # Ei_d             = -5.0                 * eV
@@ -246,30 +264,30 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
 
     # EI               = [Ei_d, Ei_j1, Ei_i, Ei_j2, Ei_a]
     ## reference densities
-    nτ_d             = 7.94e8             /m^3
-    pτ_d             = 7.94e8             /m^3
+    nτ_d = 7.94e8 / m^3
+    pτ_d = 7.94e8 / m^3
 
-    nτ_i             = 4.26e10            /m^3
-    pτ_i             = 3.05e10            /m^3
-    nτ_a             = nτ_d
-    pτ_a             = pτ_d
+    nτ_i = 4.26e10 / m^3
+    pτ_i = 3.05e10 / m^3
+    nτ_a = nτ_d
+    pτ_a = pτ_d
 
-    nτ_j1            = nτ_i;     nτ_j2      = nτ_a
-    pτ_j1            = pτ_i;     pτ_j2      = pτ_a
+    nτ_j1 = nτ_i;     nτ_j2 = nτ_a
+    pτ_j1 = pτ_i;     pτ_j2 = pτ_a
 
-    nτ               = [nτ_d, nτ_j1, nτ_i, nτ_j2, nτ_a]
-    pτ               = [pτ_d, pτ_j1, pτ_i, pτ_j2, pτ_a]
+    nτ = [nτ_d, nτ_j1, nτ_i, nτ_j2, nτ_a]
+    pτ = [pτ_d, pτ_j1, pτ_i, pτ_j2, pτ_a]
 
     ## Auger recombination
-    Auger            = 0.0
+    Auger = 0.0
 
     ## doping (doping values are from Driftfusion)
-    Nd               = 1.03e18             / (cm^3)
-    Na               = 1.03e18             / (cm^3)
-    Ni_acceptor      = 8.32e7              / (cm^3)
+    Nd = 1.03e18 / (cm^3)
+    Na = 1.03e18 / (cm^3)
+    Ni_acceptor = 8.32e7 / (cm^3)
 
     ## contact voltage
-    voltageAcceptor  = 1.2                 * V
+    voltageAcceptor = 1.2 * V
 
     if test == false
         println("*** done\n")
@@ -282,28 +300,30 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     ## Initialize Data instance and fill in predefined data
-    data                               = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
-    data.modelType                     = Stationary
+    data.modelType = Stationary
 
     ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
     ## FermiDiracMinusOne, Blakemore
-    data.F                            .= Boltzmann
+    data.F .= Boltzmann
 
-    data.bulkRecombination             = set_bulk_recombination(;iphin = iphin, iphip = iphip,
-                                                                 bulk_recomb_Auger = false,
-                                                                 bulk_recomb_radiative = true,
-                                                                 bulk_recomb_SRH = true)
+    data.bulkRecombination = set_bulk_recombination(;
+        iphin = iphin, iphip = iphip,
+        bulk_recomb_Auger = false,
+        bulk_recomb_radiative = true,
+        bulk_recomb_SRH = true
+    )
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
-    data.boundaryType[bregionDonor]    = OhmicContact
+    data.boundaryType[bregionDonor] = OhmicContact
     data.boundaryType[bregionAcceptor] = OhmicContact
 
     ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
     ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation            .= ScharfetterGummelGraded
+    data.fluxApproximation .= ScharfetterGummelGraded
 
     ################################################################################
     if test == false
@@ -312,56 +332,64 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     ## for region dependent parameters
-    params                                = Params(grid, numberOfCarriers)
+    params = Params(grid, numberOfCarriers)
     ## for space dependent parameters
-    paramsnodal                           = ParamsNodal(grid, numberOfCarriers)
+    paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
-    params.temperature                    = T
-    params.UT                             = (kB * params.temperature) / q
-    params.chargeNumbers[iphin]           = -1
-    params.chargeNumbers[iphip]           =  1
+    params.temperature = T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[iphin] = -1
+    params.chargeNumbers[iphip] = 1
 
     ## nodal band-edge energies
-    paramsnodal.bandEdgeEnergy[iphin, :]  = grading_parameter!(paramsnodal.bandEdgeEnergy[iphin, :],
-                                                              coord, regionTransportLayers, regionJunctions, h,
-                                                              heightLayers, lengthLayers, EC)
-    paramsnodal.bandEdgeEnergy[iphip, :]  = grading_parameter!(paramsnodal.bandEdgeEnergy[iphip, :],
-                                                              coord, regionTransportLayers, regionJunctions, h,
-                                                              heightLayers, lengthLayers, EV)
+    paramsnodal.bandEdgeEnergy[iphin, :] = grading_parameter!(
+        paramsnodal.bandEdgeEnergy[iphin, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, EC
+    )
+    paramsnodal.bandEdgeEnergy[iphip, :] = grading_parameter!(
+        paramsnodal.bandEdgeEnergy[iphip, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, EV
+    )
     ## nodal effective density of states
-    paramsnodal.densityOfStates[iphin, :] = grading_parameter!(paramsnodal.densityOfStates[iphin, :],
-                                                              coord, regionTransportLayers, regionJunctions, h,
-                                                              heightLayers, lengthLayers, NC)
-    paramsnodal.densityOfStates[iphip, :] = grading_parameter!(paramsnodal.densityOfStates[iphip, :],
-                                                              coord, regionTransportLayers, regionJunctions, h,
-                                                              heightLayers, lengthLayers, NV)
+    paramsnodal.densityOfStates[iphin, :] = grading_parameter!(
+        paramsnodal.densityOfStates[iphin, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, NC
+    )
+    paramsnodal.densityOfStates[iphip, :] = grading_parameter!(
+        paramsnodal.densityOfStates[iphip, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, NV
+    )
 
     for ireg in 1:numberOfRegions  ## region dependent data
 
         ## mobility
-        params.mobility[iphin, ireg]                    = μn[ireg]
-        params.mobility[iphip, ireg]                    = μp[ireg]
+        params.mobility[iphin, ireg] = μn[ireg]
+        params.mobility[iphip, ireg] = μp[ireg]
 
-        params.dielectricConstant[ireg]                 = ε[ireg] * ε0
+        params.dielectricConstant[ireg] = ε[ireg] * ε0
         ## recombination parameters
-        params.recombinationRadiative[ireg]             = r0[ireg]
-        params.recombinationSRHLifetime[iphin, ireg]    = τn[ireg]
-        params.recombinationSRHLifetime[iphip, ireg]    = τp[ireg]
+        params.recombinationRadiative[ireg] = r0[ireg]
+        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
+        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
         params.recombinationSRHTrapDensity[iphin, ireg] = nτ[ireg]
         params.recombinationSRHTrapDensity[iphip, ireg] = pτ[ireg]
-        params.recombinationAuger[iphin, ireg]          = Auger
-        params.recombinationAuger[iphip, ireg]          = Auger
+        params.recombinationAuger[iphin, ireg] = Auger
+        params.recombinationAuger[iphip, ireg] = Auger
 
     end
 
     ## doping
-    params.doping[iphin, regionDonor]      = Nd
-    params.doping[iphip, regionIntrinsic]  = Ni_acceptor
-    params.doping[iphip, regionAcceptor]   = Na
+    params.doping[iphin, regionDonor] = Nd
+    params.doping[iphip, regionIntrinsic] = Ni_acceptor
+    params.doping[iphip, regionAcceptor] = Na
 
-    data.params                            = params
-    data.paramsnodal                       = paramsnodal
-    ctsys                                  = System(grid, data, unknown_storage=unknown_storage)
+    data.params = params
+    data.paramsnodal = paramsnodal
+    ctsys = System(grid, data, unknown_storage = unknown_storage)
 
     ## print data
     if test == false
@@ -377,15 +405,15 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     end
     ################################################################################
 
-    control              = SolverControl()
-    control.verbose      = verbose
-    control.maxiters     = 200
-    control.abstol       = 1.0e-13
-    control.reltol       = 1.0e-13
-    control.tol_round    = 1.0e-13
+    control = SolverControl()
+    control.verbose = verbose
+    control.maxiters = 200
+    control.abstol = 1.0e-13
+    control.reltol = 1.0e-13
+    control.tol_round = 1.0e-13
     control.damp_initial = 0.5
-    control.damp_growth  = 1.61 # >= 1
-    control.max_round    = 5
+    control.damp_growth = 1.61 # >= 1
+    control.max_round = 5
 
     if test == false
         println("*** done\n")
@@ -397,17 +425,17 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     solution = equilibrium_solve!(ctsys, control = control)
-    inival   = solution
+    inival = solution
 
     if plotting
         label_solution, label_density, label_energy = set_plotting_labels(data)
 
         Plotter.figure()
-        plot_energies(Plotter,  ctsys, solution, "Equilibrium", label_energy)
+        plot_energies(Plotter, ctsys, solution, "Equilibrium", label_energy)
         Plotter.figure()
         plot_densities(Plotter, ctsys, solution, "Equilibrium", label_density)
         Plotter.figure()
-        plot_solution(Plotter,  ctsys, solution, "Equilibrium", label_solution)
+        plot_solution(Plotter, ctsys, solution, "Equilibrium", label_solution)
     end
 
     if test == false
@@ -419,7 +447,7 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
     end
     ################################################################################
 
-    maxBias    = voltageAcceptor # bias goes until the given voltage at acceptor boundary
+    maxBias = voltageAcceptor # bias goes until the given voltage at acceptor boundary
     biasValues = range(0, stop = maxBias, length = 13)
 
     for Δu in biasValues
@@ -431,7 +459,7 @@ function main(;n = 2, Plotter = PyPlot, plotting = false, verbose = false, test 
         set_contact!(ctsys, bregionAcceptor, Δu = Δu)
 
         solution = solve(ctsys, inival = inival, control = control)
-        inival   = solution
+        inival = solution
 
     end # bias loop
 
@@ -456,7 +484,7 @@ end #  main
 
 function test()
     testval = -3.982748467515117
-    main(test = true, unknown_storage=:dense) ≈ testval && main(test = true, unknown_storage=:sparse) ≈ testval
+    return main(test = true, unknown_storage = :dense) ≈ testval && main(test = true, unknown_storage = :sparse) ≈ testval
 end
 
 if test == false

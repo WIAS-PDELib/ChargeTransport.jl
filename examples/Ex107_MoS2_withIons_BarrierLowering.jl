@@ -1,4 +1,3 @@
-
 #=
 # MoS2 with moving defects and Schottky Barrier Lowering.
 ([source code](SOURCE_URL))
@@ -15,7 +14,7 @@ using ExtendableGrids
 using PyPlot
 
 # you can also use other Plotters, if you add them to the example file
-function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false, barrierLowering = true)
+function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, barrierLowering = true)
 
     if plotting
         Plotter.close("all")
@@ -28,21 +27,21 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     ################################################################################
 
     ## region numbers
-    regionflake  = 1
+    regionflake = 1
 
     ## boundary region numbers
-    bregionLeft  = 1
+    bregionLeft = 1
     bregionRight = 2
 
     ## grid
-    h_flake      = 1.0 * μm # length of the conducting channel
+    h_flake = 1.0 * μm # length of the conducting channel
 
     # non-uniform grid
-    coord1       = geomspace(0.0,       h_flake/2, 5e-4 * h_flake, 2e-2 * h_flake)
-    coord2       = geomspace(h_flake/2, h_flake,   2e-2 * h_flake, 5e-4 * h_flake)
-    coord        = glue(coord1, coord2)
+    coord1 = geomspace(0.0, h_flake / 2, 5.0e-4 * h_flake, 2.0e-2 * h_flake)
+    coord2 = geomspace(h_flake / 2, h_flake, 2.0e-2 * h_flake, 5.0e-4 * h_flake)
+    coord = glue(coord1, coord2)
 
-    grid         = simplexgrid(coord)
+    grid = simplexgrid(coord)
 
     ## set region in grid
     cellmask!(grid, [0.0], [h_flake], regionflake, tol = 1.0e-18)
@@ -62,55 +61,55 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     ################################################################################
 
     ## set indices of unknowns
-    iphin            = 1 # electron quasi Fermi potential
-    iphip            = 2 # hole quasi Fermi potential
-    iphix            = 3
+    iphin = 1 # electron quasi Fermi potential
+    iphip = 2 # hole quasi Fermi potential
+    iphix = 3
 
     numberOfCarriers = 3 # electrons, holes and ions
 
     # We define the physical data
-    T                = 300.0             *  K
-    εr               = 9.0               *  1.0                   # relative dielectric permittivity
-    εi               = 1.0 * εr                                   # image force dielectric permittivity
+    T = 300.0 * K
+    εr = 9.0 * 1.0                   # relative dielectric permittivity
+    εi = 1.0 * εr                                   # image force dielectric permittivity
 
-    Ec               = - 4.0             *  eV
-    Ev               = - 5.3             *  eV
-    Ex               = - 4.38            *  eV
+    Ec = - 4.0 * eV
+    Ev = - 5.3 * eV
+    Ex = - 4.38 * eV
 
-    Nc               = 2 * ( 2 * pi * 0.55 * mₑ * kB * T/(Planck_constant^2) )^(3/2) /m^3
-    Nv               = 2 * ( 2 * pi * 0.71 * mₑ * kB * T/(Planck_constant^2) )^(3/2) /m^3
-    Nx               = 1.0e28               / (m^3)
+    Nc = 2 * (2 * pi * 0.55 * mₑ * kB * T / (Planck_constant^2))^(3 / 2) / m^3
+    Nv = 2 * (2 * pi * 0.71 * mₑ * kB * T / (Planck_constant^2))^(3 / 2) / m^3
+    Nx = 1.0e28 / (m^3)
 
-    μn               = 1e-4                * (m^2) / (V * s)
-    μp               = 1e-4                * (m^2) / (V * s)
-    μx               = 0.8e-13             * (m^2) / (V * s)
+    μn = 1.0e-4 * (m^2) / (V * s)
+    μp = 1.0e-4 * (m^2) / (V * s)
+    μx = 0.8e-13 * (m^2) / (V * s)
 
     ## Schottky contact
-    barrierLeft      = 0.225                *  eV
-    barrierRight     = 0.215                *  eV
-    An               = 4 * pi * q * 0.55 * mₑ * kB^2 / Planck_constant^3
-    Ap               = 4 * pi * q * 0.71 * mₑ * kB^2 / Planck_constant^3
-    vn               = An * T^2 / (q*Nc)
-    vp               = Ap * T^2 / (q*Nv)
+    barrierLeft = 0.225 * eV
+    barrierRight = 0.215 * eV
+    An = 4 * pi * q * 0.55 * mₑ * kB^2 / Planck_constant^3
+    Ap = 4 * pi * q * 0.71 * mₑ * kB^2 / Planck_constant^3
+    vn = An * T^2 / (q * Nc)
+    vp = Ap * T^2 / (q * Nv)
 
-    Nd               = 1.0e17               / (m^3) # doping
+    Nd = 1.0e17 / (m^3) # doping
 
-    Area             = 2.1e-11 *  m^2                # Area of electrode
+    Area = 2.1e-11 * m^2                # Area of electrode
 
     # Scan protocol information
-    endTime          = 9.6    * s
-    amplitude        = 12.0   * V
-    scanrate         = 4*amplitude/endTime
+    endTime = 9.6 * s
+    amplitude = 12.0 * V
+    scanrate = 4 * amplitude / endTime
 
     ## Define scan protocol function
     function scanProtocol(t)
 
-        if    0.0 <= t  && t <= endTime/4
+        if 0.0 <= t  && t <= endTime / 4
             biasVal = 0.0 + scanrate * t
-        elseif  t >= endTime/4  && t <= 3*endTime/4
-            biasVal = amplitude .- scanrate *(t-endTime/4)
-        elseif  t >= 3*endTime/4 && t <= endTime
-            biasVal = - amplitude .+ scanrate * (t-3*endTime/4)
+        elseif t >= endTime / 4  && t <= 3 * endTime / 4
+            biasVal = amplitude .- scanrate * (t - endTime / 4)
+        elseif t >= 3 * endTime / 4 && t <= endTime
+            biasVal = - amplitude .+ scanrate * (t - 3 * endTime / 4)
         else
             biasVal = 0.0
         end
@@ -127,28 +126,30 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     end
 
     ################################################################################
-     if test == false
+    if test == false
         println("Define System and fill in information about model")
     end
     ################################################################################
 
     ## Initialize Data instance and fill in predefined data
-    data                            = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
-    data.modelType                  = Transient
-    data.F                          = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
-    data.bulkRecombination          = set_bulk_recombination(;iphin = iphin, iphip = iphip,
-                                                              bulk_recomb_Auger = false,
-                                                              bulk_recomb_radiative = false,
-                                                              bulk_recomb_SRH = false)
+    data = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
+    data.modelType = Transient
+    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data.bulkRecombination = set_bulk_recombination(;
+        iphin = iphin, iphip = iphip,
+        bulk_recomb_Auger = false,
+        bulk_recomb_radiative = false,
+        bulk_recomb_SRH = false
+    )
     if barrierLowering
-        data.boundaryType[bregionLeft]  = SchottkyBarrierLowering
+        data.boundaryType[bregionLeft] = SchottkyBarrierLowering
         data.boundaryType[bregionRight] = SchottkyBarrierLowering
     else
-        data.boundaryType[bregionLeft]  = SchottkyContact
+        data.boundaryType[bregionLeft] = SchottkyContact
         data.boundaryType[bregionRight] = SchottkyContact
     end
 
-    data.fluxApproximation         .= ExcessChemicalPotential
+    data.fluxApproximation .= ExcessChemicalPotential
 
     enable_ionic_carrier!(data, ionicCarrier = iphix, regions = [regionflake])
 
@@ -162,43 +163,43 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     end
     ################################################################################
 
-    params                                        = Params(grid, numberOfCarriers)
+    params = Params(grid, numberOfCarriers)
 
-    params.temperature                            = T
-    params.UT                                     = (kB * params.temperature) / q
-    params.chargeNumbers[iphin]                   = -1
-    params.chargeNumbers[iphip]                   =  1
-    params.chargeNumbers[iphix]                   =  2
+    params.temperature = T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[iphin] = -1
+    params.chargeNumbers[iphip] = 1
+    params.chargeNumbers[iphix] = 2
 
     for ireg in 1:length([regionflake])           # region data
 
-        params.dielectricConstant[ireg]           = εr * ε0
+        params.dielectricConstant[ireg] = εr * ε0
         params.dielectricConstantImageForce[ireg] = εi * ε0
 
         ## effective DOS, band-edge energy and mobilities
-        params.densityOfStates[iphin, ireg]       = Nc
-        params.densityOfStates[iphip, ireg]       = Nv
-        params.bandEdgeEnergy[iphin, ireg]        = Ec
-        params.bandEdgeEnergy[iphip, ireg]        = Ev
-        params.mobility[iphin, ireg]              = μn
-        params.mobility[iphip, ireg]              = μp
-        params.densityOfStates[iphix, ireg]       = Nx
-        params.bandEdgeEnergy[iphix, ireg]        = Ex
-        params.mobility[iphix, ireg]              = μx
+        params.densityOfStates[iphin, ireg] = Nc
+        params.densityOfStates[iphip, ireg] = Nv
+        params.bandEdgeEnergy[iphin, ireg] = Ec
+        params.bandEdgeEnergy[iphip, ireg] = Ev
+        params.mobility[iphin, ireg] = μn
+        params.mobility[iphip, ireg] = μp
+        params.densityOfStates[iphix, ireg] = Nx
+        params.bandEdgeEnergy[iphix, ireg] = Ex
+        params.mobility[iphix, ireg] = μx
     end
 
-    params.SchottkyBarrier[bregionLeft]           = barrierLeft
-    params.SchottkyBarrier[bregionRight]          = barrierRight
-    params.bVelocity[iphin, bregionLeft]          = vn
-    params.bVelocity[iphin, bregionRight]         = vn
-    params.bVelocity[iphip, bregionLeft]          = vp
-    params.bVelocity[iphip, bregionRight]         = vp
+    params.SchottkyBarrier[bregionLeft] = barrierLeft
+    params.SchottkyBarrier[bregionRight] = barrierRight
+    params.bVelocity[iphin, bregionLeft] = vn
+    params.bVelocity[iphin, bregionRight] = vn
+    params.bVelocity[iphip, bregionLeft] = vp
+    params.bVelocity[iphip, bregionRight] = vp
 
     ## interior doping
-    params.doping[iphin, regionflake]             = Nd
+    params.doping[iphin, regionflake] = Nd
 
-    data.params                                   = params
-    ctsys                                         = System(grid, data, unknown_storage=:sparse)
+    data.params = params
+    ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
         println("*** done\n")
@@ -210,28 +211,28 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     end
     ################################################################################
 
-    control              = SolverControl()
+    control = SolverControl()
     if verbose == true
-        control.verbose  = verbose
+        control.verbose = verbose
     else
-        control.verbose  = "eda" # still print the time values
+        control.verbose = "eda" # still print the time values
     end
     if test == true
-        control.verbose  = false # do not show time values in testing case
+        control.verbose = false # do not show time values in testing case
     end
     control.damp_initial = 0.9
-    control.damp_growth  = 1.61 # >= 1
-    control.max_round    = 5
+    control.damp_growth = 1.61 # >= 1
+    control.max_round = 5
 
-    control.abstol       = 1.0e-9
-    control.reltol       = 1.0e-9
-    control.tol_round    = 1.0e-9
+    control.abstol = 1.0e-9
+    control.reltol = 1.0e-9
+    control.tol_round = 1.0e-9
 
-    control.Δu_opt       = Inf
-    control.Δt           = 1.0e-4
-    control.Δt_min       = 1.0e-5
-    control.Δt_max       = 5.0e-2
-    control.Δt_grow      = 1.05
+    control.Δu_opt = Inf
+    control.Δt = 1.0e-4
+    control.Δt_min = 1.0e-5
+    control.Δt_max = 5.0e-2
+    control.Δt_grow = 1.05
 
     if test == false
         println("*** done\n")
@@ -244,16 +245,16 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     ################################################################################
 
     ## initialize solution and starting vectors
-    solEQ  = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0)
-    inival  = solEQ
+    solEQ = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0)
+    inival = solEQ
 
     if plotting
         label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphix] = "\$E_x-q\\psi\$"; label_energy[2, iphix] = "\$ - q \\varphi_x\$"
-        label_density[iphix]   = "\$ n_x\$";       label_solution[iphix]  = "\$ \\varphi_x\$"
+        label_density[iphix] = "\$ n_x\$";       label_solution[iphix] = "\$ \\varphi_x\$"
 
         Plotter.figure()
-        plot_densities(Plotter, ctsys, solEQ,"Equilibrium", label_density)
+        plot_densities(Plotter, ctsys, solEQ, "Equilibrium", label_density)
         Plotter.legend()
         Plotter.figure()
         plot_solution(Plotter, ctsys, solEQ, "Equilibrium", label_solution)
@@ -264,12 +265,12 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     end
 
     ################################################################################
-     if test == false
+    if test == false
         println("IV Measurement loop")
     end
     ################################################################################
 
-    sol = solve(ctsys, inival = inival, times=(0.0, endTime), control = control)
+    sol = solve(ctsys, inival = inival, times = (0.0, endTime), control = control)
 
     if test == false
         println("*** done\n")
@@ -279,25 +280,25 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     #########  IV curve calculation
     ################################################################################
 
-    IV            = zeros(0) # for saving I-V data
+    IV = zeros(0) # for saving I-V data
 
-    tvalues       = sol.t
+    tvalues = sol.t
     number_tsteps = length(tvalues)
-    biasValues    = scanProtocol.(tvalues)
+    biasValues = scanProtocol.(tvalues)
 
-    factory       = TestFunctionFactory(ctsys)
-    tf            = testfunction(factory, [bregionLeft], [bregionRight])
+    factory = TestFunctionFactory(ctsys)
+    tf = testfunction(factory, [bregionLeft], [bregionRight])
 
     push!(IV, 0.0)
-    for istep = 2:number_tsteps
-        Δt       = tvalues[istep] - tvalues[istep-1] # Time step size
-        inival   = sol.u[istep-1]
+    for istep in 2:number_tsteps
+        Δt = tvalues[istep] - tvalues[istep - 1] # Time step size
+        inival = sol.u[istep - 1]
         solution = sol.u[istep]
 
-        I        = integrate(ctsys, tf, solution, inival, Δt)
+        I = integrate(ctsys, tf, solution, inival, Δt)
 
         current = 0.0
-        for ii = 1:numberOfCarriers+1
+        for ii in 1:(numberOfCarriers + 1)
             current = current + I[ii]
         end
 
@@ -320,13 +321,13 @@ function main(;Plotter = PyPlot, plotting = false, verbose = false, test = false
     end
 
 
-    testval = sum(filter(!isnan, solEQ))/length(solEQ)
+    testval = sum(filter(!isnan, solEQ)) / length(solEQ)
     return testval
 
 end #  main
 
 function test()
-   main(test = true, barrierLowering = true) ≈ -1692.2303837883194
+    return main(test = true, barrierLowering = true) ≈ -1692.2303837883194
 end
 
 

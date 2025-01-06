@@ -2,8 +2,10 @@
 Type of statistics functions.
 
 """
-const StandardFuncSet = Union{typeof(Boltzmann), typeof(Blakemore), typeof(FermiDiracMinusOne),
-                              typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA)}
+const StandardFuncSet = Union{
+    typeof(Boltzmann), typeof(Blakemore), typeof(FermiDiracMinusOne),
+    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA),
+}
 
 ##########################################################
 
@@ -11,8 +13,10 @@ const StandardFuncSet = Union{typeof(Boltzmann), typeof(Blakemore), typeof(Fermi
 Type of charge carriers and the electric potential (corresponding to VoronoiFVM.jl).
 
 """
-const QType = Union{VoronoiFVM.ContinuousQuantity{Int32}, VoronoiFVM.DiscontinuousQuantity{Int32},
-VoronoiFVM.InterfaceQuantity{Int32}, Int64}
+const QType = Union{
+    VoronoiFVM.ContinuousQuantity{Int32}, VoronoiFVM.DiscontinuousQuantity{Int32},
+    VoronoiFVM.InterfaceQuantity{Int32}, Int64,
+}
 
 
 ##########################################################
@@ -79,7 +83,7 @@ const InterfaceModelType = Union{Type{InterfaceNone}, Type{InterfaceRecombinatio
 """
 Possible types of boundary models.
 """
-const BoundaryModelType  = Union{OuterBoundaryModelType, InterfaceModelType}
+const BoundaryModelType = Union{OuterBoundaryModelType, InterfaceModelType}
 
 ##########################################################
 ##########################################################
@@ -176,9 +180,11 @@ abstract type GeneralizedSG end
 """
 Possible types of flux discretization schemes.
 """
-const FluxApproximationType = Union{Type{ScharfetterGummel}, Type{ExcessChemicalPotential},
-                                 Type{DiffusionEnhanced}, Type{DiffusionEnhancedModifiedDrift}, Type{GeneralizedSG},
-                                 Type{ScharfetterGummelGraded}, Type{ExcessChemicalPotentialGraded}}
+const FluxApproximationType = Union{
+    Type{ScharfetterGummel}, Type{ExcessChemicalPotential},
+    Type{DiffusionEnhanced}, Type{DiffusionEnhancedModifiedDrift}, Type{GeneralizedSG},
+    Type{ScharfetterGummelGraded}, Type{ExcessChemicalPotentialGraded},
+}
 
 ##########################################################
 ##########################################################
@@ -263,8 +269,10 @@ abstract type GenerationUserDefined end
 """
 Possible types for generation model.
 """
-const GenerationModelType = Union{Type{GenerationUniform}, Type{GenerationBeerLambert},
-                                  Type{GenerationNone}, Type{GenerationUserDefined}}
+const GenerationModelType = Union{
+    Type{GenerationUniform}, Type{GenerationBeerLambert},
+    Type{GenerationNone}, Type{GenerationUserDefined},
+}
 
 
 ##########################################################
