@@ -15,9 +15,10 @@ using ExtendableGrids
 using PyPlot
 
 # you can also use other Plotters, if you add them to the example file
-function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
-              parameter_file = "../parameter_files/Params_PSC_PCBM_MAPI_Pedot.jl", # choose the parameter file)
-              )
+function main(;
+        n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
+        parameter_file = "../parameter_files/Params_PSC_PCBM_MAPI_Pedot.jl", # choose the parameter file)
+    )
 
 
     ################################################################################
@@ -28,20 +29,20 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
 
     include(parameter_file) # include the parameter file we specified
 
-    bregionNoFlux   = 3
-    height          = 5.00e-6 * cm
+    bregionNoFlux = 3
+    height = 5.0e-6 * cm
 
     ## contact voltage
     voltageAcceptor = 1.2 * V
 
     ## primary data for I-V scan protocol
-    scanrate        = 0.4 * V/s
-    number_tsteps   = 31
-    endVoltage      = voltageAcceptor # bias goes until the given voltage at acceptor boundary
+    scanrate = 0.4 * V / s
+    number_tsteps = 31
+    endVoltage = voltageAcceptor # bias goes until the given voltage at acceptor boundary
 
     ## with fixed timestep sizes we can calculate the times a priori
-    tend            = endVoltage/scanrate
-    tvalues         = range(0, stop = tend, length = number_tsteps)
+    tend = endVoltage / scanrate
+    tvalues = range(0, stop = tend, length = number_tsteps)
 
     if test == false
         println("*** done\n")
@@ -53,41 +54,49 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     end
     ################################################################################
 
-    δ            = 4*n        # the larger, the finer the mesh
-    t            = 0.5*(cm)/δ # tolerance for geomspace and glue (with factor 10)
-    k            = 1.5        # the closer to 1, the closer to the boundary geomspace
+    δ = 4 * n        # the larger, the finer the mesh
+    t = 0.5 * (cm) / δ # tolerance for geomspace and glue (with factor 10)
+    k = 1.5        # the closer to 1, the closer to the boundary geomspace
 
-    coord_n_u    = collect(range(0.0, h_ndoping/2, step=h_ndoping/(0.6*δ)))
-    coord_n_g    = geomspace(h_ndoping/2, h_ndoping,
-                             h_ndoping/(0.7*δ), h_ndoping/(1.1*δ),
-                             tol=t)
-    coord_i_g1   = geomspace(h_ndoping, h_ndoping+h_intrinsic/k,
-                             h_intrinsic/(5.1*δ), h_intrinsic/(1.0*δ),
-                             tol=t)
-    coord_i_g2   = geomspace(h_ndoping+h_intrinsic/k, h_ndoping+h_intrinsic,
-                             h_intrinsic/(1.0*δ), h_intrinsic/(5.1*δ),
-                             tol=t)
-    coord_p_g    = geomspace(h_ndoping+h_intrinsic, h_ndoping+h_intrinsic+h_pdoping/2,
-                             h_pdoping/(1.3*δ), h_pdoping/(0.3*δ),
-                             tol=t)
-    coord_p_u    = collect(range(h_ndoping+h_intrinsic+h_pdoping/2, h_ndoping+h_intrinsic+h_pdoping, step=h_pdoping/(0.6*δ)))
+    coord_n_u = collect(range(0.0, h_ndoping / 2, step = h_ndoping / (0.6 * δ)))
+    coord_n_g = geomspace(
+        h_ndoping / 2, h_ndoping,
+        h_ndoping / (0.7 * δ), h_ndoping / (1.1 * δ),
+        tol = t
+    )
+    coord_i_g1 = geomspace(
+        h_ndoping, h_ndoping + h_intrinsic / k,
+        h_intrinsic / (5.1 * δ), h_intrinsic / (1.0 * δ),
+        tol = t
+    )
+    coord_i_g2 = geomspace(
+        h_ndoping + h_intrinsic / k, h_ndoping + h_intrinsic,
+        h_intrinsic / (1.0 * δ), h_intrinsic / (5.1 * δ),
+        tol = t
+    )
+    coord_p_g = geomspace(
+        h_ndoping + h_intrinsic, h_ndoping + h_intrinsic + h_pdoping / 2,
+        h_pdoping / (1.3 * δ), h_pdoping / (0.3 * δ),
+        tol = t
+    )
+    coord_p_u = collect(range(h_ndoping + h_intrinsic + h_pdoping / 2, h_ndoping + h_intrinsic + h_pdoping, step = h_pdoping / (0.6 * δ)))
 
-    coord        = glue(coord_n_u, coord_n_g,  tol=10*t)
-    coord        = glue(coord,     coord_i_g1, tol=10*t)
-    coord        = glue(coord,     coord_i_g2, tol=10*t)
-    coord        = glue(coord,     coord_p_g,  tol=10*t)
-    coord_length = glue(coord,     coord_p_u,  tol=10*t)
+    coord = glue(coord_n_u, coord_n_g, tol = 10 * t)
+    coord = glue(coord, coord_i_g1, tol = 10 * t)
+    coord = glue(coord, coord_i_g2, tol = 10 * t)
+    coord = glue(coord, coord_p_g, tol = 10 * t)
+    coord_length = glue(coord, coord_p_u, tol = 10 * t)
 
-    height_L     = geomspace(0.0, height/2, height/(0.4*δ), height/(0.4*δ))
-    height_R     = geomspace(height/2, height, height/(0.4*δ), height/(0.4*δ))
-    coord_height = glue(height_L, height_R, tol = 10*t)
+    height_L = geomspace(0.0, height / 2, height / (0.4 * δ), height / (0.4 * δ))
+    height_R = geomspace(height / 2, height, height / (0.4 * δ), height / (0.4 * δ))
+    coord_height = glue(height_L, height_R, tol = 10 * t)
 
-    grid         = simplexgrid(coord_length, coord_height)
+    grid = simplexgrid(coord_length, coord_height)
 
     ## specify inner regions
-    cellmask!(grid, [0.0, 0.0],                     [h_ndoping, height],               regionDonor, tol = 1.0e-18)
-    cellmask!(grid, [h_pdoping, 0.0],               [h_ndoping + h_intrinsic, height], regionIntrinsic, tol = 1.0e-18)
-    cellmask!(grid, [h_ndoping + h_intrinsic, 0.0], [h_total, height],                 regionAcceptor, tol = 1.0e-18)
+    cellmask!(grid, [0.0, 0.0], [h_ndoping, height], regionDonor, tol = 1.0e-18)
+    cellmask!(grid, [h_pdoping, 0.0], [h_ndoping + h_intrinsic, height], regionIntrinsic, tol = 1.0e-18)
+    cellmask!(grid, [h_ndoping + h_intrinsic, 0.0], [h_total, height], regionAcceptor, tol = 1.0e-18)
 
     ## specifiy outer regions
     ## metal interfaces
@@ -99,7 +108,7 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     bfacemask!(grid, [0.0, height], [h_total, height], bregionNoFlux)    # BregionNumber = 3
 
     if plotting
-        gridplot(grid, Plotter= Plotter, resolution=(600,400),linewidth=0.5, legend=:lt)
+        gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
         Plotter.title("Grid")
     end
 
@@ -114,31 +123,33 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data                               = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
-    data.modelType                     = Transient
+    data.modelType = Transient
 
     ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
     ## FermiDiracMinusOne, Blakemore
-    data.F                             = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
 
-    data.bulkRecombination             = set_bulk_recombination(;iphin = iphin, iphip = iphip,
-                                                                 bulk_recomb_Auger = false,
-                                                                 bulk_recomb_radiative = true,
-                                                                 bulk_recomb_SRH = true)
+    data.bulkRecombination = set_bulk_recombination(;
+        iphin = iphin, iphip = iphip,
+        bulk_recomb_Auger = false,
+        bulk_recomb_radiative = true,
+        bulk_recomb_SRH = true
+    )
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
     data.boundaryType[bregionAcceptor] = OhmicContact
-    data.boundaryType[bregionDonor]    = OhmicContact
+    data.boundaryType[bregionDonor] = OhmicContact
 
     ## Present ionic vacancies in perovskite layer
     enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
 
     ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
     ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation            .= ExcessChemicalPotential
+    data.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
@@ -150,47 +161,47 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     end
     ################################################################################
 
-    params                                              = Params(grid, numberOfCarriers)
+    params = Params(grid, numberOfCarriers)
 
-    params.temperature                                  = T
-    params.UT                                           = (kB * params.temperature) / q
-    params.chargeNumbers[iphin]                         = zn
-    params.chargeNumbers[iphip]                         = zp
-    params.chargeNumbers[iphia]                         = za
+    params.temperature = T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[iphin] = zn
+    params.chargeNumbers[iphip] = zp
+    params.chargeNumbers[iphia] = za
 
     for ireg in 1:numberOfRegions # region data
 
-        params.dielectricConstant[ireg]                 = ε[ireg] * ε0
+        params.dielectricConstant[ireg] = ε[ireg] * ε0
 
         ## effective DOS, band edge energy and mobilities
-        params.densityOfStates[iphin, ireg]             = Nn[ireg]
-        params.densityOfStates[iphip, ireg]             = Np[ireg]
-        params.densityOfStates[iphia, ireg]             = Na[ireg]
+        params.densityOfStates[iphin, ireg] = Nn[ireg]
+        params.densityOfStates[iphip, ireg] = Np[ireg]
+        params.densityOfStates[iphia, ireg] = Na[ireg]
 
-        params.bandEdgeEnergy[iphin, ireg]              = En[ireg]
-        params.bandEdgeEnergy[iphip, ireg]              = Ep[ireg]
-        params.bandEdgeEnergy[iphia, ireg]              = Ea[ireg]
+        params.bandEdgeEnergy[iphin, ireg] = En[ireg]
+        params.bandEdgeEnergy[iphip, ireg] = Ep[ireg]
+        params.bandEdgeEnergy[iphia, ireg] = Ea[ireg]
 
-        params.mobility[iphin, ireg]                    = μn[ireg]
-        params.mobility[iphip, ireg]                    = μp[ireg]
-        params.mobility[iphia, ireg]                    = μa[ireg]
+        params.mobility[iphin, ireg] = μn[ireg]
+        params.mobility[iphip, ireg] = μp[ireg]
+        params.mobility[iphia, ireg] = μa[ireg]
 
         ## recombination parameters
-        params.recombinationRadiative[ireg]             = r0[ireg]
-        params.recombinationSRHLifetime[iphin, ireg]    = τn[ireg]
-        params.recombinationSRHLifetime[iphip, ireg]    = τp[ireg]
+        params.recombinationRadiative[ireg] = r0[ireg]
+        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
+        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
         params.recombinationSRHTrapDensity[iphin, ireg] = trap_density!(iphin, ireg, params, EI[ireg])
         params.recombinationSRHTrapDensity[iphip, ireg] = trap_density!(iphip, ireg, params, EI[ireg])
 
     end
 
     ## interior doping
-    params.doping[iphin, regionDonor]                   = Cn
-    params.doping[iphia, regionIntrinsic]               = Ca
-    params.doping[iphip, regionAcceptor]                = Cp
+    params.doping[iphin, regionDonor] = Cn
+    params.doping[iphia, regionIntrinsic] = Ca
+    params.doping[iphip, regionAcceptor] = Cp
 
-    data.params                                         = params
-    ctsys                                               = System(grid, data, unknown_storage=:sparse)
+    data.params = params
+    ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
         show_params(ctsys)
@@ -202,12 +213,12 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     end
     ################################################################################
 
-    control              = SolverControl()
-    control.verbose      = verbose
-    control.maxiters     = 300
-    control.max_round    = 5
+    control = SolverControl()
+    control.verbose = verbose
+    control.maxiters = 300
+    control.max_round = 5
     control.damp_initial = 0.1
-    control.damp_growth  = 1.21 # >= 1
+    control.damp_growth = 1.21 # >= 1
 
     if test == false
         println("*** done\n")
@@ -220,12 +231,12 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     solution = equilibrium_solve!(ctsys, control = control)
-    inival   = solution
+    inival = solution
 
     if plotting # currently, plotting the solution was only tested with PyPlot.
         ipsi = data.index_psi
-        X = grid[Coordinates][1,:]
-        Y = grid[Coordinates][2,:]
+        X = grid[Coordinates][1, :]
+        Y = grid[Coordinates][2, :]
 
         Plotter.figure()
         Plotter.surf(X[:], Y[:], solution[ipsi, :])
@@ -236,7 +247,7 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
         Plotter.tight_layout()
         ################
         Plotter.figure()
-        Plotter.surf(X[:], Y[:], solution[iphin,:] )
+        Plotter.surf(X[:], Y[:], solution[iphin, :])
         Plotter.title("quasi Fermi potential \$ \\varphi_n \$ (Equilibrium)")
         Plotter.xlabel("length [m]")
         Plotter.ylabel("height [m]")
@@ -255,14 +266,14 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     ################################################################################
 
     ## for saving I-V data
-    IV            = zeros(0) # for IV values
-    biasValues    = zeros(0) # for bias values
+    IV = zeros(0) # for IV values
+    biasValues = zeros(0) # for bias values
 
-    for istep = 2:number_tsteps
+    for istep in 2:number_tsteps
 
-        t  = tvalues[istep]       # Actual time
+        t = tvalues[istep]       # Actual time
         Δu = t * scanrate         # Applied voltage
-        Δt = t - tvalues[istep-1] # Time step size
+        Δt = t - tvalues[istep - 1] # Time step size
 
         ## Apply new voltage; set non equilibrium boundary conditions
         set_contact!(ctsys, bregionAcceptor, Δu = Δu)
@@ -274,12 +285,12 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
         solution = solve(ctsys, inival = inival, control = control, tstep = Δt)
 
         ## get I-V data
-        current  = get_current_val(ctsys, solution, inival, Δt)
+        current = get_current_val(ctsys, solution, inival, Δt)
 
         push!(IV, current)
         push!(biasValues, Δu)
 
-        inival   = solution
+        inival = solution
     end # time loop
 
     if plotting
@@ -291,14 +302,14 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
         Plotter.zlabel("potential [V]")
         ################
         Plotter.figure()
-        Plotter.surf(X[:], Y[:], solution[iphin,:] )
+        Plotter.surf(X[:], Y[:], solution[iphin, :])
         Plotter.title("quasi Fermi potential \$ \\varphi_n \$ at end time")
         Plotter.xlabel("length [m]")
         Plotter.ylabel("height [m]")
         Plotter.zlabel("potential [V]")
         ################
         Plotter.figure()
-        Plotter.plot(biasValues, IV.*(cm)^2/height, label = "",  linewidth= 3, marker = "o")
+        Plotter.plot(biasValues, IV .* (cm)^2 / height, label = "", linewidth = 3, marker = "o")
         Plotter.grid()
         Plotter.ylabel("total current [A]") #
         Plotter.xlabel("Applied Voltage [V]")
@@ -308,14 +319,14 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
         println("*** done\n")
     end
 
-    testval = sum(filter(!isnan, solution))/length(solution) # when using sparse storage, we get NaN values in solution
+    testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
     return testval
 
 end #  main
 
 function test()
     testval = -0.5818799192233242
-    main(test = true) ≈ testval
+    return main(test = true) ≈ testval
 end
 
 if test == false
