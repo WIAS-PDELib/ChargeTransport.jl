@@ -605,7 +605,7 @@ mutable struct Data{TFuncs<:Function, TVoltageFunc<:Function, TGenerationData<:U
 
     """
     An datatype containing the information, whether at least on quasi Fermi potential is
-    assumend to be continuous or discontinuous.
+    assumed to be continuous or discontinuous.
     """
     qFModel                      ::  QFModelType
 
@@ -616,7 +616,7 @@ mutable struct Data{TFuncs<:Function, TVoltageFunc<:Function, TGenerationData<:U
     boundaryType                 ::  Array{BoundaryModelType, 1}
 
     """
-    An array containing predefined functions for the applied bias in dependance of time
+    An array containing predefined functions for the applied bias in dependence of time
     at each outer boundary.
     """
     contactVoltageFunction       ::  Array{TVoltageFunc, 1}
@@ -627,8 +627,9 @@ mutable struct Data{TFuncs<:Function, TVoltageFunc<:Function, TGenerationData<:U
     bulkRecombination            ::  BulkRecombination
 
     """
-    A function/Array containing the user-specific photogeneration rate. It can be a function
-    which is specified in the user example or an array which is read in and calculatd with,
+    A function/Array containing the user-specific photogeneration rate. 
+    It can be a function which is specified in the user example 
+    or an array which is read in and calculated with,
     e.g., an external software.
     """
     generationData               ::  TGenerationData
@@ -733,7 +734,7 @@ mutable struct Data{TFuncs<:Function, TVoltageFunc<:Function, TGenerationData<:U
     ###############################################################
 
     """
-    Within this template informations concerning the band-edge energy
+    Within this template, information concerning the band-edge energy
     of each carrier is stored locally which saves allocations.
     We have two of such templates due to the two point flux approximation schemes.
     """
@@ -745,14 +746,14 @@ mutable struct Data{TFuncs<:Function, TVoltageFunc<:Function, TGenerationData<:U
     tempBEE2                     ::  Array{Float64, 1}
 
     """
-    Within this template informations concerning the effective DOS
+    Within this template, information concerning the effective DOS
     of each carrier is stored locally which saves allocations.
     We have two of such templates due to the two point flux approximation schemes.
     """
     tempDOS1                     ::  Array{Float64, 1}
 
     """
-    See the desciption of tempDOS2.
+    See the description of tempDOS2.
     """
     tempDOS2                     ::  Array{Float64, 1}
 
@@ -1532,7 +1533,7 @@ function get_current_val(ctsys, U, Uold, Δt) # DA: But caution, still need some
         current = current + I[ii]
     end
 
-    # DA: caution I[ipsi] not completly correct. In our examples, this does not effect something,
+    # DA: caution I[ipsi] not completely correct. In our examples, this does not effect something,
     # but we need derivative here.
     return current
 end
@@ -1586,7 +1587,7 @@ $(TYPEDSIGNATURES)
 Compute the electro-neutral solution for the Boltzmann approximation.
 It is obtained by setting the left-hand side in
 the Poisson equation equal to zero and solving for ``\\psi``.
-The charge carriers may obey different statitics functions.
+The charge carriers may obey different statistics functions.
 Currently, this one is not well tested for the case of charge carriers beyond electrons and holes.
 """
 function electroNeutralSolution(ctsys)
@@ -1661,7 +1662,7 @@ end
 $(TYPEDSIGNATURES)
 
 First try of debugger. Print the Jacobi matrix for a given node, i.e. the number of node in
-the grid and not the excact coordinate. This is only done for the one dimensional case so far.
+the grid and not the exact coordinate. This is only done for the one dimensional case so far.
 """
 function printJacobi(node, sys)
     ctdata = data(sys)

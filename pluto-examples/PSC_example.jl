@@ -477,7 +477,7 @@ begin
 
     end # generation loop
 	#############################################################
-	## put here back the homogenous Neumann boundary conditions.
+	## put here back the homogeneous Neumann boundary conditions.
     ctsys.fvmsys.boundary_factors[iphia, bregionJunction2] = 0.0
     ctsys.fvmsys.boundary_values[iphia, bregionJunction2]  = 0.0
 
@@ -878,7 +878,7 @@ begin
 
         end # generation loop
 
-        ## put here back the homogenous Neumann boundary conditions.
+        ## put here back the homogeneous Neumann boundary conditions.
         ctsys.fvmsys.boundary_factors[iphia, bregionJunction2] = 0.0
         ctsys.fvmsys.boundary_values[iphia, bregionJunction2]  = 0.0
 

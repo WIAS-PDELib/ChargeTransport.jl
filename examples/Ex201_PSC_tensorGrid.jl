@@ -89,7 +89,7 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     cellmask!(grid, [h_pdoping, 0.0],               [h_ndoping + h_intrinsic, height], regionIntrinsic, tol = 1.0e-18)
     cellmask!(grid, [h_ndoping + h_intrinsic, 0.0], [h_total, height],                 regionAcceptor, tol = 1.0e-18)
 
-    ## specifiy outer regions
+    ## specify outer regions
     ## metal interfaces
     bfacemask!(grid, [0.0, 0.0], [0.0, height], bregionDonor)            # BregionNumber = 1
     bfacemask!(grid, [h_total, 0.0], [h_total, height], bregionAcceptor) # BregionNumber = 2

@@ -1,0 +1,3 @@
+[codespell]
+ignore-words-list = missings,rcall,linke,strat,nd,nodel
+skip = CITATIONS.bib,*.html

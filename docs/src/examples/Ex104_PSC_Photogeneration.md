@@ -327,7 +327,7 @@ these values are needed for putting the generation slightly on
     end
     ################################################################################
 
-    # put here back the homogenous Neumann boundary conditions.
+    # put here back the homogeneous Neumann boundary conditions.
     ctsys.fvmsys.boundary_factors[iphia, bregionJ2] = 0.0
     ctsys.fvmsys.boundary_values[iphia, bregionJ2]  = 0.0
 

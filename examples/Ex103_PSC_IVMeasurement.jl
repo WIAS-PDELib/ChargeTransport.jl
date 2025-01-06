@@ -60,16 +60,16 @@ function main(;n = 3, Plotter = PyPlot, plotting = false, verbose = false, test 
     if otherScanProtocol
         ## scan protocol parameter
         number_tsteps = 40
-        frequence     = 10.0 * Hz
+        frequency     = 10.0 * Hz
         amplitude     = 0.2  * V
-        tend          = 1/frequence
+        tend          = 1/frequency
 
         ## Define sinusoidal applied voltage
         function sinusoidalScanProtocol(t)
             if t == Inf
                 0.0
             else
-                amplitude * sin(2.0 * pi * frequence * t)
+                amplitude * sin(2.0 * pi * frequency * t)
             end
         end
 
