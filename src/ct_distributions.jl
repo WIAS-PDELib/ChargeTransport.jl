@@ -54,7 +54,7 @@ The incomplete Fermi-Dirac integral of order 1/2, implemented according to [Bedn
 function FermiDiracOneHalfBednarczyk(x::Real)
 
     a = x^4 + 33.6*x * (1.0 - 0.68*exp(-0.17*(x+1)^2)) + 50
-    sqrt(pi) / ( 2 * (3/4*sqrt(pi) * a^(-3/8) + exp(-x) ) )
+    1.0 / (3/4*sqrt(pi) * a^(-3/8) + exp(-x))
 
 end
 
