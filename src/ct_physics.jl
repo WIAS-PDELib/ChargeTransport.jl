@@ -440,8 +440,9 @@ Creates Schottky boundary conditions. For the electrostatic potential we assume
 
 ``\\psi = - \\phi_S/q + U, ``
 
-where  ``\\phi_S`` corresponds to a given value (non-negative Schottky barrier) and ``U`` to the applied voltage. The quantitity ``\\phi_S`` needs to be specified in the main file.
-For eletrons and holes we assume the following
+where  ``\\phi_S`` corresponds to a given value (non-negative Schottky barrier) and ``U`` to the applied voltage. 
+The quantity ``\\phi_S`` needs to be specified in the main file.
+For electrons and holes we assume the following
 
 ``f[n_\\alpha]  =  z_\\alpha q v_\\alpha (n_\\alpha - n_{\\alpha, 0})``,
 
@@ -492,8 +493,9 @@ A mixed Schottky-Ohmic boundary type condition, where we impose on the electric 
 
 ``\\psi = - \\phi_S/q + U, ``
 
-with  ``\\phi_S`` as given value (non-negative Schottky barrier) and ``U`` to the applied voltage. The quantitity ``\\phi_S`` needs to be specified in the main file.
-For eletrons and holes we assume the following (Ohmic)
+with  ``\\phi_S`` as given value (non-negative Schottky barrier) and ``U`` to the applied voltage. 
+The quantity ``\\phi_S`` needs to be specified in the main file.
+For electrons and holes we assume the following (Ohmic)
 
 `` \\varphi_{\\alpha} = U``.
 """

@@ -11,7 +11,7 @@ using ChargeTransport
 using ExtendableGrids
 using PyPlot
 
-## function to initialize the grid for a possble extension to other p-i-n devices.
+## function to initialize the grid for a possible extension to other p-i-n devices.
 function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping)
     coord_ndoping   = collect(range(0.0, stop = h_ndoping, length = 3 * refinementfactor))
     coord_intrinsic = collect(range(h_ndoping, stop = (h_ndoping + h_intrinsic), length = 3 * refinementfactor))
