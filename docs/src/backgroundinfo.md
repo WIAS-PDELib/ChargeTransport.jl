@@ -91,4 +91,3 @@ For a comprehensive overview of drift-diffusion models, semiconductor applicatio
 | $ \varphi_\alpha $     | quasi Fermi potential for $ \alpha $       |      |      |      |      | $ E_\alpha $      | band-edge energy for $ \alpha $      |
 | $ k_B $     | Boltzmann constant       |      |      |      |      | $ T $      | temperature      |
 | $ \mu_\alpha $     | mobility of carrier $ \alpha $      |      |      |      |      |        |        |
-
