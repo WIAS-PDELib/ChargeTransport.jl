@@ -1108,6 +1108,21 @@ function storage!(f, u, node, data, ::Type{OutOfEquilibrium})
 
 end
 
+
+function DensityProduct(f, u, node, data)
+
+    # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
+    iphin = data.bulkRecombination.iphin
+    iphip = data.bulkRecombination.iphip
+
+    # based on user index and regularity of solution quantities or integers are used and depicted here
+    iphin = data.chargeCarrierList[iphin]
+    iphip = data.chargeCarrierList[iphip]
+
+    return f[1] = get_density!(u, node, data, iphin) * get_density!(u, node, data, iphip)
+
+end
+
 ##########################################################
 ##########################################################
 """
@@ -1254,6 +1269,54 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ExcessChemicalPotentia
 
     return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
 
+end
+
+# Reconstructing the concentration gradients
+function ConcentrationGradient(f, u, edge, data)
+
+    # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
+    iphin = data.bulkRecombination.iphin
+    iphip = data.bulkRecombination.iphip
+
+    # based on user index and regularity of solution quantities or integers are used and depicted here
+    iphin = data.chargeCarrierList[iphin]
+    iphip = data.chargeCarrierList[iphip]
+
+    nnk, nnl = get_density!(u, edge, data, iphin)
+    npk, npl = get_density!(u, edge, data, iphip)
+
+    f[iphin] = - data.params.chargeNumbers[iphin] * (nnl - nnk)
+    return f[iphip] = - data.params.chargeNumbers[iphip] * (npl - npk)
+
+end
+
+# The excess chemical potential flux discretization scheme without force term for postprocessing
+function ExcessChemicalPotentialDiffusive(f, u, edge, data)
+
+    params = data.params
+    paramsnodal = data.paramsnodal
+
+    for icc in data.chargeCarrierList
+
+        nodek = edge.node[1]   # left node
+        nodel = edge.node[2]   # right node
+        ireg = edge.region
+        j0 = params.UT * params.mobility[icc, ireg]
+
+        bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
+
+        etak, etal = etaFunction!(u, edge, data, icc)
+
+        Q = params.chargeNumbers[icc] * ((- bandEdgeDiff / q) / params.UT) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
+        bp, bm = fbernoulli_pm(Q)
+
+        ncck, nccl = get_density!(u, edge, data, icc)
+
+        f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    end
+
+    return
 end
 
 # The excess chemical potential flux scheme for

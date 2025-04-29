@@ -45,6 +45,7 @@ export ModelType, Transient, Stationary
 export FluxApproximationType
 export ScharfetterGummel, ExcessChemicalPotential, DiffusionEnhanced, DiffusionEnhancedModifiedDrift, GeneralizedSG
 export ScharfetterGummelGraded, ExcessChemicalPotentialGraded
+export ExcessChemicalPotentialDiffusive, ConcentrationGradient, DensityProduct
 
 export InEquilibrium, OutOfEquilibrium
 
