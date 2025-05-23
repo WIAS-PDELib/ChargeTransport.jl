@@ -30,4 +30,5 @@ const μs = 1.0e-6 * s
 const ns = 1.0e-9 * s
 const ps = 1.0e-12 * s
 
-const eV = q * V
+# not constant: depends on the given value of q
+global eV = q * V
