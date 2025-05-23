@@ -1,13 +1,29 @@
 module ChargeTransport
 
-using VoronoiFVM          # PDE solver with a FVM spatial discretization
-using ExtendableGrids     # grid initializer
-using GridVisualize       # visualizer wrapper
-using Printf              # printing
-using DocStringExtensions # for documentation
-using SparseArrays        # for generating sparse arrays
-using Interpolations      # for interpolation of data
-using Roots               # for finding zeros
+# for documentation
+using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF,
+    TYPEDFIELDS, TYPEDSIGNATURES
+# grid initializer
+using ExtendableGrids: ExtendableGrids, BFaceNodes, BFaceRegions, CellNodes,
+    CellRegions, Coordinates, ExtendableGrid,
+    NumBFaceRegions, NumCellRegions, append!, dim_space,
+    num_cellregions, num_nodes, subgrid
+using ForwardDiff: ForwardDiff
+# visualizer wrapper
+using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
+# for interpolation of data
+using Interpolations: Interpolations, Gridded, Linear
+# printing
+using Printf: @printf
+# for interpolation of data
+using Roots: Roots, find_zero
+# for generating sparse arrays
+using SparseArrays: SparseArrays, spzeros
+# PDE solver with a FVM spatial discretization
+using VoronoiFVM: VoronoiFVM, ContinuousQuantity, DiscontinuousQuantity,
+    NewtonControl, SolverControl, TestFunctionFactory,
+    boundary_dirichlet!, fbernoulli_pm, physics!,
+    unknown_indices, value
 
 
 include("ct_constants.jl")
