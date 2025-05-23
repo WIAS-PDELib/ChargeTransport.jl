@@ -21,8 +21,7 @@ using Roots: Roots, find_zero
 using SparseArrays: SparseArrays, spzeros
 # PDE solver with a FVM spatial discretization
 using VoronoiFVM: VoronoiFVM, ContinuousQuantity, DiscontinuousQuantity,
-    NewtonControl, SolverControl, TestFunctionFactory,
-    boundary_dirichlet!, fbernoulli_pm, physics!,
+    TestFunctionFactory, boundary_dirichlet!, fbernoulli_pm, physics!,
     unknown_indices, value
 
 
