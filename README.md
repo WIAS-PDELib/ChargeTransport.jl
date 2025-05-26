@@ -40,3 +40,10 @@ the semiconductor drift-diffusion equations via the Voronoi finite volume method
 [5.] B. Spetzler, D. Abdel, F. Schwierz, M. Ziegler and P. Farrell. [The Role of Vacancy Dynamics in Two-Dimensional Memristive Devices.](https://doi.org/10.1002/aelm.202300635) Advanced Electronic Materials (2023).
 
 [6.] D. Abdel, A. Glitzky and M. Liero. [Analysis of a drift-diffusion model for perovskite solar cells.](https://doi.org/10.3934/dcdsb.2024081) Discrete and Continuous Dynamical Systems - Series B (2024).
+
+[7.] D. Abdel, M. Herda, M. Ziegler, C. Chainais-Hillairet, B. Spetzler, P. Farrell. [Numerical analysis and simulation of lateral memristive devices: Schottky, ohmic, and multi-dimensional electrode models]( 	
+https://doi.org/10.48550/arXiv.2412.15065
+) submitted (2024).
+
+[8.] B. Spetzler, E. Spetzler, S. Zamankhani, D. Abdel, P. Farrell, K.-U. Sattler, M. Ziegler. [Physics-Guided Sequence Modeling for Fast Simulation and Design Exploration of 2D Memristive Devices](https://doi.org/10.48550/arXiv.2505.13882
+) (2025).
