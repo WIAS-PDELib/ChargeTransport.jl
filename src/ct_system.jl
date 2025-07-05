@@ -288,7 +288,7 @@ mutable struct Params
     ####                   integer numbers                     ####
     ###############################################################
     """
-    Number of nodes used for the disretization of the domain ``\\mathbf{\\Omega}``.
+    Number of nodes used for the discretization of the domain ``\\mathbf{\\Omega}``.
     """
     numberOfNodes::Int64
 
@@ -354,7 +354,7 @@ mutable struct Params
     ###############################################################
 
     """
-    An array for the given Schottky barriers at present Schotkky contacts.
+    An array for the given Schottky barriers at present Schottky contacts.
     """
     SchottkyBarrier::Array{Float64, 1}
 
@@ -693,7 +693,7 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     F::Array{TFuncs, 1}
 
     """
-    An datatype containing the information, whether at least on quasi Fermi potential is
+    A datatype containing the information, whether at least on quasi Fermi potential is
     assumed to be continuous or discontinuous.
     """
     qFModel::QFModelType
@@ -716,8 +716,8 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     bulkRecombination::BulkRecombination
 
     """
-    A function/Array containing the user-specific photogeneration rate. 
-    It can be a function which is specified in the user example 
+    A function/array containing the user-specific photogeneration rate.
+    It can be a function which is specified in the user example
     or an array which is read in and calculated with,
     e.g., an external software.
     """
@@ -1598,7 +1598,7 @@ gridplot(grid::ExtendableGrid; Plotter, kwargs...) = GridVisualize.gridplot(grid
 """
 $(TYPEDSIGNATURES)
 
-Functions which calculates the equilibrium solution in case of non-present fluxes and zero bias.
+Function which calculates the equilibrium solution in case of non-present fluxes and zero bias.
 
 """
 
@@ -1759,7 +1759,6 @@ function electroNeutralSolution(ctsys)
     data = ctsys.fvmsys.physics.data
 
     params = data.params
-    paramsnodal = data.paramsnodal
 
     if params.numberOfCarriers > 2
         error("this method is currently only working for electrons and holes")

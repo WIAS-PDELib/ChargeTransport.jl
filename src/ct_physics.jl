@@ -43,7 +43,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Defining locally the band-edge energy for interior nodes (analougesly for boundary nodes and edges).
+Defining locally the band-edge energy for interior nodes (analogously for boundary nodes and edges).
 """
 function get_BEE!(icc::QType, node::VoronoiFVM.Node, data)
 
@@ -440,7 +440,7 @@ Creates Schottky boundary conditions. For the electrostatic potential we assume
 
 ``\\psi = - \\phi_S/q + U, ``
 
-where  ``\\phi_S`` corresponds to a given value (non-negative Schottky barrier) and ``U`` to the applied voltage. 
+where  ``\\phi_S`` corresponds to a given value (non-negative Schottky barrier) and ``U`` to the applied voltage.
 The quantity ``\\phi_S`` needs to be specified in the main file.
 For electrons and holes we assume the following
 
@@ -493,7 +493,7 @@ A mixed Schottky-Ohmic boundary type condition, where we impose on the electric 
 
 ``\\psi = - \\phi_S/q + U, ``
 
-with  ``\\phi_S`` as given value (non-negative Schottky barrier) and ``U`` to the applied voltage. 
+with  ``\\phi_S`` as given value (non-negative Schottky barrier) and ``U`` to the applied voltage.
 The quantity ``\\phi_S`` needs to be specified in the main file.
 For electrons and holes we assume the following (Ohmic)
 
@@ -619,7 +619,7 @@ end
 """
 $(TYPEDSIGNATURES)
 Generic operator to save the projected gradient of electric potential
-(for system with standard Schotty contacts). Note that this currently
+(for system with standard Schottky contacts). Note that this currently
 only working in one dimension!
 
 """
