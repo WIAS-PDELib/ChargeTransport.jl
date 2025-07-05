@@ -587,6 +587,94 @@ end
 """
 $(TYPEDEF)
 
+A struct holding the physical parameters for the Helmholtz equation simulation in a laser.
+$(TYPEDFIELDS)
+"""
+mutable struct ParamsOptical
+
+    ###############################################################
+    ####                     real numbers                      ####
+    ###############################################################
+    """
+    The wavelength for the laser on hand.
+    """
+    laserWavelength              ::  Float64
+
+    """
+    The laser power.
+    """
+    power                        ::  Float64
+
+    ###############################################################
+    ####                   number of regions                   ####
+    ###############################################################
+    """
+    A region dependant array for the absorption coefficient in the
+    absorption function in the medium.
+    """
+    absorption_0                 ::  Array{Float64,1}
+
+    """
+    A region dependant array for the gain model coefficient.
+    """
+    gain_0                       ::  Array{Float64,1}
+
+    """
+    A region dependent array for the refractive index coefficient.
+    """
+    refractiveIndex_0            ::  Array{Float64,1}
+
+    """
+    A region dependent array for the second refractive index coefficient.
+    """
+    refractiveIndex_d            ::  Array{Float64,1}
+
+    """
+    A region dependent array for the refractive index exponent.
+    """
+    refractiveIndex_γ            ::  Array{Float64,1}
+
+    ###############################################################
+    ####                 number of eigenvalues                 ####
+    ###############################################################
+    """
+    An array of the eigenvalues.
+    """
+    eigenvalues                  ::  Array{Complex{Float64},1}
+
+    ###############################################################
+    ####        number of carriers x number of regions         ####
+    ###############################################################
+    """
+    A 2D array with the corresponding free carrier absorption values.
+    """
+    absorptionFreeCarriers       ::  Array{Float64,2}
+
+    ###############################################################
+    ####        number of nodes x number of eigenvalues        ####
+    ###############################################################
+    """
+    A 2D array with the corresponding eigenvector for eah eigenvalue.
+    """
+    eigenvectors                 ::  Array{Complex{Float64}, 2}
+
+    ###############################################################
+    ####        number of carriers + 1 x number of nodes       ####
+    ###############################################################
+    """
+    A 2D array with the calculated solutions ``\\varphi_n``,
+    ``\\varphi_p`` and``\\psi`` in all the nodes.
+    """
+    oldSolution                  ::  Array{Float64, 2}
+
+    ###############################################################
+    ParamsOptical() = new()
+
+end
+
+"""
+$(TYPEDEF)
+
 A struct holding all data information including model and numerics information,
 but also all physical parameters for a drift-diffusion simulation of a semiconductor device.
 
@@ -773,6 +861,11 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     paramsnodal::ParamsNodal
 
+    """
+    A struct holding the physical parameters for the Helmholtz equation simulation in a laser.
+    """
+    paramsoptical                :: ParamsOptical
+
     ###############################################################
     Data{TFuncs, TVoltageFunc, TGenerationData}() where {TFuncs, TVoltageFunc, TGenerationData} = new()
 
@@ -936,6 +1029,57 @@ function ParamsNodal(grid, numberOfCarriers)
 
 end
 
+"""
+$(TYPEDSIGNATURES)
+Simplified constructor for ParamsOptical which only takes the grid,
+numberOfCarriers and numberOfEigenvalues as argument.
+"""
+function ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
+
+    numberOfNodes           = num_nodes(grid)
+    numberOfRegions         = grid[NumCellRegions]
+    ###############################################################
+
+    paramsoptical = ParamsOptical()
+
+    ###############################################################
+    ####                     real numbers                      ####
+    ###############################################################
+    paramsoptical.laserWavelength              = 0.0
+    paramsoptical.power                        = 0.0
+
+    ###############################################################
+    ####                   number of regions                   ####
+    ###############################################################
+    paramsoptical.absorption_0                 = spzeros(Float64, numberOfRegions)
+    paramsoptical.gain_0                       = spzeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_0            = spzeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_d            = spzeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_γ            = spzeros(Float64, numberOfRegions)
+
+    ###############################################################
+    ####                 number of eigenvalues                 ####
+    ###############################################################
+    paramsoptical.eigenvalues            = spzeros(Complex, numberOfEigenvalues)
+
+    ###############################################################
+    ####        number of carriers x number of regions         ####
+    ###############################################################
+    paramsoptical.absorptionFreeCarriers = spzeros(Float64, numberOfCarriers, numberOfRegions)
+
+    ###############################################################
+    ####        number of nodes x number of eigenvalues        ####
+    ###############################################################
+    paramsoptical.eigenvectors           = spzeros(Complex, numberOfNodes, numberOfEigenvalues)
+
+    ###############################################################
+    ####        number of carriers + 1 x number of nodes       ####
+    ###############################################################
+    paramsoptical.oldSolution            = spzeros(Float64, numberOfCarriers+1, numberOfNodes)
+
+    ###############################################################
+    return paramsoptical
+end
 
 """
 $(TYPEDSIGNATURES)
@@ -1022,6 +1166,7 @@ function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for 
     ###############################################################
     data.params = Params(grid, numberOfCarriers)
     data.paramsnodal = ParamsNodal(grid, numberOfCarriers)
+    data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
 
     ###############################################################
 
@@ -1334,6 +1479,16 @@ function show_params(ctsys::System)
     end
 
     return
+end
+
+function show_paramsoptical(ctsys::System)              # ZA: find command to shorten very long vectors in terminal output
+
+    paramsoptical = ctsys.data.paramsoptical
+    for name in fieldnames(typeof(paramsoptical))[1:end]
+        @printf("%30s = ",name)
+        println(display(getfield(paramsoptical,name)))
+    end
+
 end
 
 function Base.show(io::IO, this::ParamsNodal)
