@@ -1602,7 +1602,8 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System; control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, inival = nothing)
+function equilibrium_solve!(ctsys::System, inival::VoronoiFVM.SparseSolutionArray{Float64, Int32}; control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0)
+    # Δu is give as a vector of inital voltages (from electroneutral solution) on the boundaries
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1624,14 +1625,15 @@ function equilibrium_solve!(ctsys::System; control = VoronoiFVM.NewtonControl(),
         inival .= 0.0
     end
 
-    sol = unknowns(ctsys)
+    # sol = unknowns(ctsys)
+    sol = inival
 
     # we slightly turn a linear Poisson problem to a nonlinear one with these variables.
     I = collect(nonlinear_steps:-1:0.0)
     LAMBDA = 10 .^ (-I)
-    if ctsys.fvmsys.physics.data.boundaryType[1] != SchottkyBarrierLowering
-        prepend!(LAMBDA, 0.0)
-    end
+    # if ctsys.fvmsys.physics.data.boundaryType[1] != SchottkyBarrierLowering
+    #     prepend!(LAMBDA, 0.0)
+    # end
 
     for i in eachindex(LAMBDA)
 
