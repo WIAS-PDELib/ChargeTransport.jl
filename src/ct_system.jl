@@ -722,6 +722,12 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     e.g., an external software.
     """
     generationData::TGenerationData
+
+    """
+    A datatype defining whether the user wants to use the laser model or not.
+    """
+    laserModel::LaserModelType
+
     ###############################################################
     ####        Information on present charge carriers         ####
     ###############################################################
@@ -1125,6 +1131,12 @@ function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for 
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
     )
+
+    if numberOfEigenvalues == 0
+        data.laserModel = LaserModelOff        # by default, no laser model is used
+    else
+        data.laserModel = LaserModelOn         # this is needed to define the stimulated recombination in ct_physics.jl
+    end
 
     ###############################################################
     ####        Information on present charge carriers         ####
@@ -1602,8 +1614,8 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System, inival::VoronoiFVM.SparseSolutionArray{Float64, Int32}; control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0)
-    # Δu is give as a vector of inital voltages (from electroneutral solution) on the boundaries
+function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0)
+    # Δu is give as a vector of initial voltages (from electroneutral solution) on the boundaries
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1619,21 +1631,15 @@ function equilibrium_solve!(ctsys::System, inival::VoronoiFVM.SparseSolutionArra
         set_contact!(ctsys, ibreg, Δu = 0.0)
     end
 
-    # initialize solution and starting vectors
-    if inival === nothing
-        inival = unknowns(ctsys)
-        inival .= 0.0
-    end
 
-    # sol = unknowns(ctsys)
     sol = inival
 
     # we slightly turn a linear Poisson problem to a nonlinear one with these variables.
     I = collect(nonlinear_steps:-1:0.0)
     LAMBDA = 10 .^ (-I)
-    # if ctsys.fvmsys.physics.data.boundaryType[1] != SchottkyBarrierLowering
-    #     prepend!(LAMBDA, 0.0)
-    # end
+    if ctsys.fvmsys.physics.data.boundaryType[1] != SchottkyBarrierLowering
+        prepend!(LAMBDA, 0.0)
+    end
 
     for i in eachindex(LAMBDA)
 

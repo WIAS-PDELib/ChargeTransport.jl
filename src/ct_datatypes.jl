@@ -273,8 +273,27 @@ const GenerationModelType = Union{
     Type{GenerationUniform}, Type{GenerationBeerLambert},
     Type{GenerationNone}, Type{GenerationUserDefined},
 }
+##########################################################
+##########################################################
+"""
+$(TYPEDEF)
+Abstract type for no laser model.
+"""
+abstract type LaserModelOff end
 
+"""
+$(TYPEDEF)
+Abstract type for usage of laser model.
+"""
+abstract type LaserModelOn end
 
+##########################################################
+"""
+Possible types for the laser model.
+"""
+const LaserModelType = Union{
+    Type{LaserModelOn}, Type{LaserModelOff}
+}
 ##########################################################
 ##########################################################
 

@@ -71,6 +71,7 @@ export AuxModelSRHType, SRH2SpeciesPresentTrapDens
 
 export GenerationModelType
 export GenerationNone, GenerationBeerLambert, GenerationUniform, GenerationUserDefined
+export LaserModelType, LaserModelOff, LaserModelOn
 export BarrierLoweringType
 export BarrierLoweringOn, BarrierLoweringOff
 ##################################################################

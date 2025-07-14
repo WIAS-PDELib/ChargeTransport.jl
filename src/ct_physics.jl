@@ -782,7 +782,6 @@ function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
     # based on user index and regularity of solution quantities or integers are used and depicted here
     iphin = data.chargeCarrierList[iphin]
     iphip = data.chargeCarrierList[iphip]
-    ipsi = data.index_psi
 
     n = get_density!(u, node, data, iphin)
     p = get_density!(u, node, data, iphip)
@@ -802,16 +801,13 @@ function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
     kernelSRH = params.prefactor_SRH / (taup * (n + n0) + taun * (p + p0))
     kernel = kernelRad + kernelAuger + kernelSRH
 
-    # calculate stimulatedRecombination
-    stimulatedRecombination = StimulatedRecombination(u,node, data, ipsi, iphin, iphip, n,p)
-
     ###########################################################
     ####       right-hand side of continuity equations     ####
     ####       for φ_n and φ_p (bipolar reaction)          ####
     ###########################################################
-    f[iphin] = q * params.chargeNumbers[iphin] * kernel * excessDensTerm + q * params.chargeNumbers[iphin] * stimulatedRecombination
-    return f[iphip] = q * params.chargeNumbers[iphip] * kernel * excessDensTerm + + q * params.chargeNumbers[iphip] * stimulatedRecombination
-
+    f[iphin] = q * params.chargeNumbers[iphin] * kernel * excessDensTerm
+    f[iphip] = q * params.chargeNumbers[iphip] * kernel * excessDensTerm
+    return nothing
 end
 
 
@@ -866,6 +862,31 @@ function addRecombination!(f, u, node, data, ::SRHWithTrapsType)
     end
 
     return
+end
+
+function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOff})
+    return nothing
+end
+
+function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOn})
+    params = data.params
+    # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
+    iphin = data.bulkRecombination.iphin
+    iphip = data.bulkRecombination.iphip
+
+    # based on user index and regularity of solution quantities or integers are used and depicted here
+    iphin = data.chargeCarrierList[iphin]
+    iphip = data.chargeCarrierList[iphip]
+    ipsi = data.index_psi
+
+    n = get_density!(u, node, data, iphin)
+    p = get_density!(u, node, data, iphip)
+
+    # calculate stimulatedRecombination
+    stimulatedRecombination = StimulatedRecombination(u,node, data, ipsi, iphin, iphip, n,p)
+    f[iphin] = f[iphin] + q * params.chargeNumbers[iphin] * stimulatedRecombination
+    f[iphip] = f[iphip] + q * params.chargeNumbers[iphip] * stimulatedRecombination
+    return nothing
 end
 
 function addGeneration!(f, u, node, data)
@@ -947,8 +968,11 @@ function RHSContinuityEquations!(f, u, node, data)
 
     # dependent on user information concerncing recombination
     addRecombination!(f, u, node, data, data.bulkRecombination.bulk_recomb_SRH)
+    # dependent on user information concerning laser model
+    addStimulatedRecombination!(f, u, node, data, data.laserModel)
     # dependent on user information concerncing generation
-    return addGeneration!(f, u, node, data)
+    addGeneration!(f, u, node, data)
+    return nothing
 
 end
 
