@@ -10,7 +10,6 @@ using ChargeTransport
 using ExtendableGrids
 using GridVisualize
 using PyPlot
-pygui(true)
 
 ###########################################################################
 
