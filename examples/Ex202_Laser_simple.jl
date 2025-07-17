@@ -13,6 +13,9 @@ using PyPlot
 
 ###########################################################################
 
+# for convenience
+parametersdir = ChargeTransport.parametersdir
+
 
 numberOfColoumns = Dict(
     "ref1" => [2, 4],
