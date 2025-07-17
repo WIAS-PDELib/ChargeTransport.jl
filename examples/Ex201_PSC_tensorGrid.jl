@@ -20,7 +20,7 @@ parametersdir = ChargeTransport.parametersdir
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
 function main(;
-        n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
+        n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false,
         parameter_file = parametersdir("Params_PSC_PCBM_MAPI_Pedot.jl"), # choose the parameter file)
     )
 

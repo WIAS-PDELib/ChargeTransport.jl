@@ -43,7 +43,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Defining locally the band-edge energy for interior nodes (analougesly for boundary nodes and edges).
+Defining locally the band-edge energy for interior nodes (analogously for boundary nodes and edges).
 """
 function get_BEE!(icc::QType, node::VoronoiFVM.Node, data)
 
@@ -440,7 +440,7 @@ Creates Schottky boundary conditions. For the electrostatic potential we assume
 
 ``\\psi = - \\phi_S/q + U, ``
 
-where  ``\\phi_S`` corresponds to a given value (non-negative Schottky barrier) and ``U`` to the applied voltage. 
+where  ``\\phi_S`` corresponds to a given value (non-negative Schottky barrier) and ``U`` to the applied voltage.
 The quantity ``\\phi_S`` needs to be specified in the main file.
 For electrons and holes we assume the following
 
@@ -493,7 +493,7 @@ A mixed Schottky-Ohmic boundary type condition, where we impose on the electric 
 
 ``\\psi = - \\phi_S/q + U, ``
 
-with  ``\\phi_S`` as given value (non-negative Schottky barrier) and ``U`` to the applied voltage. 
+with  ``\\phi_S`` as given value (non-negative Schottky barrier) and ``U`` to the applied voltage.
 The quantity ``\\phi_S`` needs to be specified in the main file.
 For electrons and holes we assume the following (Ohmic)
 
@@ -619,7 +619,7 @@ end
 """
 $(TYPEDSIGNATURES)
 Generic operator to save the projected gradient of electric potential
-(for system with standard Schotty contacts). Note that this currently
+(for system with standard Schottky contacts). Note that this currently
 only working in one dimension!
 
 """
@@ -729,6 +729,46 @@ function reaction!(f, u, node, data, ::Type{InEquilibrium})
     return
 end
 
+function StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)      # sum over transversal modes, now only one #which power do I use and how
+    #change name add_..._
+
+    params = data.params
+    paramsoptical = data.paramsoptical
+    ireg = node.region
+
+    hbar = Planck_constant / (2 * pi)
+    c0 = 299_792_458
+    k0 = 2 * pi / paramsoptical.laserWavelength
+    ω0 = k0 * c0
+    kBT = kB * params.temperature
+
+    Ec = params.bandEdgeEnergy[iphin, ireg]
+    Ev = params.bandEdgeEnergy[iphip, ireg]
+
+    kBT = kB * params.temperature
+    n0 = paramsoptical.refractiveIndex_0[ireg]
+    nd = paramsoptical.refractiveIndex_d[ireg]
+    γn = paramsoptical.refractiveIndex_γ[ireg]
+
+    g0 = paramsoptical.gain_0[ireg]
+
+    eValue = paramsoptical.eigenvalues[1]         #or effectiveRefractiveIndex, the one divided by k0, dimensionlos
+    beta = sqrt(-eValue)
+    eVector = paramsoptical.eigenvectors[node.index, 1]
+
+    power = paramsoptical.power         # paramsoptical.power?
+    expTerm1 = exp((-q * u[iphin] - Ec + q * u[ipsi]) / kBT)             ## !!q psi
+    expTerm2 = exp((Ev + q * u[iphip] - q * u[ipsi]) / kBT)
+    expTerm3 = exp(((-q * (u[iphin] - u[iphip])) - (hbar * ω0)) / kBT) - 1
+    gainDenominator = (1 + expTerm1) * (1 + expTerm2)
+    gain = (g0 / gainDenominator) * expTerm3
+
+    refractive = n0 - (nd * ((n + p) / 2))^γn
+    RstimValue = ((refractive * gain) / (hbar * ω0)) * power * (((abs.(eVector)) .^ 2) / (real(beta) / k0))
+    return RstimValue
+
+end
+
 
 function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
 
@@ -760,13 +800,14 @@ function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
     kernelAuger = (params.recombinationAuger[iphin, ireg] * n + params.recombinationAuger[iphip, ireg] * p)
     kernelSRH = params.prefactor_SRH / (taup * (n + n0) + taun * (p + p0))
     kernel = kernelRad + kernelAuger + kernelSRH
+
     ###########################################################
     ####       right-hand side of continuity equations     ####
     ####       for φ_n and φ_p (bipolar reaction)          ####
     ###########################################################
     f[iphin] = q * params.chargeNumbers[iphin] * kernel * excessDensTerm
-    return f[iphip] = q * params.chargeNumbers[iphip] * kernel * excessDensTerm
-
+    f[iphip] = q * params.chargeNumbers[iphip] * kernel * excessDensTerm
+    return nothing
 end
 
 
@@ -821,6 +862,31 @@ function addRecombination!(f, u, node, data, ::SRHWithTrapsType)
     end
 
     return
+end
+
+function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOff})
+    return nothing
+end
+
+function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOn})
+    params = data.params
+    # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
+    iphin = data.bulkRecombination.iphin
+    iphip = data.bulkRecombination.iphip
+
+    # based on user index and regularity of solution quantities or integers are used and depicted here
+    iphin = data.chargeCarrierList[iphin]
+    iphip = data.chargeCarrierList[iphip]
+    ipsi = data.index_psi
+
+    n = get_density!(u, node, data, iphin)
+    p = get_density!(u, node, data, iphip)
+
+    # calculate stimulatedRecombination
+    stimulatedRecombination = StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)
+    f[iphin] = f[iphin] + q * params.chargeNumbers[iphin] * stimulatedRecombination
+    f[iphip] = f[iphip] + q * params.chargeNumbers[iphip] * stimulatedRecombination
+    return nothing
 end
 
 function addGeneration!(f, u, node, data)
@@ -902,8 +968,11 @@ function RHSContinuityEquations!(f, u, node, data)
 
     # dependent on user information concerncing recombination
     addRecombination!(f, u, node, data, data.bulkRecombination.bulk_recomb_SRH)
+    # dependent on user information concerning laser model
+    addStimulatedRecombination!(f, u, node, data, data.laserModel)
     # dependent on user information concerncing generation
-    return addGeneration!(f, u, node, data)
+    addGeneration!(f, u, node, data)
+    return nothing
 
 end
 

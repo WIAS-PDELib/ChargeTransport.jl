@@ -15,7 +15,7 @@ using PyPlot
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
+function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
 
     if plotting
         Plotter.close("all")

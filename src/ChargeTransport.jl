@@ -76,6 +76,7 @@ export AuxModelSRHType, SRH2SpeciesPresentTrapDens
 
 export GenerationModelType
 export GenerationNone, GenerationBeerLambert, GenerationUniform, GenerationUserDefined
+export LaserModelType, LaserModelOff, LaserModelOn
 export BarrierLoweringType
 export BarrierLoweringOn, BarrierLoweringOff
 ##################################################################
@@ -92,7 +93,7 @@ export reaction!, SRHRecombination!, RadiativeRecombination!, SRRecombination!, 
 
 include("ct_system.jl")
 
-export Params, ParamsNodal, Data, System
+export Params, ParamsNodal, ParamsOptical, Data, System
 export BulkRecombination, set_bulk_recombination
 
 export enable_ionic_carrier!
@@ -109,7 +110,7 @@ export gridplot
 export set_contact!
 export compute_open_circuit_voltage
 export electroNeutralSolution, print_jacobi
-export show_params, trap_density!
+export show_params, show_paramsoptical, trap_density!
 export get_current_val, charge_density
 
 ##################################################################
