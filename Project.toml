@@ -1,7 +1,7 @@
 name = "ChargeTransport"
 uuid = "25c3eafe-d88c-11e9-3031-f396758f002a"
-authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>"]
-version = "0.4.0"
+authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>, Zeina Amer <zeina.amer@wias-berlin.de>"]
+version = "0.5.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
