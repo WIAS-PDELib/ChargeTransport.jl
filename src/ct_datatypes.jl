@@ -292,7 +292,7 @@ abstract type LaserModelOn end
 Possible types for the laser model.
 """
 const LaserModelType = Union{
-    Type{LaserModelOn}, Type{LaserModelOff}
+    Type{LaserModelOn}, Type{LaserModelOff},
 }
 ##########################################################
 ##########################################################

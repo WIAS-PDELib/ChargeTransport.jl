@@ -729,42 +729,42 @@ function reaction!(f, u, node, data, ::Type{InEquilibrium})
     return
 end
 
-function StimulatedRecombination(u,node, data,ipsi, iphin, iphip, n,p)      # sum over transversal modes, now only one #which power do I use and how
+function StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)      # sum over transversal modes, now only one #which power do I use and how
     #change name add_..._
 
-    params        = data.params
+    params = data.params
     paramsoptical = data.paramsoptical
-    ireg          = node.region
+    ireg = node.region
 
-    hbar = Planck_constant / (2*pi)
-    c0   = 299_792_458
-    k0   = 2*pi / paramsoptical.laserWavelength
-    ω0   = k0 * c0
-    kBT  = kB * params.temperature
+    hbar = Planck_constant / (2 * pi)
+    c0 = 299_792_458
+    k0 = 2 * pi / paramsoptical.laserWavelength
+    ω0 = k0 * c0
+    kBT = kB * params.temperature
 
-    Ec   = params.bandEdgeEnergy[iphin,ireg]
-    Ev   = params.bandEdgeEnergy[iphip,ireg]
+    Ec = params.bandEdgeEnergy[iphin, ireg]
+    Ev = params.bandEdgeEnergy[iphip, ireg]
 
-    kBT  = kB * params.temperature
-    n0   = paramsoptical.refractiveIndex_0[ireg]
-    nd   = paramsoptical.refractiveIndex_d[ireg]
-    γn   = paramsoptical.refractiveIndex_γ[ireg]
+    kBT = kB * params.temperature
+    n0 = paramsoptical.refractiveIndex_0[ireg]
+    nd = paramsoptical.refractiveIndex_d[ireg]
+    γn = paramsoptical.refractiveIndex_γ[ireg]
 
-    g0   = paramsoptical.gain_0[ireg]
+    g0 = paramsoptical.gain_0[ireg]
 
-    eValue   = paramsoptical.eigenvalues[1]         #or effectiveRefractiveIndex, the one divided by k0, dimensionlos
-    beta     = sqrt(-eValue)
-    eVector  = paramsoptical.eigenvectors[node.index,1]
+    eValue = paramsoptical.eigenvalues[1]         #or effectiveRefractiveIndex, the one divided by k0, dimensionlos
+    beta = sqrt(-eValue)
+    eVector = paramsoptical.eigenvectors[node.index, 1]
 
-    power     = paramsoptical.power         # paramsoptical.power?
-    expTerm1  = exp((-q * u[iphin] - Ec + q * u[ipsi]) / kBT)             ## !!q psi
-    expTerm2  = exp((Ev + q * u[iphip] - q * u[ipsi]) / kBT)
-    expTerm3  = exp( ((-q * (u[iphin] - u[iphip])) - (hbar * ω0)) / kBT ) - 1
-    gainDenominator  = (1 + expTerm1) * (1 + expTerm2)
-    gain             = (g0 / gainDenominator)  *  expTerm3
+    power = paramsoptical.power         # paramsoptical.power?
+    expTerm1 = exp((-q * u[iphin] - Ec + q * u[ipsi]) / kBT)             ## !!q psi
+    expTerm2 = exp((Ev + q * u[iphip] - q * u[ipsi]) / kBT)
+    expTerm3 = exp(((-q * (u[iphin] - u[iphip])) - (hbar * ω0)) / kBT) - 1
+    gainDenominator = (1 + expTerm1) * (1 + expTerm2)
+    gain = (g0 / gainDenominator) * expTerm3
 
-    refractive = n0 - (nd * ((n+p) / 2)) ^γn
-    RstimValue = ((refractive * gain ) / (hbar * ω0 )) * power * (((abs.(eVector)).^2)  / (real(beta)/k0))
+    refractive = n0 - (nd * ((n + p) / 2))^γn
+    RstimValue = ((refractive * gain) / (hbar * ω0)) * power * (((abs.(eVector)) .^ 2) / (real(beta) / k0))
     return RstimValue
 
 end
@@ -883,7 +883,7 @@ function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOn})
     p = get_density!(u, node, data, iphip)
 
     # calculate stimulatedRecombination
-    stimulatedRecombination = StimulatedRecombination(u,node, data, ipsi, iphin, iphip, n,p)
+    stimulatedRecombination = StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)
     f[iphin] = f[iphin] + q * params.chargeNumbers[iphin] * stimulatedRecombination
     f[iphip] = f[iphip] + q * params.chargeNumbers[iphip] * stimulatedRecombination
     return nothing

@@ -21,7 +21,7 @@ numberOfColoumns = Dict(
     "ref4" => [16, 32],
     "ref5" => [32, 64]
 )
-numberOfRows     = Dict(
+numberOfRows = Dict(
     "ref1" => [4, 8, 2, 8, 4],
     "ref2" => [8, 16, 4, 16, 8],
     "ref3" => [16, 32, 8, 32, 16],
@@ -32,42 +32,42 @@ numberOfRows     = Dict(
 ###################################################################
 
 """ Initializing X and Y coords for the tesca grid"""
-function tesca_grid(; refinement=1, showplot=false,airbox=false)
+function tesca_grid(; refinement = 1, showplot = false, airbox = false)
 
     ncol = numberOfColoumns["ref$(refinement)"]
     nrow = numberOfRows["ref$(refinement)"]
 
     widths_columns = [1.0  10.0] * μm
-    heights_rows   = [1.0  0.5  0.05  0.5  1.0] * μm
+    heights_rows = [1.0  0.5  0.05  0.5  1.0] * μm
 
-    coord_x1  = collect(range(0.0, widths_columns[1], length=ncol[1]+1))
-    coord_x2  = collect(range(widths_columns[1], sum(widths_columns[1:2]), length=ncol[2]+1))
-    X         = glue(coord_x1, coord_x2)
-    X         = glue(reverse(-X),X)
+    coord_x1 = collect(range(0.0, widths_columns[1], length = ncol[1] + 1))
+    coord_x2 = collect(range(widths_columns[1], sum(widths_columns[1:2]), length = ncol[2] + 1))
+    X = glue(coord_x1, coord_x2)
+    X = glue(reverse(-X), X)
 
-    coord_y1  = collect(range(0.0, heights_rows[1], length=nrow[1]+1))
-    coord_y2  = collect(range(heights_rows[1], sum(heights_rows[1:2]), length=nrow[2]+1))
-    coord_y3  = collect(range(sum(heights_rows[1:2]), sum(heights_rows[1:3]), length=nrow[3]+1))
-    coord_y4  = collect(range(sum(heights_rows[1:3]), sum(heights_rows[1:4]), length=nrow[4]+1))
-    coord_y5  = collect(range(sum(heights_rows[1:4]), sum(heights_rows[1:5]), length=nrow[5]+1))
-    Y         = glue(glue(glue(glue(coord_y1, coord_y2),coord_y3),coord_y4),coord_y5)
+    coord_y1 = collect(range(0.0, heights_rows[1], length = nrow[1] + 1))
+    coord_y2 = collect(range(heights_rows[1], sum(heights_rows[1:2]), length = nrow[2] + 1))
+    coord_y3 = collect(range(sum(heights_rows[1:2]), sum(heights_rows[1:3]), length = nrow[3] + 1))
+    coord_y4 = collect(range(sum(heights_rows[1:3]), sum(heights_rows[1:4]), length = nrow[4] + 1))
+    coord_y5 = collect(range(sum(heights_rows[1:4]), sum(heights_rows[1:5]), length = nrow[5] + 1))
+    Y = glue(glue(glue(glue(coord_y1, coord_y2), coord_y3), coord_y4), coord_y5)
 
-    grid = simplexgrid(X,Y)
+    grid = simplexgrid(X, Y)
 
-    cellmask!(grid, [X[1],0.0],             [sum(widths_columns), heights_rows[1]],        1)
-    cellmask!(grid, [X[1],heights_rows[1]], [sum(widths_columns),sum(heights_rows[1:2])],  2)
-    cellmask!(grid, [X[1],sum(heights_rows[1:2])], [sum(widths_columns),sum(heights_rows[1:3])],  3)
-    cellmask!(grid, [X[1],sum(heights_rows[1:3])], [sum(widths_columns),sum(heights_rows[1:4])],  4)
-    cellmask!(grid, [X[1],sum(heights_rows[1:4])], [sum(widths_columns),sum(heights_rows[1:5])],  5)
+    cellmask!(grid, [X[1], 0.0], [sum(widths_columns), heights_rows[1]], 1)
+    cellmask!(grid, [X[1], heights_rows[1]], [sum(widths_columns), sum(heights_rows[1:2])], 2)
+    cellmask!(grid, [X[1], sum(heights_rows[1:2])], [sum(widths_columns), sum(heights_rows[1:3])], 3)
+    cellmask!(grid, [X[1], sum(heights_rows[1:3])], [sum(widths_columns), sum(heights_rows[1:4])], 4)
+    cellmask!(grid, [X[1], sum(heights_rows[1:4])], [sum(widths_columns), sum(heights_rows[1:5])], 5)
 
     # AIR
-    cellmask!(grid, [widths_columns[1],sum(heights_rows[1:4])], [sum(widths_columns),sum(heights_rows[1:5])],  6)
-    cellmask!(grid, [X[1],sum(heights_rows[1:4])], [-widths_columns[1],sum(heights_rows[1:5])],  6)
+    cellmask!(grid, [widths_columns[1], sum(heights_rows[1:4])], [sum(widths_columns), sum(heights_rows[1:5])], 6)
+    cellmask!(grid, [X[1], sum(heights_rows[1:4])], [-widths_columns[1], sum(heights_rows[1:5])], 6)
 
-    bregionDonor1     = 1    # bottom boundary
-    bregionAcceptor2  = 2    # top boundary
-    bregionNoFlux     = 3
-    bregionAirBox     = 4
+    bregionDonor1 = 1    # bottom boundary
+    bregionAcceptor2 = 2    # top boundary
+    bregionNoFlux = 3
+    bregionAirBox = 4
     bfacemask!(grid, [-widths_columns[1], sum(heights_rows)], [widths_columns[1], sum(heights_rows)], bregionAcceptor2)
     bfacemask!(grid, [X[1], 0.0], [X[end], 0.0], bregionDonor1)
 
@@ -80,26 +80,30 @@ function tesca_grid(; refinement=1, showplot=false,airbox=false)
     bfacemask!(grid, [widths_columns[1], sum(heights_rows[1:4])], [widths_columns[1], sum(heights_rows)], bregionNoFlux)
 
     bfacemask!(grid, [X[1], sum(heights_rows[1:4])], [X[1], Y[end]], bregionAirBox)
-    bfacemask!(grid, [X[1], Y[end]], [-widths_columns[1], Y[end]],  bregionAirBox)
-    bfacemask!(grid, [widths_columns[1], Y[end]], [X[end], Y[end]],  bregionAirBox)
+    bfacemask!(grid, [X[1], Y[end]], [-widths_columns[1], Y[end]], bregionAirBox)
+    bfacemask!(grid, [widths_columns[1], Y[end]], [X[end], Y[end]], bregionAirBox)
     bfacemask!(grid, [X[end], sum(heights_rows[1:4])], [X[end], Y[end]], bregionAirBox)
 
 
-    if airbox==false
-        grid = subgrid(grid,[1,2,3,4,5])
+    if airbox == false
+        grid = subgrid(grid, [1, 2, 3, 4, 5])
     end
 
-    if showplot==true
-        GridVisualize.gridplot(grid, Plotter= PyPlot,linewidth=1,fontsize=35,size=(1200,900),
-        legend=:best, show=true,aspect=4, colorbar=false,title="Device Geometry, values in [m]", xlabel= "x-coordinates", ylabel="y-coordinates")
+    if showplot == true
+        GridVisualize.gridplot(
+            grid, Plotter = PyPlot, linewidth = 1, fontsize = 35, size = (1200, 900),
+            legend = :best, show = true, aspect = 4, colorbar = false, title = "Device Geometry, values in [m]", xlabel = "x-coordinates", ylabel = "y-coordinates"
+        )
     end
 
     return grid
 end
 
-function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", test = false,
-    unknown_storage=:sparse, numberOfEigenvalues=1,
-    parameter_file = parametersdir("Params_Laser_simple.jl")) # choose the parameter file)
+function main(;
+        refinement = 1, plotting = false, Plotter = PyPlot, verbose = "", test = false,
+        unknown_storage = :sparse, numberOfEigenvalues = 1,
+        parameter_file = parametersdir("Params_Laser_simple.jl")
+    ) # choose the parameter file)
 
     include(parameter_file)
 
@@ -108,7 +112,7 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
         println("Set up grid.")
     end
 
-    grid = tesca_grid(refinement=refinement, showplot=plotting, airbox=false)
+    grid = tesca_grid(refinement = refinement, showplot = plotting, airbox = false)
 
     if test == false
         println("*** done\n")
@@ -121,28 +125,30 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data                               = Data(grid, numberOfCarriers, numberOfEigenvalues=numberOfEigenvalues)
+    data = Data(grid, numberOfCarriers, numberOfEigenvalues = numberOfEigenvalues)
 
     ## Possible choices: Stationary, Transient
-    data.modelType                     = Stationary
+    data.modelType = Stationary
 
     ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
     ## FermiDiracMinusOne, Blakemore.
     ## Can be a vector with different statistics (for n and p).
-    data.F                             .=  FermiDiracOneHalfTeSCA
+    data.F .= FermiDiracOneHalfTeSCA
 
-    data.bulkRecombination             = set_bulk_recombination(;iphin = iphin, iphip = iphip,
-                                                                    bulk_recomb_Auger = true,
-                                                                    bulk_recomb_radiative = true,
-                                                                    bulk_recomb_SRH = true)
+    data.bulkRecombination = set_bulk_recombination(;
+        iphin = iphin, iphip = iphip,
+        bulk_recomb_Auger = true,
+        bulk_recomb_radiative = true,
+        bulk_recomb_SRH = true
+    )
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
     data.boundaryType[bregionAcceptor2] = OhmicContact    # top boundary Dirichlet condition
-    data.boundaryType[bregionDonor1]    = OhmicContact    # bottom boundary Dirichlet condition
+    data.boundaryType[bregionDonor1] = OhmicContact    # bottom boundary Dirichlet condition
     #                                                     # rest is set to Neumann by default
 
-    data.fluxApproximation            .= ExcessChemicalPotential
+    data.fluxApproximation .= ExcessChemicalPotential
     #data.fluxApproximation           .= ScharfetterGummel           # if F=Boltzmann
 
     if test == false
@@ -161,57 +167,57 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
         doping doping (or vcat(Nd,Na) = doping).
     """
 
-    params                                         = Params(grid, numberOfCarriers)
-    paramsoptical                                  = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
+    params = Params(grid, numberOfCarriers)
+    paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
 
-    params.temperature                             = T
-    params.UT                                      = (kB * params.temperature) / q
-    params.chargeNumbers[iphin]                    = -1
-    params.chargeNumbers[iphip]                    =  1
-    paramsoptical.laserWavelength                  = λ
+    params.temperature = T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[iphin] = -1
+    params.chargeNumbers[iphip] = 1
+    paramsoptical.laserWavelength = λ
 
-    params.dielectricConstant[:]                   = εr .* ε0
-    paramsoptical.absorption_0[:]                  = α0
-    paramsoptical.gain_0[:]                        = gain0
-    paramsoptical.refractiveIndex_0[:]             = nTilde
-    paramsoptical.refractiveIndex_d[:]             = nTilde_d
-    paramsoptical.refractiveIndex_γ[:]             = γn
+    params.dielectricConstant[:] = εr .* ε0
+    paramsoptical.absorption_0[:] = α0
+    paramsoptical.gain_0[:] = gain0
+    paramsoptical.refractiveIndex_0[:] = nTilde
+    paramsoptical.refractiveIndex_d[:] = nTilde_d
+    paramsoptical.refractiveIndex_γ[:] = γn
 
-    Nc = params.densityOfStates[iphin, :]          = NC
-    Nv = params.densityOfStates[iphip, :]          = NV
-    Ec = params.bandEdgeEnergy[iphin, :]           = EC
-    Ev = params.bandEdgeEnergy[iphip, :]           = EV
+    Nc = params.densityOfStates[iphin, :] = NC
+    Nv = params.densityOfStates[iphip, :] = NV
+    Ec = params.bandEdgeEnergy[iphin, :] = EC
+    Ev = params.bandEdgeEnergy[iphip, :] = EV
 
-    params.mobility[iphin, :]                      = μn
-    params.mobility[iphip, :]                      = μp
+    params.mobility[iphin, :] = μn
+    params.mobility[iphip, :] = μp
 
     ## recombination parameters
-    params.recombinationRadiative[:]               = r0
-    params.recombinationSRHLifetime[iphin, :]      = τn
-    params.recombinationSRHLifetime[iphip, :]      = τp
-    params.recombinationSRHTrapDensity[iphin, :]   = Nintr = sqrt.( Nc.*Nv .* exp.(-(Ec.-Ev)./(kB*T)) )
-    params.recombinationSRHTrapDensity[iphip, :]   = Nintr = sqrt.( Nc.*Nv .* exp.(-(Ec.-Ev)./(kB*T)) )
-    params.recombinationAuger[iphin, :]            = Auger_Cn
-    params.recombinationAuger[iphip, :]            = Auger_Cp
+    params.recombinationRadiative[:] = r0
+    params.recombinationSRHLifetime[iphin, :] = τn
+    params.recombinationSRHLifetime[iphip, :] = τp
+    params.recombinationSRHTrapDensity[iphin, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * T)))
+    params.recombinationSRHTrapDensity[iphip, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * T)))
+    params.recombinationAuger[iphin, :] = Auger_Cn
+    params.recombinationAuger[iphip, :] = Auger_Cp
 
     paramsoptical.absorptionFreeCarriers[iphin, :] = fcnalf
     paramsoptical.absorptionFreeCarriers[iphip, :] = fcpalf
 
-    paramsoptical.eigenvalues                     .= 1 + 1*im   # dummy value for initializing
+    paramsoptical.eigenvalues .= 1 + 1 * im   # dummy value for initializing
 
     ## interior doping
     for ireg in regionsDonor   #[1,2,3]            # n-doped regions
-        params.doping[iphin, ireg]                 = doping[ireg]
+        params.doping[iphin, ireg] = doping[ireg]
     end
 
     for ireg in regionsAcceptor  #[4,5]            # p-doped region
-        params.doping[iphip, ireg]                 = doping[ireg]
+        params.doping[iphip, ireg] = doping[ireg]
     end
 
-    data.params                                    = params
-    data.paramsoptical                             = paramsoptical
+    data.params = params
+    data.paramsoptical = paramsoptical
 
-    ctsys                                          = System(grid, data, unknown_storage=unknown_storage)
+    ctsys = System(grid, data, unknown_storage = unknown_storage)
 
 
     if test == false
@@ -225,13 +231,13 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
     end
     ################################################################################
 
-    control              = SolverControl()
-    control.verbose      = verbose
-    control.maxiters     = 300
-    control.abstol       = 1.0e-7
-    control.reltol       = 1.0e-7
-    control.tol_round    = 1.0e-7
-    control.max_round    = 3
+    control = SolverControl()
+    control.verbose = verbose
+    control.maxiters = 300
+    control.abstol = 1.0e-7
+    control.reltol = 1.0e-7
+    control.tol_round = 1.0e-7
+    control.max_round = 3
     control.damp_initial = 0.8   # < 1
     #control.damp_growth  = 1.21 # >= 1
 
@@ -249,15 +255,15 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
 
     ## calculate equilibrium solution and set as initial guess
 
-    psi0Vector    =  electroNeutralSolution(ctsys)
+    psi0Vector = electroNeutralSolution(ctsys)
 
-    inival        = unknowns(ctsys)
-    inival[1,:]   = inival[2,:]     .= 0.0
-    inival[3,:]   = psi0Vector
+    inival = unknowns(ctsys)
+    inival[1, :] = inival[2, :] .= 0.0
+    inival[3, :] = psi0Vector
 
 
-    solution      = equilibrium_solve!(ctsys, inival=inival, control = control,nonlinear_steps=20.0)
-    inival        = solution
+    solution = equilibrium_solve!(ctsys, inival = inival, control = control, nonlinear_steps = 20.0)
+    inival = solution
 
 
     if test == false
@@ -270,9 +276,9 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
     end
     ################################################################################
 
-    maxBias    = U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
+    maxBias = U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
     biasValues = range(0, stop = maxBias, length = 40)
-    IV         = zeros(0)
+    IV = zeros(0)
 
     for Δu in biasValues
 
@@ -283,8 +289,8 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
         ## set non equilibrium boundary conditions
         set_contact!(ctsys, bregionAcceptor2, Δu = Δu)
 
-        solution  = solve(ctsys; inival = inival, control = control)
-        inival   .= solution
+        solution = solve(ctsys; inival = inival, control = control)
+        inival .= solution
 
     end # bias loop
 
@@ -294,13 +300,14 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
 
     ################################################################################
     ctsys.data.paramsoptical.oldSolution = solution
-    currentSolution                      = solution
-    inival                               = solution
+    currentSolution = solution
+    inival = solution
 
 
     # eigenvalue and eigenvector of the Helmholtz eigenvalue problem calculated explicitly
     λ1 = [-5.6192359487570194e14 + 4.6950340673509827e11im]
-    v1 = [-6.44693721037541e-8 + 2.1403391419628273e-8im,
+    v1 = [
+        -6.44693721037541e-8 + 2.1403391419628273e-8im,
         -0.00016112043789318325 + 5.3345497772375895e-5im,
         -0.04065180212557369 + 0.013461955814899604im,
         -1.625774595841853e-5 + 5.383258567547116e-6im,
@@ -618,57 +625,63 @@ function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", t
         4.5603758851597413e-7 + 1.2148604691560496e-6im,
         0.002969506128344968 + 0.0012874640305961553im,
         0.006574836820047356 - 0.0005804001481589592im,
-        1.3129492382349002e-5 - 1.1631785073414748e-6im
+        1.3129492382349002e-5 - 1.1631785073414748e-6im,
     ]
 
     v1 = reshape(v1, length(v1), 1)      # reshaping because in system it must be a 2D array
 
     ############################
-    ctsys.data.paramsoptical.eigenvalues  = λ1
+    ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
-    ctsys.data.paramsoptical.power        = P[2]
+    ctsys.data.paramsoptical.power = P[2]
 
     previousSolution = currentSolution
-    solution  = solve(ctsys; inival = inival, control = control)
+    solution = solve(ctsys; inival = inival, control = control)
     ctsys.data.paramsoptical.oldSolution = solution
-    currentSolution                      = solution
-    inival                               = solution
+    currentSolution = solution
+    inival = solution
 
 
-    ctsys.data.paramsoptical.eigenvalues  = λ1
+    ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
-    ctsys.data.paramsoptical.power        = P[2]
+    ctsys.data.paramsoptical.power = P[2]
 
     previousSolution = currentSolution
-    solution  = solve(ctsys; inival = inival, control = control)
+    solution = solve(ctsys; inival = inival, control = control)
     ctsys.data.paramsoptical.oldSolution = solution
-    currentSolution                      = solution
-    inival                               = solution
+    currentSolution = solution
+    inival = solution
 
 
     if plotting
-        vis = GridVisualizer(;Plotter=PyPlot, fignumber=2, resolution = (1200, 900))
+        vis = GridVisualizer(; Plotter = PyPlot, fignumber = 2, resolution = (1200, 900))
 
-        scalarplot!(vis, grid, solution[1,:], Plotter=PyPlot, legend=:best, clear=false, title="Applied voltage Δu = $maxBias V",
-                    xlabel="cross section space along \$x=0\$ [m]", ylabel="potentials [V]", fontsize=55, linewidth=5,
-                    slice=:x => 0, label="\$ \\varphi_n \$",  color="blue")
+        scalarplot!(
+            vis, grid, solution[1, :], Plotter = PyPlot, legend = :best, clear = false, title = "Applied voltage Δu = $maxBias V",
+            xlabel = "cross section space along \$x=0\$ [m]", ylabel = "potentials [V]", fontsize = 55, linewidth = 5,
+            slice = :x => 0, label = "\$ \\varphi_n \$", color = "blue"
+        )
 
-        scalarplot!(vis, grid, solution[2,:], Plotter=PyPlot, linewidth=5,
-                    slice=:x => 0, label="\$ \\varphi_p \$", clear=false, color="mediumvioletred")
+        scalarplot!(
+            vis, grid, solution[2, :], Plotter = PyPlot, linewidth = 5,
+            slice = :x => 0, label = "\$ \\varphi_p \$", clear = false, color = "mediumvioletred"
+        )
 
-        scalarplot!(vis, grid, solution[3,:], Plotter=PyPlot, linewidth=5,
-                    slice=:x => 0, label="\$ \\psi \$", clear=false, color="darkorange")
+        scalarplot!(
+            vis, grid, solution[3, :], Plotter = PyPlot, linewidth = 5,
+            slice = :x => 0, label = "\$ \\psi \$", clear = false, color = "darkorange"
+        )
     end
 
 
-    testval  = sum(solution)/length(solution)
+    testval = sum(solution) / length(solution)
     return testval
 
 end # main
 
 function test()
-   testval =  0.5122451923673309
-   return main(test=true) ≈ testval
+    testval = 0.5122451923673309
+    return main(test = true) ≈ testval
 end
 
 if test == false
