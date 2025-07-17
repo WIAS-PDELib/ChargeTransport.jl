@@ -609,13 +609,13 @@ mutable struct ParamsOptical
     ####                   number of regions                   ####
     ###############################################################
     """
-    A region dependant array for the absorption coefficient in the
+    A region dependent array for the absorption coefficient in the
     absorption function in the medium.
     """
     absorption_0::Array{Float64, 1}
 
     """
-    A region dependant array for the gain model coefficient.
+    A region dependent array for the gain model coefficient.
     """
     gain_0::Array{Float64, 1}
 
