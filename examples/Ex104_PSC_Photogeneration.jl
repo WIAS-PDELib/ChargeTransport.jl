@@ -14,12 +14,17 @@ using ChargeTransport
 using ExtendableGrids
 using PyPlot
 
+# for convenience
+parametersdir = ChargeTransport.parametersdir
+
+# you can also use other Plotters, if you add them to the example file
+# you can set verbose also to true to display some solver information
 function main(;
         n = 5,
-        Plotter = PyPlot, # you can also use other Plotters, if you add them to the example file
+        Plotter = PyPlot,
         plotting = false, verbose = false, test = false,
         ########################
-        parameter_file = joinpath(@__DIR__, "..", "parameter_files", "Params_PSC_TiO2_MAPI_spiro.jl"), # choose the parameter file
+        parameter_file = parametersdir("Params_PSC_TiO2_MAPI_spiro.jl"), # choose the parameter file
         ########################
         userdefinedGeneration = false
     ) # you can choose between predefined and user-defined generation profiles

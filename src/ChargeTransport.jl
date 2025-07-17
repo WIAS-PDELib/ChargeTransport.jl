@@ -24,6 +24,11 @@ using VoronoiFVM: VoronoiFVM, ContinuousQuantity, DiscontinuousQuantity,
     TestFunctionFactory, boundary_dirichlet!, fbernoulli_pm, physics!,
     unknown_indices, value
 
+# for internal data handling (naming "inspired" by DrWatson)
+# we do not export these functions
+datadir(args...) = joinpath(pkgdir(ChargeTransport), "data", args...)
+examplesdir(args...) = joinpath(pkgdir(ChargeTransport), "examples", args...)
+parametersdir(args...) = joinpath(pkgdir(ChargeTransport), "parameter_files", args...)
 
 include("ct_constants.jl")
 

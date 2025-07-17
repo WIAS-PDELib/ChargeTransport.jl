@@ -20,10 +20,13 @@ using GridVisualize
 using GLMakie
 using PyPlot
 
+# for convenience
+parametersdir = ChargeTransport.parametersdir
+
 # We strongly emphasize to use GLMakie for the visualization here.
 function main(;
         Plotter = GLMakie, plotting = false, test = false, verbose = false,
-        parameter_file = "../parameter_files/Params_PSC_TiO2_MAPI_spiro.jl", # choose the parameter file
+        parameter_file = parametersdir("Params_PSC_TiO2_MAPI_spiro.jl"), # choose the parameter file
     )
 
     PyPlot.close("all")

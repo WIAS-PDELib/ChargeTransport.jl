@@ -18,10 +18,14 @@ using ChargeTransport
 using ExtendableGrids
 using PyPlot
 
+# for convenience
+parametersdir = ChargeTransport.parametersdir
+
 # # you can also use other Plotters, if you add them to the example file
+# you can set verbose also to true to display some solver information
 function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
-        parameter_file = "../parameter_files/Params_PSC_TiO2_MAPI_spiro.jl", # choose the parameter file
+        parameter_file = parametersdir("Params_PSC_TiO2_MAPI_spiro.jl"), # choose the parameter file
         otherScanProtocol = false
     ) # you can choose between two scan protocols
 

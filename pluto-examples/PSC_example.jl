@@ -33,7 +33,9 @@ begin
     using PyPlot
     using PlutoUI
     #Pkg.resolve()
-    include("../parameter_files/Params_PSC_TiO2_MAPI_spiro.jl")
+    # for convenience
+    parametersdir = ChargeTransport.parametersdir
+    include(parametersdir("Params_PSC_TiO2_MAPI_spiro.jl"))
     nothing
 end
 
