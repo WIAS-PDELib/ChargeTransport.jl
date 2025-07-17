@@ -47,6 +47,7 @@ function grading_parameter!(physicalParameter, coord, regionTransportLayers, reg
 end
 
 # you can also use other Plotters, if you add them to the example file
+# you can set verbose also to true to display some solver information
 function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
     if plotting

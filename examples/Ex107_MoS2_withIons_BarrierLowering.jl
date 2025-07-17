@@ -14,6 +14,7 @@ using ExtendableGrids
 using PyPlot
 
 # you can also use other Plotters, if you add them to the example file
+# you can set verbose also to true to display some solver information
 function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, barrierLowering = true)
 
     if plotting
