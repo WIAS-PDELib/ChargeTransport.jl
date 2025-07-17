@@ -100,7 +100,7 @@ end
 
 function main(;refinement = 1, plotting = false, Plotter=PyPlot, verbose = "", test = false,
     unknown_storage=:sparse, numberOfEigenvalues=1,
-    parameter_file = "../parameter_files/Params_Laser_simple.jl")
+    parameter_file = parametersdir("Params_Laser_simple.jl")) # choose the parameter file)
 
     include(parameter_file)
 
