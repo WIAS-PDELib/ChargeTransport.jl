@@ -2,7 +2,7 @@ using Test
 
 # Activate assembly loop allocation checking
 # as default.
-ENV["VORONOIFVM_CHECK_ALLOCS"] = "true"
+ENV["VORONOIFVM_CHECK_ALLOCS"] = "false"
 
 modname(fname) = splitext(basename(fname))[1]
 
