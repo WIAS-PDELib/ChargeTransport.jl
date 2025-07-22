@@ -1,7 +1,7 @@
 ChargeTransport.jl -- Simulating charge transport in semiconductors
 ================================
 
-[![Build status](https://github.com/PatricioFarrell/ChargeTransport.jl/workflows/linux-macos-windows/badge.svg)](https://github.com/PatricioFarrell/ChargeTransport.jl/actions)
+[![Build status](https://github.com/WIAS-PDELib/ChargeTransport.jl/workflows/linux-macos-windows/badge.svg)](https://github.com/WIAS-PDELib/ChargeTransport.jl/actions)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/dev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6257906.svg)](https://doi.org/10.5281/zenodo.6257906)
