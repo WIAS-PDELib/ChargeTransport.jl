@@ -162,12 +162,12 @@ If one wishes to invert the illumination, one needs to define
 params.invertedIllumination                   = -1
 ```
 where this value is by default set to one (for light entering from the left).
-Furthermore, we recommend performing a time loop while increasing the generation rate and afterwards applying the scan protocol with a full generation due to numerical stability, see this [example](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex108_PSC_uniform_Generation.jl) or [this one](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex108_PSC_BeerLambert_Generation.jl).
+Furthermore, we recommend performing a time loop while increasing the generation rate and afterwards applying the scan protocol with a full generation due to numerical stability, see this [example](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex104_PSC_Photogeneration.jl).
 
 ## Example 4: Multi-dimensional problems
 It is also possible to perform multi-dimensional simulations.
 
-For a 2D mesh you may use a structured grid via [ExtendableGrids.jl](https://github.com/j-fu/ExtendableGrids.jl) or an unstructured mesh via the Julia wrapper [Triangulate.jl](https://github.com/JuliaGeometry/Triangulate.jl) for Jonathan Richard Shewchuk's Triangle mesh generator.
+For a 2D mesh you may use a structured grid via [ExtendableGrids.jl](https://github.com/WIAS-PDELib/ExtendableGrids.jl) or an unstructured mesh via the Julia wrapper [Triangulate.jl](https://github.com/JuliaGeometry/Triangulate.jl) for Jonathan Richard Shewchuk's Triangle mesh generator.
 Respective examples can be likewise found within this package.
 
-Lastly, with help of the [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) wrapper, three dimensional tetrahedral meshes can be generated, see [this](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Grid_3D.jl) example.
+Lastly, with help of the [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) wrapper, three dimensional tetrahedral meshes can be generated, see [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Grid_3D.jl) example.

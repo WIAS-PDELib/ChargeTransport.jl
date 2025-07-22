@@ -1,74 +1,27 @@
-using Documenter, Literate, ChargeTransport, PlutoSliderServer
+using Documenter, ExampleJuggler, Literate, ChargeTransport, PlutoSliderServer
 
-# Turn block comments starting in the first column into "normal" hash comments
-# as block comments currently are not handled by Literate.jl.
-# from https://github.com/chmerdon/GradientRobustMultiPhysics.jl/.
-function hashify_block_comments(input)
-    lines_in = collect(eachline(IOBuffer(input)))
-    lines_out = IOBuffer()
-    line_number = 0
-    in_block_comment_region = false
-    for line in lines_in
-        line_number += 1
-        if occursin(r"^#=", line)
-            if in_block_comment_region
-                error("line $(line_number): already in block comment region\n$(line)")
-            end
-            println(lines_out, replace(line, r"^#=" => "#"))
-            in_block_comment_region = true
-        elseif occursin(r"^=#", line)
-            if !in_block_comment_region
-                error("line $(line_number): not in block comment region\n$(line)")
-            end
-            println(lines_out, replace(line, r"^=#" => "#"))
-            in_block_comment_region = false
-        else
-            if in_block_comment_region
-                println(lines_out, "# " * line)
-            else
-                println(lines_out, line)
-            end
-        end
-    end
-    return String(take!(lines_out))
-end
+DocMeta.setdocmeta!(ExampleJuggler, :DocTestSetup, :(using ExampleJuggler); recursive = true)
 
-#
-# Replace SOURCE_URL marker with github url of source
-#
-function replace_source_url(input, source_url)
-    lines_in = collect(eachline(IOBuffer(input)))
-    lines_out = IOBuffer()
-    for line in lines_in
-        println(lines_out, replace(line, "SOURCE_URL" => source_url))
-    end
-    return String(take!(lines_out))
-end
+exampledir = joinpath(@__DIR__, "..", "examples")
 
-#
-# Generate Markdown pages from examples
-#
-example_jl_dir = joinpath(@__DIR__, "..", "examples")
-example_md_dir = joinpath(@__DIR__, "src", "examples")
 
-for example_source in readdir(example_jl_dir)
-    base, ext = splitext(example_source)
-    if ext == ".jl"
-        source_url = "https://github.com/PatricioFarrell/ChargeTransport.jl/tree/master/examples/" * example_source
-        preprocess(buffer) = replace_source_url(buffer, source_url) |> hashify_block_comments
-        Literate.markdown(
-            joinpath(@__DIR__, "..", "examples", example_source),
-            example_md_dir,
-            documenter = false,
-            execute = false,
-            info = false,
-            preprocess = preprocess
-        )
-    end
-end
+modules = modules = [
+    "Ex101_PIN.jl",
+    "Ex102_PIN_nodal_doping.jl",
+    "Ex103_PSC_IVMeasurement.jl",
+    "Ex104_PSC_Photogeneration.jl",
+    "Ex105_PSC_gradedFlux.jl",
+    "Ex106_PSC_SurfaceRecombination.jl",
+    "Ex107_MoS2_withIons_BarrierLowering.jl",
+    "Ex108_CIGS_WithTraps.jl",
+    "Ex109_Traps.jl",
+    "Ex201_PSC_tensorGrid.jl",
+    "Ex202_Laser_simple.jl",
+]
 
-generated_examples = joinpath.("examples", readdir(example_md_dir))
+cleanexamples()
 
+module_examples = @docmodules(exampledir, modules, use_module_titles = true)
 #############################################################################
 
 notebooks = [
@@ -91,7 +44,7 @@ for notebook in notebookjl
     base = split(notebook, ".")[1]
     mdstring = """
     ##### [$(base).jl](@id $(base))
-    [Download](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/pluto-examples/$(notebook))
+    [Download](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/pluto-examples/$(notebook))
     this [Pluto.jl](https://github.com/fonsp/Pluto.jl) notebook.
     ```@raw html
     <iframe style="height:20000px" width="100%" src="../$(base).html"> </iframe>
@@ -106,16 +59,15 @@ end
 
 notebooks = first.(notebooks) .=> notebookmd
 
-
 #############################################################################
 
 makedocs(
     sitename = "ChargeTransport.jl",
     modules = [ChargeTransport],
-    clean = true,
+    clean = false,
     doctest = false,
-    authors = "D. Abdel, P. Farrell, J. Fuhrmann",
-    repo = "https://github.com/PatricioFarrell/ChargeTransport.jl",
+    authors = "D. Abdel, Z. Amer, P. Farrell, J. Fuhrmann, P. Jaap",
+    repo = "https://github.com/WIAS-PDELib/ChargeTransport.jl",
     pages = Any[
         "ChargeTransport.jl -- Simulating charge transport in semiconductors" => "general.md",
         "Mathematical drift-diffusion models" => "backgroundinfo.md",
@@ -125,11 +77,13 @@ makedocs(
             "PSC.md",
         ],
         "Types, Constructors and Methods" => "allindex.md",
-        "Pluto Notebooks" => notebooks,
-        "Examples" => generated_examples,
+        #"Pluto Notebooks" => notebooks,
+        "Examples" => module_examples,
     ]
 )
 
+cleanexamples()
+
 deploydocs(
-    repo = "github.com/PatricioFarrell/ChargeTransport.jl.git"
+    repo = "github.com/WIAS-PDELib/ChargeTransport.jl.git"
 )
