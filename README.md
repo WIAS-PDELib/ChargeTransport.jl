@@ -1,7 +1,6 @@
 ChargeTransport.jl -- Simulating charge transport in semiconductors
 ================================
-
-[![Build status](https://github.com/WIAS-PDELib/ChargeTransport.jl/workflows/linux-macos-windows/badge.svg)](https://github.com/WIAS-PDELib/ChargeTransport.jl/actions)
+[![Build status](https://github.com/WIAS-PDELib/ChargeTransport.jl/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/WIAS-PDELib/ChargeTransport.jl/actions/workflows/ci.yml?query=branch%3Amaster)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/dev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6257906.svg)](https://doi.org/10.5281/zenodo.6257906)
@@ -41,9 +40,11 @@ the semiconductor drift-diffusion equations via the Voronoi finite volume method
 
 [6.] D. Abdel, A. Glitzky and M. Liero. [Analysis of a drift-diffusion model for perovskite solar cells.](https://doi.org/10.3934/dcdsb.2024081) Discrete and Continuous Dynamical Systems - Series B (2024).
 
-[7.] D. Abdel, M. Herda, M. Ziegler, C. Chainais-Hillairet, B. Spetzler, P. Farrell. [Numerical analysis and simulation of lateral memristive devices: Schottky, ohmic, and multi-dimensional electrode models]( 	
+[7.] D. Abdel, M. Herda, M. Ziegler, C. Chainais-Hillairet, B. Spetzler, P. Farrell. [Numerical analysis and simulation of lateral memristive devices: Schottky, ohmic, and multi-dimensional electrode models.]( 	
 https://doi.org/10.48550/arXiv.2412.15065
 ) submitted (2024).
 
-[8.] B. Spetzler, E. Spetzler, S. Zamankhani, D. Abdel, P. Farrell, K.-U. Sattler, M. Ziegler. [Physics-Guided Sequence Modeling for Fast Simulation and Design Exploration of 2D Memristive Devices](https://doi.org/10.48550/arXiv.2505.13882
+[8.] B. Spetzler, E. Spetzler, S. Zamankhani, D. Abdel, P. Farrell, K.-U. Sattler, M. Ziegler. [Physics-Guided Sequence Modeling for Fast Simulation and Design Exploration of 2D Memristive Devices.](https://doi.org/10.48550/arXiv.2505.13882
 ) (2025).
+
+[9.] D. Abdel, J. Relle, T. Kirchartz, P. Jaap, J. Fuhrmann, S. Burger, C. Becker, K. Jäger, P. Farrell. [Unravelling the mystery of enhanced open-circuit voltages in nanotextured perovskite solar cells.](https://doi.org/10.48550/arXiv.2506.10691) submitted (2025).
