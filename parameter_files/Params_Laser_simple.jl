@@ -1,5 +1,5 @@
 # Parameters for a simple laser simulation
-@kwdef struct ParamsLaserSimple
+@kwdef struct Params_Laser_simple
 
     #####################################################################
     ############################ parameters ############################
