@@ -24,12 +24,9 @@ module PSC_2D_unstructuredGrid
     ## It seems that this problem is common: https://discourse.julialang.org/t/could-not-load-library-librsvg-very-strange-error/21276
     using PyPlot
 
-    # for convenience
-    parametersdir = ChargeTransport.parametersdir
-
     function main(
             Plotter = PyPlot, ; plotting = false, verbose = false, test = false,
-            parameter_file = parametersdir("Params_PSC_PCBM_MAPI_Pedot.jl"), # choose the parameter file)
+            parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
         )
 
         PyPlot.close("all")
@@ -40,7 +37,8 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        include(parameter_file) # include the parameter file we specified
+        # parameter
+        p = parameter_set()
 
         bregionNoFlux = 5
         height = 5.0e-6 * cm
@@ -70,13 +68,13 @@ module PSC_2D_unstructuredGrid
 
         ## specify boundary nodes
         length_0 = point!(b, 0.0, 0.0)
-        length_n = point!(b, h_ndoping, 0.0)
-        length_ni = point!(b, h_ndoping + h_intrinsic, 0.0)
+        length_n = point!(b, p.h_ndoping, 0.0)
+        length_ni = point!(b, p.h_ndoping + p.h_intrinsic, 0.0)
         length_nip = point!(b, h_total, 0.0)
 
         height_0 = point!(b, 0.0, height)
-        height_n = point!(b, h_ndoping, height)
-        height_ni = point!(b, h_ndoping + h_intrinsic, height)
+        height_n = point!(b, p.h_ndoping, height)
+        height_ni = point!(b, p.h_ndoping + p.h_intrinsic, height)
         height_nip = point!(b, h_total, height)
 
         ## specify boundary regions
@@ -100,11 +98,11 @@ module PSC_2D_unstructuredGrid
 
         ## cell regions
         cellregion!(b, regionDonor)
-        regionpoint!(b, h_ndoping / 2, height / 2)
+        regionpoint!(b, p.h_ndoping / 2, height / 2)
         cellregion!(b, regionIntrinsic)
-        regionpoint!(b, h_ndoping + h_intrinsic / 2, height / 2)
+        regionpoint!(b, p.h_ndoping + p.h_intrinsic / 2, height / 2)
         cellregion!(b, regionAcceptor)
-        regionpoint!(b, h_ndoping + h_intrinsic + h_pdoping / 2, height / 2)
+        regionpoint!(b, p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2, height / 2)
 
         options!(b, maxvolume = 1.0e-16)
 

@@ -18,14 +18,11 @@ using ChargeTransport
 using ExtendableGrids
 using PyPlot
 
-# for convenience
-parametersdir = ChargeTransport.parametersdir
-
 # # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
 function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false,
-        parameter_file = parametersdir("Params_PSC_TiO2_MAPI_spiro.jl"), # choose the parameter file
+        parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         otherScanProtocol = false
     ) # you can choose between two scan protocols
 
@@ -38,7 +35,8 @@ function main(;
     end
     ################################################################################
 
-    include(parameter_file) # include the parameter file we specified
+    # parameters
+    p = parameter_set()
 
     ## contact voltage
     voltageAcceptor = 1.2 * V
@@ -97,28 +95,28 @@ function main(;
     t = 0.5 * (cm) / δ # tolerance for geomspace and glue (with factor 10)
     k = 1.5        # the closer to 1, the closer to the boundary geomspace
 
-    coord_n_u = collect(range(0.0, h_ndoping / 2, step = h_ndoping / (0.8 * δ)))
+    coord_n_u = collect(range(0.0, p.h_ndoping / 2, step = p.h_ndoping / (0.8 * δ)))
     coord_n_g = geomspace(
-        h_ndoping / 2, h_ndoping,
-        h_ndoping / (0.7 * δ), h_ndoping / (1.1 * δ),
+        p.h_ndoping / 2, p.h_ndoping,
+        p.h_ndoping / (0.7 * δ), p.h_ndoping / (1.1 * δ),
         tol = t
     )
     coord_i_g1 = geomspace(
-        h_ndoping, h_ndoping + h_intrinsic / k,
-        h_intrinsic / (2.8 * δ), h_intrinsic / (2.1 * δ),
+        p.h_ndoping, p.h_ndoping + p.h_intrinsic / k,
+        p.h_intrinsic / (2.8 * δ), p.h_intrinsic / (2.1 * δ),
         tol = t
     )
     coord_i_g2 = geomspace(
-        h_ndoping + h_intrinsic / k, h_ndoping + h_intrinsic,
-        h_intrinsic / (2.1 * δ), h_intrinsic / (2.8 * δ),
+        p.h_ndoping + p.h_intrinsic / k, p.h_ndoping + p.h_intrinsic,
+        p.h_intrinsic / (2.1 * δ), p.h_intrinsic / (2.8 * δ),
         tol = t
     )
     coord_p_g = geomspace(
-        h_ndoping + h_intrinsic, h_ndoping + h_intrinsic + h_pdoping / 2,
-        h_pdoping / (1.6 * δ), h_pdoping / (1.6 * δ),
+        p.h_ndoping + p.h_intrinsic, p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2,
+        p.h_pdoping / (1.6 * δ), p.h_pdoping / (1.6 * δ),
         tol = t
     )
-    coord_p_u = collect(range(h_ndoping + h_intrinsic + h_pdoping / 2, h_ndoping + h_intrinsic + h_pdoping, step = h_pdoping / (1.3 * δ)))
+    coord_p_u = collect(range(p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2, p.h_ndoping + p.h_intrinsic + p.h_pdoping, step = p.h_pdoping / (1.3 * δ)))
 
     coord = glue(coord_n_u, coord_n_g, tol = 10 * t)
     coord = glue(coord, coord_i_g1, tol = 10 * t)
@@ -128,15 +126,15 @@ function main(;
     grid = ExtendableGrids.simplexgrid(coord)
 
     ## set different regions in grid
-    cellmask!(grid, [0.0 * μm], [heightLayers[1]], regionDonor, tol = 1.0e-18)     # n-doped region   = 1
-    cellmask!(grid, [heightLayers[1]], [heightLayers[2]], regionIntrinsic, tol = 1.0e-18) # intrinsic region = 2
-    cellmask!(grid, [heightLayers[2]], [heightLayers[3]], regionAcceptor, tol = 1.0e-18)  # p-doped region   = 3
+    cellmask!(grid, [0.0 * μm], [p.heightLayers[1]], p.regionDonor, tol = 1.0e-18)     # n-doped region   = 1
+    cellmask!(grid, [p.heightLayers[1]], [p.heightLayers[2]], p.regionIntrinsic, tol = 1.0e-18) # intrinsic region = 2
+    cellmask!(grid, [p.heightLayers[2]], [p.heightLayers[3]], p.regionAcceptor, tol = 1.0e-18)  # p-doped region   = 3
 
     ## bfacemask! for setting different boundary regions
-    bfacemask!(grid, [0.0], [0.0], bregionDonor, tol = 1.0e-18)     # outer left boundary
-    bfacemask!(grid, [h_total], [h_total], bregionAcceptor, tol = 1.0e-18)  # outer right boundary
-    bfacemask!(grid, [heightLayers[1]], [heightLayers[1]], bregionJ1, tol = 1.0e-18) # first  inner interface
-    bfacemask!(grid, [heightLayers[2]], [heightLayers[2]], bregionJ2, tol = 1.0e-18) # second inner interface
+    bfacemask!(grid, [0.0], [0.0], p.bregionDonor, tol = 1.0e-18)     # outer left boundary
+    bfacemask!(grid, [p.h_total], [p.h_total], p.bregionAcceptor, tol = 1.0e-18)  # outer right boundary
+    bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18) # first  inner interface
+    bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18) # second inner interface
 
     if plotting
         gridplot(grid, Plotter = Plotter, legend = :lt)
@@ -155,7 +153,7 @@ function main(;
 
     ## Initialize Data instance and fill in predefined data
     ## Currently, the way to go is to pass a contact voltage function exactly here.
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, p.numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
@@ -165,7 +163,7 @@ function main(;
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
 
     data.bulkRecombination = set_bulk_recombination(;
-        iphin = iphin, iphip = iphip,
+        iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
@@ -173,13 +171,13 @@ function main(;
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
-    data.boundaryType[bregionAcceptor] = OhmicContact
-    data.boundaryType[bregionDonor] = OhmicContact
+    data.boundaryType[p.bregionAcceptor] = OhmicContact
+    data.boundaryType[p.bregionDonor] = OhmicContact
 
     ## With this method, the user enable the ionic carrier parsed to ionicCarrier and gives
     ## gives the information on which regions this ionic carrier is defined.
     ## In this application ion vacancies only live in active perovskite layer.
-    enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
+    enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
     ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
@@ -195,43 +193,43 @@ function main(;
     end
     ################################################################################
 
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid, p.numberOfCarriers)
 
-    params.temperature = T
+    params.temperature = p.T
     params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[iphin] = zn
-    params.chargeNumbers[iphip] = zp
-    params.chargeNumbers[iphia] = za
+    params.chargeNumbers[p.iphin] = p.zn
+    params.chargeNumbers[p.iphip] = p.zp
+    params.chargeNumbers[p.iphia] = p.za
 
-    for ireg in 1:numberOfRegions # region data
+    for ireg in 1:p.numberOfRegions # region data
 
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
+        params.dielectricConstant[ireg] = p.ε[ireg] * ε0
 
         ## effective DOS, band edge energy and mobilities
-        params.densityOfStates[iphin, ireg] = Nn[ireg]
-        params.densityOfStates[iphip, ireg] = Np[ireg]
-        params.densityOfStates[iphia, ireg] = Na[ireg]
+        params.densityOfStates[p.iphin, ireg] = p.Nn[ireg]
+        params.densityOfStates[p.iphip, ireg] = p.Np[ireg]
+        params.densityOfStates[p.iphia, ireg] = p.Na[ireg]
 
-        params.bandEdgeEnergy[iphin, ireg] = En[ireg]
-        params.bandEdgeEnergy[iphip, ireg] = Ep[ireg]
-        params.bandEdgeEnergy[iphia, ireg] = Ea[ireg]
+        params.bandEdgeEnergy[p.iphin, ireg] = p.En[ireg]
+        params.bandEdgeEnergy[p.iphip, ireg] = p.Ep[ireg]
+        params.bandEdgeEnergy[p.iphia, ireg] = p.Ea[ireg]
 
-        params.mobility[iphin, ireg] = μn[ireg]
-        params.mobility[iphip, ireg] = μp[ireg]
-        params.mobility[iphia, ireg] = μa[ireg]
+        params.mobility[p.iphin, ireg] = p.μn[ireg]
+        params.mobility[p.iphip, ireg] = p.μp[ireg]
+        params.mobility[p.iphia, ireg] = p.μa[ireg]
 
         ## recombination parameters
-        params.recombinationRadiative[ireg] = r0[ireg]
-        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
-        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
-        params.recombinationSRHTrapDensity[iphin, ireg] = trap_density!(iphin, ireg, params, EI[ireg])
-        params.recombinationSRHTrapDensity[iphip, ireg] = trap_density!(iphip, ireg, params, EI[ireg])
+        params.recombinationRadiative[ireg] = p.r0[ireg]
+        params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
+        params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
+        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg])
+        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg])
     end
 
     ## doping
-    params.doping[iphin, regionDonor] = Cn
-    params.doping[iphia, regionIntrinsic] = Ca
-    params.doping[iphip, regionAcceptor] = Cp
+    params.doping[p.iphin, p.regionDonor] = p.Cn
+    params.doping[p.iphia, p.regionIntrinsic] = p.Ca
+    params.doping[p.iphip, p.regionAcceptor] = p.Cp
 
     data.params = params
     ctsys = System(grid, data, unknown_storage = :sparse)
@@ -306,11 +304,11 @@ function main(;
     for istep in 2:number_tsteps
 
         t = tvalues[istep]                                    # Actual time
-        Δu = contactVoltageFunction[bregionAcceptor](t) # Applied voltage
+        Δu = contactVoltageFunction[p.bregionAcceptor](t) # Applied voltage
         Δt = t - tvalues[istep - 1]                              # Time step size
 
         ## Apply new voltage by setting non equilibrium boundary conditions
-        set_contact!(ctsys, bregionAcceptor, Δu = Δu)
+        set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
 
         if test == false
             println("time value: t = $(t) s")
@@ -327,12 +325,12 @@ function main(;
         IntSRHnSum = 0.0; IntRadnSum = 0.0
         IntSRHpSum = 0.0; IntRadpSum = 0.0
 
-        for ii in 1:numberOfRegions
-            IntSRHnSum = IntSRHnSum - IntSRH[iphin, ii]
-            IntRadnSum = IntRadnSum - IntRad[iphin, ii]
+        for ii in 1:p.numberOfRegions
+            IntSRHnSum = IntSRHnSum - IntSRH[p.iphin, ii]
+            IntRadnSum = IntRadnSum - IntRad[p.iphin, ii]
 
-            IntSRHpSum = IntSRHpSum + IntSRH[iphip, ii]
-            IntRadpSum = IntRadpSum + IntRad[iphip, ii]
+            IntSRHpSum = IntSRHpSum + IntSRH[p.iphip, ii]
+            IntRadpSum = IntRadpSum + IntRad[p.iphip, ii]
         end
 
         push!(IV, current)
@@ -359,7 +357,7 @@ function main(;
         plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage)", label_solution)
     end
 
-    biasValues = contactVoltageFunction[bregionAcceptor].(tvalues)
+    biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
     if plotting
         Plotter.figure()

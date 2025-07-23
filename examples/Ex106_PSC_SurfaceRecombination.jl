@@ -14,14 +14,11 @@ using ChargeTransport
 using ExtendableGrids
 using PyPlot
 
-# for convenience
-parametersdir = ChargeTransport.parametersdir
-
 # you can also use other Plotters, if you add them to the example file
 function main(;
         n = 6, Plotter = PyPlot, plotting = false,
         verbose = "", test = false,
-        parameter_file = parametersdir("Params_PSC_PCBM_MAPI_Pedot.jl"), # choose the parameter file
+        parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
     )
 
     if plotting
@@ -34,7 +31,8 @@ function main(;
     end
     ################################################################################
 
-    include(parameter_file) # include the parameter file we specified
+    # parameter
+    p = parameter_set()
 
     ## contact voltage
     voltageAcceptor = 1.2 * V
@@ -62,28 +60,28 @@ function main(;
     t = 0.5 * (cm) / δ # tolerance for geomspace and glue (with factor 10)
     k = 1.5        # the closer to 1, the closer to the boundary geomspace
 
-    coord_n_u = collect(range(0.0, h_ndoping / 2, step = h_ndoping / (0.8 * δ)))
+    coord_n_u = collect(range(0.0, p.h_ndoping / 2, step = p.h_ndoping / (0.8 * δ)))
     coord_n_g = geomspace(
-        h_ndoping / 2, h_ndoping,
-        h_ndoping / (0.7 * δ), h_ndoping / (1.1 * δ),
+        p.h_ndoping / 2, p.h_ndoping,
+        p.h_ndoping / (0.7 * δ), p.h_ndoping / (1.1 * δ),
         tol = t
     )
     coord_i_g1 = geomspace(
-        h_ndoping, h_ndoping + h_intrinsic / k,
-        h_intrinsic / (5.1 * δ), h_intrinsic / (1.1 * δ),
+        p.h_ndoping, p.h_ndoping + p.h_intrinsic / k,
+        p.h_intrinsic / (5.1 * δ), p.h_intrinsic / (1.1 * δ),
         tol = t
     )
     coord_i_g2 = geomspace(
-        h_ndoping + h_intrinsic / k, h_ndoping + h_intrinsic,
-        h_intrinsic / (1.1 * δ), h_intrinsic / (5.1 * δ),
+        p.h_ndoping + p.h_intrinsic / k, p.h_ndoping + p.h_intrinsic,
+        p.h_intrinsic / (1.1 * δ), p.h_intrinsic / (5.1 * δ),
         tol = t
     )
     coord_p_g = geomspace(
-        h_ndoping + h_intrinsic, h_ndoping + h_intrinsic + h_pdoping / 2,
-        h_pdoping / (1.3 * δ), h_pdoping / (0.6 * δ),
+        p.h_ndoping + p.h_intrinsic, p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2,
+        p.h_pdoping / (1.3 * δ), p.h_pdoping / (0.6 * δ),
         tol = t
     )
-    coord_p_u = collect(range(h_ndoping + h_intrinsic + h_pdoping / 2, h_ndoping + h_intrinsic + h_pdoping, step = h_pdoping / (0.8 * δ)))
+    coord_p_u = collect(range(p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2, p.h_ndoping + p.h_intrinsic + p.h_pdoping, step = p.h_pdoping / (0.8 * δ)))
 
     coord = glue(coord_n_u, coord_n_g, tol = 10 * t)
     coord = glue(coord, coord_i_g1, tol = 10 * t)

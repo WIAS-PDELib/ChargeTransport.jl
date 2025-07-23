@@ -42,6 +42,16 @@ export cm, mm, μm, nm, ms, μs, ns, ps, eV
 export tiny_penalty_value
 ##################################################################
 
+# parameter files (add new parameter sets to the list below)
+for parameter_set in [
+        :Params_Laser_simple,
+        :Params_PSC_PCBM_MAPI_Pedot,
+        :Params_PSC_TiO2_MAPI_spiro,
+    ]
+    include(parametersdir("$(parameter_set).jl"))
+    @eval export $parameter_set
+end
+
 include("ct_distributions.jl")
 
 export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk

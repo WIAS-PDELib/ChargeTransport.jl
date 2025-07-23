@@ -13,10 +13,6 @@ using PyPlot
 
 ###########################################################################
 
-# for convenience
-parametersdir = ChargeTransport.parametersdir
-
-
 numberOfColoumns = Dict(
     "ref1" => [2, 4],
     "ref2" => [4, 8],
@@ -105,10 +101,11 @@ end
 function main(;
         refinement = 1, plotting = false, Plotter = PyPlot, verbose = "", test = false,
         unknown_storage = :sparse, numberOfEigenvalues = 1,
-        parameter_file = parametersdir("Params_Laser_simple.jl")
-    ) # choose the parameter file)
+        parameter_set = Params_Laser_simple
+    ) # choose the parameter set
 
-    include(parameter_file)
+    # parameter
+    p = parameter_set()
 
     ################################################################################
     if test == false

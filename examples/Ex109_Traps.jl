@@ -12,13 +12,13 @@ using ExtendableGrids
 using PyPlot
 
 ## function to initialize the grid for a possible extension to other p-i-n devices.
-function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping)
+function initialize_pin_grid(refinementfactor, h_ndoping, p.h_intrinsic, p.h_pdoping)
     coord_ndoping = collect(range(0.0, stop = h_ndoping, length = 3 * refinementfactor))
-    coord_intrinsic = collect(range(h_ndoping, stop = (h_ndoping + h_intrinsic), length = 3 * refinementfactor))
+    coord_intrinsic = collect(range(h_ndoping, stop = (h_ndoping + p.h_intrinsic), length = 3 * refinementfactor))
     coord_pdoping = collect(
         range(
-            (h_ndoping + h_intrinsic),
-            stop = (h_ndoping + h_intrinsic + h_pdoping),
+            (h_ndoping + p.h_intrinsic),
+            stop = (h_ndoping + p.h_intrinsic + p.h_pdoping),
             length = 3 * refinementfactor
         )
     )
@@ -56,29 +56,29 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
 
     ## grid
     refinementfactor = 2^(n - 1)
-    h_pdoping = 2.0 * μm
-    h_intrinsic = 2.0 * μm
+    p.h_pdoping = 2.0 * μm
+    p.h_intrinsic = 2.0 * μm
     h_ndoping = 2.0 * μm
-    h_total = h_pdoping + h_intrinsic + h_ndoping
+    h_total = p.h_pdoping + p.h_intrinsic + h_ndoping
     w_device = 0.5 * μm  # width of device
     z_device = 1.0e-4 * cm  # depth of device
 
     coord = initialize_pin_grid(
         refinementfactor,
-        h_pdoping,
-        h_intrinsic,
+        p.h_pdoping,
+        p.h_intrinsic,
         h_ndoping
     )
 
     grid = simplexgrid(coord)
 
     ## set different regions in grid
-    cellmask!(grid, [0.0 * μm], [h_pdoping], regionAcceptor)  # p-doped
-    cellmask!(grid, [h_pdoping], [h_pdoping + h_intrinsic], regionIntrinsic) # intrinsic
-    cellmask!(grid, [h_pdoping + h_intrinsic], [h_total], regionDonor)     # n-doped
+    cellmask!(grid, [0.0 * μm], [p.h_pdoping], regionAcceptor)  # p-doped
+    cellmask!(grid, [p.h_pdoping], [p.h_pdoping + p.h_intrinsic], regionIntrinsic) # intrinsic
+    cellmask!(grid, [p.h_pdoping + p.h_intrinsic], [h_total], regionDonor)     # n-doped
 
-    bfacemask!(grid, [h_pdoping], [h_pdoping], bregionJunction1, tol = 1.0e-18)
-    bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2, tol = 1.0e-18)
+    bfacemask!(grid, [p.h_pdoping], [p.h_pdoping], bregionJunction1, tol = 1.0e-18)
+    bfacemask!(grid, [p.h_pdoping + p.h_intrinsic], [p.h_pdoping + p.h_intrinsic], bregionJunction2, tol = 1.0e-18)
 
     if plotting
         gridplot(grid, Plotter = Plotter, legend = :lt)

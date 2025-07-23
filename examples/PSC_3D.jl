@@ -20,13 +20,10 @@ using GridVisualize
 using GLMakie
 using PyPlot
 
-# for convenience
-parametersdir = ChargeTransport.parametersdir
-
 # We strongly emphasize to use GLMakie for the visualization here.
 function main(;
         Plotter = GLMakie, plotting = false, test = false, verbose = false,
-        parameter_file = parametersdir("Params_PSC_TiO2_MAPI_spiro.jl"), # choose the parameter file
+        parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
     PyPlot.close("all")
@@ -37,7 +34,8 @@ function main(;
     end
     ################################################################################
 
-    include(parameter_file) # include the parameter file we specified
+    # parameter
+    p = parameter_set()
 
     bregionNoFlux = 5
     height = 2.0e-5 * cm
@@ -55,16 +53,16 @@ function main(;
 
     ## 1D Grid
     n = 10
-    coord_ndoping = collect(range(0.0, stop = h_ndoping, length = n))
-    coord_intrinsic = collect(range(h_ndoping, stop = (h_ndoping + h_intrinsic), length = 2 * n))
-    coord_pdoping = collect(range((h_ndoping + h_intrinsic), stop = (h_total), length = n))
+    coord_ndoping = collect(range(0.0, stop = p.h_ndoping, length = n))
+    coord_intrinsic = collect(range(p.h_ndoping, stop = (p.h_ndoping + p.h_intrinsic), length = 2 * n))
+    coord_pdoping = collect(range((p.h_ndoping + p.h_intrinsic), stop = (h_total), length = n))
     coord = glue(coord_ndoping, coord_intrinsic)
     coord = glue(coord, coord_pdoping)
     grid1D = simplexgrid(coord)
 
-    cellmask!(grid1D, [0.0 * μm], [h_ndoping], regionDonor, tol = 1.0e-18)
-    cellmask!(grid1D, [h_ndoping], [h_ndoping + h_intrinsic], regionIntrinsic, tol = 1.0e-18)
-    cellmask!(grid1D, [h_ndoping + h_intrinsic], [h_total], regionAcceptor, tol = 1.0e-18)
+    cellmask!(grid1D, [0.0 * μm], [p.h_ndoping], regionDonor, tol = 1.0e-18)
+    cellmask!(grid1D, [p.h_ndoping], [p.h_ndoping + p.h_intrinsic], regionIntrinsic, tol = 1.0e-18)
+    cellmask!(grid1D, [p.h_ndoping + p.h_intrinsic], [h_total], regionAcceptor, tol = 1.0e-18)
 
     bfacemask!(grid1D, [heightLayers[1]], [heightLayers[1]], bregionJ1) # first  inner interface
     bfacemask!(grid1D, [heightLayers[2]], [heightLayers[2]], bregionJ2) # second inner interface
@@ -74,9 +72,9 @@ function main(;
     coord_width = collect(range(0.0, stop = width, length = n))
     grid3D = simplexgrid(coord, coord_height, coord_width)
 
-    cellmask!(grid3D, [0.0, 0.0, 0.0], [h_ndoping, height, width], regionDonor, tol = 1.0e-18)
-    cellmask!(grid3D, [h_ndoping, 0.0, 0.0], [h_ndoping + h_intrinsic, height, width], regionIntrinsic, tol = 1.0e-18)
-    cellmask!(grid3D, [h_ndoping + h_intrinsic, 0.0, 0.0], [h_total, height, width], regionAcceptor, tol = 1.0e-18)
+    cellmask!(grid3D, [0.0, 0.0, 0.0], [p.h_ndoping, height, width], regionDonor, tol = 1.0e-18)
+    cellmask!(grid3D, [p.h_ndoping, 0.0, 0.0], [p.h_ndoping + p.h_intrinsic, height, width], regionIntrinsic, tol = 1.0e-18)
+    cellmask!(grid3D, [p.h_ndoping + p.h_intrinsic, 0.0, 0.0], [h_total, height, width], regionAcceptor, tol = 1.0e-18)
 
     ## metal interfaces [xmin, ymin, zmin], [xmax, ymax, zmax]
     bfacemask!(grid3D, [0.0, 0.0, 0.0], [0.0, height, width], bregionDonor) # BregionNumber = 1
