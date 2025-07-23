@@ -1,6 +1,6 @@
 #=
 # GaAs diode with spatially varying doping (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating charge transport in a GaAs pin diode. This means the PDE problem corresponds to the
 van Roosbroeck system of equations. The simulations are performed out of equilibrium and for

@@ -1,6 +1,6 @@
 #=
 # CIGS: stationary with traps and Schottky contacts.
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating stationary charge transport for CIGS with hole traps and mixed Schottky/Ohmic
 contact conditions. Assume that SRH recombination only happens within a small regime.

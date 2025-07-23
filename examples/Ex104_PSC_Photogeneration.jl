@@ -1,6 +1,6 @@
 #=
 # PSC device with photogeneration rate (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating a three layer PSC device TiO2 | MAPI | Pedot with mobile ions where the
 ion vacancy accumulation is limited by the Fermi-Dirac integral of order -1.
