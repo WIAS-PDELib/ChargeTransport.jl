@@ -356,7 +356,7 @@ md"""
 md"""
 Using this predefined information, a finite volume discretization scheme is created for the model.
 
-The solutions and the respective I-V characteristics are calculated with help of [VoronoiFVM.jl](https://github.com/j-fu/VoronoiFVM.jl).
+The solutions and the respective I-V characteristics are calculated with help of [VoronoiFVM.jl](https://github.com/WIAS-PDELib/VoronoiFVM.jl).
 """
 
 # ╔═╡ c00b33f1-8722-49e9-93b3-3703c5d0efb7

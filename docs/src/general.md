@@ -7,7 +7,7 @@ ChargeTransport.jl -- Simulating charge transport in semiconductors
 
 
 `ChargeTransport.jl` simulates charge transport in semiconductors. To this end, it discretizes
-the semiconductor drift-diffusion equations via the Voronoi finite volume method as implemented in [VoronoiFVM.jl](https://github.com/j-fu/VoronoiFVM.jl).
+the semiconductor drift-diffusion equations via the Voronoi finite volume method as implemented in [VoronoiFVM.jl](https://github.com/WIAS-PDELib/VoronoiFVM.jl).
 
 ### Special features
 

@@ -21,7 +21,7 @@ Step 3: Solve the problem in equilibrium
 Step 4: Solve the problem for an applied bias
 
 ## Example 1: Stationary 1D problem (region doping)
-We consider a three-layer GaAs p-i-n device in one dimension. We will explain [the PIN example](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex101_PIN.jl) in
+We consider a three-layer GaAs p-i-n device in one dimension. We will explain [the PIN example](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex101_PIN.jl) in
 greater detail.
 
 
@@ -186,12 +186,12 @@ current = get_current_val(ctsys, solution)
 ```
 we have the possibility to calculate the total current.
 
-Moreover, there are several different plotting routines, see [ct_plotting.jl](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/src/ct_plotting.jl).
+Moreover, there are several different plotting routines, see [ct_plotting.jl](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/src/ct_plotting.jl).
 
 ## Example 2: Stationary 1D problem (nodal doping)
 
-Now, instead of using regionwise doping it is possible to apply a nodal doping. (This is indeed also possible for other physical parameters, see the description of [ParamsNodal](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/ab0684293845859fb142ea69d786a88b597a8b67/src/ct_system.jl#L426).)
-For this, go to previous Step 2, where you build your parameter set and adjust the doping initialization (code snippet is from [this example](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex102_PIN_nodal_doping.jl))
+Now, instead of using regionwise doping it is possible to apply a nodal doping. (This is indeed also possible for other physical parameters, see the description of [ParamsNodal](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/ab0684293845859fb142ea69d786a88b597a8b67/src/ct_system.jl#L426).)
+For this, go to previous Step 2, where you build your parameter set and adjust the doping initialization (code snippet is from [this example](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex102_PIN_nodal_doping.jl))
 
 ```julia
 paramsnodal = ParamsNodal(grid, numberOfCarriers)

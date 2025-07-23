@@ -36,7 +36,7 @@ Differences to the previous example include
 A quick survey on how to use `ChargeTransport.jl` to adjust the input parameters such that these features can be simulated will be given in the following.
 
 ## Example 1: Graded interfaces
-By default, we assume abrupt inner interfaces. If one wishes to simulate graded interfaces, where for example the effective density of states and the band-edge energy may vary, we refer to [this](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex104_PSC_gradedFlux_Schottky_contacts.jl) or [this](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex105_PSC_gradedFlux.jl) example.
+By default, we assume abrupt inner interfaces. If one wishes to simulate graded interfaces, where for example the effective density of states and the band-edge energy may vary, we refer to [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex104_PSC_gradedFlux_Schottky_contacts.jl) or [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex105_PSC_gradedFlux.jl) example.
 
 We sketch the relevant parts here. First, we need to define two additional thin interface layers
 
@@ -67,7 +67,7 @@ paramsnodal.bandEdgeEnergy[iphin, :] = grading_parameter!(paramsnodal.bandEdgeEn
 ```
 
 ## Example 2: Linear IV scan protocol
-Here, we summarize the main parts of [this](https://github.com/PatricioFarrell/ChargeTransport.jl/blob/master/examples/Ex106_PSC_withIons_IVMeasurement.jl) example.
+Here, we summarize the main parts of [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex106_PSC_withIons_IVMeasurement.jl) example.
 Define three charge carriers.
 ```julia
 iphin                    = 2 # electrons
