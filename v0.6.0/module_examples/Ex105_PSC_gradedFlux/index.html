@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D). · ChargeTransport.jl</title><meta name="title" content="Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D). · ChargeTransport.jl"/><meta property="og:title" content="Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D). · ChargeTransport.jl"/><meta property="twitter:title" content="Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D). · ChargeTransport.jl"/><meta name="description" content="Documentation for ChargeTransport.jl."/><meta property="og:description" content="Documentation for ChargeTransport.jl."/><meta property="twitter:description" content="Documentation for ChargeTransport.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../general/">ChargeTransport.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../general/">ChargeTransport.jl – Simulating charge transport in semiconductors</a></li><li><a class="tocitem" href="../../changes/">Changelog</a></li><li><a class="tocitem" href="../../backgroundinfo/">Mathematical drift-diffusion models</a></li><li><span class="tocitem">How to get started</span><ul><li><a class="tocitem" href="../../GeneralInformation/">Code overview</a></li><li><a class="tocitem" href="../../GaAs/">van Roosbroeck system</a></li><li><a class="tocitem" href="../../PSC/">Perovskite solar cell</a></li></ul></li><li><a class="tocitem" href="../../allindex/">Types, Constructors and Methods</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../Ex101_PIN/">GaAs diode (1D).</a></li><li><a class="tocitem" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D).</a></li><li><a class="tocitem" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D).</a></li><li><a class="tocitem" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D).</a></li><li class="is-active"><a class="tocitem" href>Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li><li><a class="tocitem" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D).</a></li><li><a class="tocitem" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering.</a></li><li><a class="tocitem" href="../Ex108_CIGS_WithTraps/">CIGS: stationary with traps and Schottky contacts.</a></li><li><a class="tocitem" href="../Ex109_Traps/">GaAs diode: transient with traps (1D).</a></li><li><a class="tocitem" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid).</a></li><li><a class="tocitem" href="../Ex202_Laser_simple/">-</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WIAS-PDELib/ChargeTransport.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Three-layer-PSC-device-with-graded-interfaces-and-Ohmic-contacts-(1D)."><a class="docs-heading-anchor" href="#Three-layer-PSC-device-with-graded-interfaces-and-Ohmic-contacts-(1D).">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a id="Three-layer-PSC-device-with-graded-interfaces-and-Ohmic-contacts-(1D).-1"></a><a class="docs-heading-anchor-permalink" href="#Three-layer-PSC-device-with-graded-interfaces-and-Ohmic-contacts-(1D)." title="Permalink"></a></h1><p>(<a href="../Ex105_PSC_gradedFlux.jl">source code</a>)</p><p>Simulating a three layer PSC device Ti02| MAPI | spiro-OMeTAD without mobile ions. The simulations are performed out of equilibrium, stationary and with two junctions between perovskite layer and transport layers, to which we refer as graded interfaces. Hence, a graded flux discretization with space dependent band-edge energies and density of states is tested here. The difference here is that we adjusted the order of indexing the quasi Fermi potentials.</p><p>The parameters are based on the default parameter set of Ionmonger (with minor adjustments), such that we can likewise compare with the software Driftfusion, see https://github.com/barnesgroupICL/Driftfusion/blob/Methods-IonMonger-Comparison/Input<em>files/IonMonger</em>default_bulk.csv</p><pre><code class="language-julia hljs">module Ex105_PSC_gradedFlux
+
+using ChargeTransport
+using ExtendableGrids
+using PyPlot
+
+# function for grading the physical parameters
+function grading_parameter!(physicalParameter, coord, regionTransportLayers, regionJunctions, h, heightLayers, lengthLayers, values)
+    for ireg in regionTransportLayers
+
+        xcoord = lengthLayers[ireg]:lengthLayers[ireg + 1]
+        physicalParameter[xcoord] .= values[ireg]
+
+    end
+
+    for ireg in regionJunctions
+
+        xcoord = lengthLayers[ireg]:lengthLayers[ireg + 1]
+        left = lengthLayers[ireg] - 3
+        junction = h[ireg]
+        right = lengthLayers[ireg + 2] - 3
+
+        gradient = (physicalParameter[right] - physicalParameter[left]) / junction
+
+        for index in xcoord
+            physicalParameter[index] = physicalParameter[left] + (coord[index] - heightLayers[ireg - 1]) * gradient
+        end
+
+    end
+
+    return physicalParameter
+end</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = &quot;&quot;, test = false, unknown_storage = :sparse)
+
+    if plotting
+        Plotter.close(&quot;all&quot;)
+    end
+    ################################################################################
+    if test == false
+        println(&quot;Set up grid and regions&quot;)
+    end
+    ################################################################################
+
+    # region numbers
+    regionDonor = 1          # n doped region
+    regionJunction1 = 2
+    regionIntrinsic = 3          # intrinsic region
+    regionJunction2 = 4
+    regionAcceptor = 5          # p doped region
+    regions = [regionDonor, regionJunction1, regionIntrinsic, regionJunction2, regionAcceptor]
+    regionTransportLayers = [regionDonor, regionIntrinsic, regionAcceptor]
+    regionJunctions = [regionJunction1, regionJunction2]
+    numberOfRegions = length(regions)
+
+    # boundary region numbers
+    bregionDonor = 1
+    bregionAcceptor = 2
+    bregionDJ1 = 3
+    bregionJ1I = 4
+    bregionIJ2 = 5
+    bregionJ2A = 6
+
+    # grid
+    h_ndoping = 9.9e-6 * cm
+    h_junction1 = 1.0e-7 * cm
+    h_intrinsic = 4.0e-5 * cm
+    h_junction2 = 1.0e-7 * cm
+    h_pdoping = 1.99e-5 * cm
+    h_total = h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping
+    h = [h_ndoping, h_junction1, h_intrinsic, h_junction2, h_pdoping]
+    heightLayers = [
+        h_ndoping,
+        h_ndoping + h_junction1,
+        h_ndoping + h_junction1 + h_intrinsic,
+        h_ndoping + h_junction1 + h_intrinsic + h_junction2,
+        h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping,
+    ]
+    refinementfactor = 2^(n - 1)
+
+    coord_ndoping = collect(range(0.0, stop = h_ndoping, length = 4 * refinementfactor))
+    length_n = length(coord_ndoping)
+    coord_junction1 = collect(
+        range(
+            h_ndoping,
+            stop = h_ndoping + h_junction1,
+            length = 3 * refinementfactor
+        )
+    )
+    coord_intrinsic = collect(
+        range(
+            h_ndoping + h_junction1,
+            stop = (h_ndoping + h_junction1 + h_intrinsic),
+            length = 10 * refinementfactor
+        )
+    )
+    coord_junction2 = collect(
+        range(
+            h_ndoping + h_junction1 + h_intrinsic,
+            stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
+            length = 3 * refinementfactor
+        )
+    )
+    coord_pdoping = collect(
+        range(
+            (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
+            stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping),
+            length = 4 * refinementfactor
+        )
+    )
+
+    coord = glue(coord_ndoping, coord_junction1)
+    length_j1 = length(coord)
+    coord = glue(coord, coord_intrinsic)
+    length_i = length(coord)
+    coord = glue(coord, coord_junction2)
+    length_j2 = length(coord)
+    coord = glue(coord, coord_pdoping)
+
+    grid = simplexgrid(coord)
+    numberOfNodes = length(coord)
+    lengthLayers = [1, length_n, length_j1, length_i, length_j2, numberOfNodes]
+
+    # set different regions in grid
+    cellmask!(grid, [0.0 * μm], [heightLayers[1]], regionDonor)      # n-doped region   = 1
+    cellmask!(grid, [heightLayers[1]], [heightLayers[2]], regionJunction1)  # first junction   = 2
+    cellmask!(grid, [heightLayers[2]], [heightLayers[3]], regionIntrinsic)  # intrinsic region = 3
+    cellmask!(grid, [heightLayers[3]], [heightLayers[4]], regionJunction2)  # sec. junction    = 4
+    cellmask!(grid, [heightLayers[4]], [heightLayers[5]], regionAcceptor)   # p-doped region   = 5</code></pre><p>inner interfaces</p><pre><code class="language-julia hljs">    bfacemask!(grid, [heightLayers[1]], [heightLayers[1]], bregionDJ1)
+    bfacemask!(grid, [heightLayers[2]], [heightLayers[2]], bregionJ1I)
+    bfacemask!(grid, [heightLayers[3]], [heightLayers[3]], bregionIJ2)
+    bfacemask!(grid, [heightLayers[4]], [heightLayers[4]], bregionJ2A)
+
+    if plotting
+        gridplot(grid, Plotter = Plotter, legend = :lt)
+        Plotter.title(&quot;Grid&quot;)
+    end
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define physical parameters and model&quot;)
+    end
+    ################################################################################
+
+    # set indices of the quasi Fermi potentials
+    iphin = 2 # electron quasi Fermi potential
+    iphip = 1 # hole quasi Fermi potential
+    numberOfCarriers = 2
+
+    # temperature
+    T = 300.0 * K
+
+    # band edge energies
+    Ec_d = -4.0 * eV
+    Ev_d = -6.0 * eV
+
+    Ec_i = -3.7 * eV
+    Ev_i = -5.4 * eV
+
+    Ec_a = -3.1 * eV
+    Ev_a = -5.1 * eV
+
+    # these parameters at the junctions for E_\alpha and N_\alpha will be overwritten.
+    Ec_j1 = Ec_d;     Ec_j2 = Ec_i
+    Ev_j1 = Ev_d;     Ev_j2 = Ev_i
+
+    EC = [Ec_d, Ec_j1, Ec_i, Ec_j2, Ec_a]
+    EV = [Ev_d, Ev_j1, Ev_i, Ev_j2, Ev_a]
+
+    # effective densities of state
+    Nc_d = 5.0e19 / (cm^3)
+    Nv_d = 5.0e19 / (cm^3)
+
+    Nc_i = 8.1e18 / (cm^3)
+    Nv_i = 5.8e18 / (cm^3)
+
+    Nc_a = 5.0e19 / (cm^3)
+    Nv_a = 5.0e19 / (cm^3)
+
+    Nc_j1 = Nc_d;     Nc_j2 = Nc_i
+    Nv_j1 = Nv_d;     Nv_j2 = Nv_i
+
+    NC = [Nc_d, Nc_j1, Nc_i, Nc_j2, Nc_a]
+    NV = [Nv_d, Nv_j1, Nv_i, Nv_j2, Nv_a]
+
+    # mobilities
+    μn_d = 3.89 * (cm^2) / (V * s)
+    μp_d = 3.89 * (cm^2) / (V * s)
+
+    μn_i = 6.62e1 * (cm^2) / (V * s)
+    μp_i = 6.62e1 * (cm^2) / (V * s)
+
+    μn_a = 3.89e-1 * (cm^2) / (V * s)
+    μp_a = 3.89e-1 * (cm^2) / (V * s)
+
+    μn_j1 = μn_d;     μn_j2 = μn_i
+    μp_j1 = μp_d;     μp_j2 = μp_i
+
+    μn = [μn_d, μn_j1, μn_i, μn_j2, μn_a]
+    μp = [μp_d, μp_j1, μp_i, μp_j2, μp_a]
+
+    # relative dielectric permittivity
+    ε_d = 10.0 * 1.0
+    ε_i = 24.1 * 1.0
+    ε_a = 3.0 * 1.0
+
+    ε_j1 = ε_d;       ε_j2 = ε_a
+
+    ε = [ε_d, ε_j1, ε_i, ε_j2, ε_a]
+
+    # radiative recombination
+    r0_d = 0.0e+0 * cm^3 / s
+    r0_i = 1.0e-12 * cm^3 / s
+    r0_a = 0.0e+0 * cm^3 / s
+
+    r0_j1 = r0_i;      r0_j2 = r0_i
+
+    r0 = [r0_d, r0_j1, r0_i, r0_j2, r0_a]
+
+    # life times and trap densities
+    τn_d = 1.0e100 * s
+    τp_d = 1.0e100 * s
+
+    τn_i = 3.0e-10 * s
+    τp_i = 3.0e-8 * s
+    τn_a = τn_d
+    τp_a = τp_d
+
+    τn_j1 = τn_i;     τn_j2 = τn_a
+    τp_j1 = τp_i;     τp_j2 = τp_a
+
+    τn = [τn_d, τn_j1, τn_i, τn_j2, τn_a]
+    τp = [τp_d, τp_j1, τp_i, τp_j2, τp_a]
+
+    # SRH trap energies (needed for calculation of trap_density! (SRH))</code></pre><p>Ei<em>d             = -5.0                 * eV Ei</em>i             = -4.55                * eV Ei_a             = -4.1                 * eV</p><p>Ei<em>j1            = Ei</em>d;      Ei<em>j2     = Ei</em>i</p><p>EI               = [Ei<em>d, Ei</em>j1, Ei<em>i, Ei</em>j2, Ei_a]</p><pre><code class="language-julia hljs">    # reference densities
+    nτ_d = 7.94e8 / m^3
+    pτ_d = 7.94e8 / m^3
+
+    nτ_i = 4.26e10 / m^3
+    pτ_i = 3.05e10 / m^3
+    nτ_a = nτ_d
+    pτ_a = pτ_d
+
+    nτ_j1 = nτ_i;     nτ_j2 = nτ_a
+    pτ_j1 = pτ_i;     pτ_j2 = pτ_a
+
+    nτ = [nτ_d, nτ_j1, nτ_i, nτ_j2, nτ_a]
+    pτ = [pτ_d, pτ_j1, pτ_i, pτ_j2, pτ_a]
+
+    # Auger recombination
+    Auger = 0.0
+
+    # doping (doping values are from Driftfusion)
+    Nd = 1.03e18 / (cm^3)
+    Na = 1.03e18 / (cm^3)
+    Ni_acceptor = 8.32e7 / (cm^3)
+
+    # contact voltage
+    voltageAcceptor = 1.2 * V
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define System and fill in information about model&quot;)
+    end
+    ################################################################################
+
+    # Initialize Data instance and fill in predefined data
+    data = Data(grid, numberOfCarriers)
+
+    # Possible choices: Stationary, Transient
+    data.modelType = Stationary
+
+    # Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
+    # FermiDiracMinusOne, Blakemore
+    data.F .= Boltzmann
+
+    data.bulkRecombination = set_bulk_recombination(;
+        iphin = iphin, iphip = iphip,
+        bulk_recomb_Auger = false,
+        bulk_recomb_radiative = true,
+        bulk_recomb_SRH = true
+    )
+
+    # Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
+    # InterfaceRecombination (inner boundary).
+    data.boundaryType[bregionDonor] = OhmicContact
+    data.boundaryType[bregionAcceptor] = OhmicContact
+
+    # Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
+    # ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
+    data.fluxApproximation .= ScharfetterGummelGraded
+
+    ################################################################################
+    if test == false
+        println(&quot;Define Params and fill in physical parameters&quot;)
+    end
+    ################################################################################
+
+    # for region dependent parameters
+    params = Params(grid, numberOfCarriers)
+    # for space dependent parameters
+    paramsnodal = ParamsNodal(grid, numberOfCarriers)
+
+    params.temperature = T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[iphin] = -1
+    params.chargeNumbers[iphip] = 1
+
+    # nodal band-edge energies
+    paramsnodal.bandEdgeEnergy[iphin, :] = grading_parameter!(
+        paramsnodal.bandEdgeEnergy[iphin, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, EC
+    )
+    paramsnodal.bandEdgeEnergy[iphip, :] = grading_parameter!(
+        paramsnodal.bandEdgeEnergy[iphip, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, EV
+    )
+    # nodal effective density of states
+    paramsnodal.densityOfStates[iphin, :] = grading_parameter!(
+        paramsnodal.densityOfStates[iphin, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, NC
+    )
+    paramsnodal.densityOfStates[iphip, :] = grading_parameter!(
+        paramsnodal.densityOfStates[iphip, :],
+        coord, regionTransportLayers, regionJunctions, h,
+        heightLayers, lengthLayers, NV
+    )
+
+    for ireg in 1:numberOfRegions  ## region dependent data
+
+        # mobility
+        params.mobility[iphin, ireg] = μn[ireg]
+        params.mobility[iphip, ireg] = μp[ireg]
+
+        params.dielectricConstant[ireg] = ε[ireg] * ε0
+        # recombination parameters
+        params.recombinationRadiative[ireg] = r0[ireg]
+        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
+        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
+        params.recombinationSRHTrapDensity[iphin, ireg] = nτ[ireg]
+        params.recombinationSRHTrapDensity[iphip, ireg] = pτ[ireg]
+        params.recombinationAuger[iphin, ireg] = Auger
+        params.recombinationAuger[iphip, ireg] = Auger
+
+    end
+
+    # doping
+    params.doping[iphin, regionDonor] = Nd
+    params.doping[iphip, regionIntrinsic] = Ni_acceptor
+    params.doping[iphip, regionAcceptor] = Na
+
+    data.params = params
+    data.paramsnodal = paramsnodal
+    ctsys = System(grid, data, unknown_storage = unknown_storage)
+
+    # print data
+    if test == false
+        show_params(ctsys)
+    end
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+    ################################################################################
+    if test == false
+        println(&quot;Define control parameters for Solver&quot;)
+    end
+    ################################################################################
+
+    control = SolverControl()
+    control.verbose = verbose
+    control.maxiters = 200
+    control.abstol = 1.0e-13
+    control.reltol = 1.0e-13
+    control.tol_round = 1.0e-13
+    control.damp_initial = 0.5
+    control.damp_growth = 1.61 # &gt;= 1
+    control.max_round = 5
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+    ################################################################################
+    if test == false
+        println(&quot;Compute solution in thermodynamic equilibrium&quot;)
+    end
+    ################################################################################
+
+    solution = equilibrium_solve!(ctsys, control = control)
+    inival = solution
+
+    if plotting
+        label_solution, label_density, label_energy = set_plotting_labels(data)
+
+        Plotter.figure()
+        plot_energies(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_energy)
+        Plotter.figure()
+        plot_densities(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_density)
+        Plotter.figure()
+        plot_solution(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_solution)
+    end
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+    ################################################################################
+    if test == false
+        println(&quot;Bias loop&quot;)
+    end
+    ################################################################################
+
+    maxBias = voltageAcceptor # bias goes until the given voltage at acceptor boundary
+    biasValues = range(0, stop = maxBias, length = 13)
+
+    for Δu in biasValues
+        if test == false
+            println(&quot;Bias value: Δu = $(Δu) V&quot;)
+        end
+
+        # set non equilibrium boundary conditions
+        set_contact!(ctsys, bregionAcceptor, Δu = Δu)
+
+        solution = solve(ctsys, inival = inival, control = control)
+        inival = solution
+
+    end # bias loop
+
+    # plotting
+    if plotting
+        Plotter.figure()
+        plot_energies(Plotter, ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_energy)
+        Plotter.figure()
+        plot_densities(Plotter, ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_density)
+        Plotter.figure()
+        plot_solution(Plotter, ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_solution)
+    end
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    testval = solution[data.index_psi, 20]
+    return testval
+
+end #  main
+
+function test()
+    testval = -3.982748467515117
+    return main(test = true, unknown_storage = :dense) ≈ testval &amp;&amp; main(test = true, unknown_storage = :sparse) ≈ testval
+end
+
+if test == false
+    println(&quot;This message should show when this module is successfully recompiled.&quot;)
+end
+
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex104_PSC_Photogeneration/">« PSC device with photogeneration rate (1D).</a><a class="docs-footer-nextpage" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 23 July 2025 13:24">Wednesday 23 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
