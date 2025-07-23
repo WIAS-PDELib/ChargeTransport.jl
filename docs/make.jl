@@ -70,6 +70,7 @@ makedocs(
     repo = "https://github.com/WIAS-PDELib/ChargeTransport.jl",
     pages = Any[
         "ChargeTransport.jl -- Simulating charge transport in semiconductors" => "general.md",
+        "Changelog" => "changes.md",
         "Mathematical drift-diffusion models" => "backgroundinfo.md",
         "How to get started" => [
             "GeneralInformation.md",
