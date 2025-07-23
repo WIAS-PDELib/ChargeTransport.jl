@@ -1827,22 +1827,3 @@ function charge_density(psi0, phi, UT, EVector, chargeNumbers, dopingVector, dos
     # https://stackoverflow.com/questions/45667291/how-to-apply-one-argument-to-arrayfunction-1-element-wise-smartly-in-julia
     return sum(-chargeNumbers .* dopingVector) + sum(chargeNumbers .* dosVector .* (etaFunction(psi0, phi, UT, EVector, chargeNumbers) .|> FVector))
 end
-
-"""
-
-$(TYPEDSIGNATURES)
-
-First try of debugger. Print the Jacobi matrix for a given node, i.e. the number of node in
-the grid and not the exact coordinate. This is only done for the one dimensional case so far.
-"""
-function printJacobi(node, sys)
-    ctdata = data(sys)
-    numberOfNodes = ctdata.numberOfNodes
-    return if node == 1
-        println(sys.matrix[1:3, 1:9])
-    elseif node == numberOfNodes
-        println(sys.matrix[(3 * numberOfNodes - 2):(3 * numberOfNodes), (3 * numberOfNodes - 8):(3 * numberOfNodes)])
-    else
-        println(sys.matrix[(3 * node - 2):(3 * node), (3 * node - 5):(3 * node + 3)])
-    end
-end
