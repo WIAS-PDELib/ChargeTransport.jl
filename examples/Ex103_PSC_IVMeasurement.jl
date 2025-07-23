@@ -1,6 +1,6 @@
 #=
 # PSC device with ions and different I-V scan protocols (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating a three layer PSC device Ti02| MAPI | spiro-OMeTAD with mobile ions where
 the ion vacancy accumulation is limited by the Fermi-Dirac integral of order -1.

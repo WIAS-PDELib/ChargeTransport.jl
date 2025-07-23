@@ -1,6 +1,6 @@
 #=
 # GaAs diode (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 We simulate charge transport in a GaAs pin diode, where we use the van Roosbroeck
 system of equations as charge transport model. The unknowns are given by the quasi Fermi

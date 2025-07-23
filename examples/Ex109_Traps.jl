@@ -1,6 +1,6 @@
 #=
 # GaAs diode: transient with traps (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating transient charge transport in a GaAs p-i-n diode with an electron trap.
 =#

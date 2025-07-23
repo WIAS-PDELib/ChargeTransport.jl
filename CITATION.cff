@@ -30,4 +30,4 @@ authors:
     orcid: 'https://orcid.org/0000-0001-8567-9988'
 doi: "10.5281/zenodo.6257906"
 license: AGPL-3.0
-repository-code: "https://github.com/PatricioFarrell/ChargeTransport.jl"
+repository-code: "https://github.com/WIAS-PDELib/ChargeTransport.jl"

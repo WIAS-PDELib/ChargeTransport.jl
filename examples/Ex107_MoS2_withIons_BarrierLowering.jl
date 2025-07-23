@@ -1,6 +1,6 @@
 #=
 # MoS2 with moving defects and Schottky Barrier Lowering.
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Memristor simulation with additional moving positively charged defects and
 Schottky barrier lowering at the contacts.

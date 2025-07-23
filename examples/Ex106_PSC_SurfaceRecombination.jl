@@ -1,6 +1,6 @@
 #=
 # PSC device with surface recombination (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating a three layer PSC device PCBM | MAPI | Pedot with mobile ions with a linear scan protocol.
 

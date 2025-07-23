@@ -1,6 +1,6 @@
 #=
 # Three-layer PSC device with graded interfaces & Ohmic contacts (1D).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating a three layer PSC device Ti02| MAPI | spiro-OMeTAD without mobile ions. The simulations are
 performed out of equilibrium, stationary and with two junctions between perovskite layer and

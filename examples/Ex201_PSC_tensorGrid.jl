@@ -1,6 +1,6 @@
 #=
 # PSC device on 2D domain (Tensor grid).
-([source code](SOURCE_URL))
+([source code](@__SOURCE_URL__))
 
 Simulating a three layer PSC device PCBM | MAPI | Pedot with mobile ions.
 The simulations are
