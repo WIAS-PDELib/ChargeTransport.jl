@@ -11,6 +11,7 @@
 iphin = 1 # electron quasi Fermi potential
 iphip = 2 # hole quasi Fermi potential
 iphia = 3
+ipsi = 4
 numberOfCarriers = 3 # electrons, holes and anion vacancies
 
 ########## device geometry ##########

@@ -16,7 +16,6 @@ using PyPlot
 # for convenience
 parametersdir = ChargeTransport.parametersdir
 
-
 numberOfColoumns = Dict(
     "ref1" => [2, 4],
     "ref2" => [4, 8],
@@ -106,7 +105,7 @@ function main(;
         refinement = 1, plotting = false, Plotter = PyPlot, verbose = "", test = false,
         unknown_storage = :sparse, numberOfEigenvalues = 1,
         parameter_file = parametersdir("Params_Laser_simple.jl")
-    ) # choose the parameter file)
+    ) # choose the parameter file
 
     include(parameter_file)
 
@@ -222,7 +221,6 @@ function main(;
 
     ctsys = System(grid, data, unknown_storage = unknown_storage)
 
-
     if test == false
         show_params(ctsys)
         println("*** done\n")
@@ -246,9 +244,7 @@ function main(;
 
     if test == false
         println("*** done\n")
-
     end
-
 
     ################################################################################
     if test == false
@@ -257,17 +253,14 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and set as initial guess
-
     psi0Vector = electroNeutralSolution(ctsys)
 
     inival = unknowns(ctsys)
     inival[1, :] = inival[2, :] .= 0.0
     inival[3, :] = psi0Vector
 
-
     solution = equilibrium_solve!(ctsys, inival = inival, control = control, nonlinear_steps = 20.0)
     inival = solution
-
 
     if test == false
         println("*** done\n")
@@ -281,7 +274,6 @@ function main(;
 
     maxBias = U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
     biasValues = range(0, stop = maxBias, length = 40)
-    IV = zeros(0)
 
     for Δu in biasValues
 
@@ -305,7 +297,6 @@ function main(;
     ctsys.data.paramsoptical.oldSolution = solution
     currentSolution = solution
     inival = solution
-
 
     # eigenvalue and eigenvector of the Helmholtz eigenvalue problem calculated explicitly
     λ1 = [-5.6192359487570194e14 + 4.6950340673509827e11im]
@@ -644,7 +635,6 @@ function main(;
     currentSolution = solution
     inival = solution
 
-
     ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
     ctsys.data.paramsoptical.power = P[2]
@@ -654,7 +644,6 @@ function main(;
     ctsys.data.paramsoptical.oldSolution = solution
     currentSolution = solution
     inival = solution
-
 
     if plotting
         vis = GridVisualizer(; Plotter = PyPlot, fignumber = 2, resolution = (1200, 900))
@@ -675,7 +664,6 @@ function main(;
             slice = :x => 0, label = "\$ \\psi \$", clear = false, color = "darkorange"
         )
     end
-
 
     testval = sum(solution) / length(solution)
     return testval

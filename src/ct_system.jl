@@ -128,8 +128,9 @@ function enable_trap_carrier!(; data = data::Data, trapCarrier::Int64, regions::
     else
         data.bulkRecombination.bulk_recomb_SRH = SRHTrapsStationary
     end
+    push!(data.trapCarrierList, enableTraps)
 
-    return push!(data.trapCarrierList, enableTraps)
+    return
 
 end
 
@@ -163,13 +164,12 @@ considered as additional carrier with an own continuity equation. In this case t
 density is additionally added to the right-hand side of Poisson equation.
 """
 function add_trap_density_Poisson!(; data = data::Data, zt = 1::Int64, Nt = 5.0e20 * ones(Float64, data.params.numberOfRegions)::Array{Float64, 1})
-
     data.bulkRecombination.SRH_2species_trap = SRH2SpeciesPresentTrapDens
     aux_trap_values = AuxiliaryStationaryTrapValues()
     aux_trap_values.zt = zt
     aux_trap_values.Nt = Nt
-    return data.AuxTrapValues = aux_trap_values
-
+    data.AuxTrapValues = aux_trap_values
+    return
 end
 ###########################################################
 ###########################################################
@@ -215,8 +215,8 @@ function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 
 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
-
-    return push!(data.ionicCarrierList, enableIons)
+    push!(data.ionicCarrierList, enableIons)
+    return
 
 end
 
@@ -1527,10 +1527,9 @@ set_contact!(ctsys, ibreg, ; Δu) = __set_contact!(ctsys, ibreg, Δu, ctsys.data
 
 # For schottky contacts
 function __set_contact!(ctsys, ibreg, Δu, ::Type{SchottkyContact})
-
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
-
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 end
 
 # For internal boundaries, do nothing
@@ -1540,26 +1539,22 @@ end
 
 # For schottky contacts with barrier lowering
 function __set_contact!(ctsys, ibreg, Δu, ::Type{SchottkyBarrierLowering})
-
-    # set Schottky barrier and applied voltage
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
-
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 end
 
 
 function __set_contact!(ctsys, ibreg, Δu, ::Type{OhmicContact})
-
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
-
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 end
 
 
 function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
-
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
-
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 end
 
 ###########################################################
@@ -1572,8 +1567,6 @@ enable_boundary_species!(ctsys::System, ispecies, regions) = VoronoiFVM.enable_b
 unknowns(ctsys::System) = VoronoiFVM.unknowns(ctsys.fvmsys)
 
 solve(ctsys::System; kwargs...) = VoronoiFVM.solve(ctsys.fvmsys; kwargs...)
-## DA: This one will be deleted soon (in VoronoiFVM):
-solve!(solution, initialGuess, ctsys, ; control = control, tstep = tstep) = VoronoiFVM.solve!(solution, initialGuess, ctsys.fvmsys, control = control, tstep = tstep)
 
 VoronoiFVM.TestFunctionFactory(ctsys::System) = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
 integrate(ctsys::System, tf, solution, inival, Δt) = VoronoiFVM.integrate(ctsys.fvmsys, tf, solution, inival, Δt)
@@ -1631,7 +1624,6 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
     for ibreg in grid[BFaceRegions]
         set_contact!(ctsys, ibreg, Δu = 0.0)
     end
-
 
     sol = inival
 
@@ -1744,11 +1736,10 @@ for solar cells under illumination.
 """
 
 function compute_open_circuit_voltage(bias::Array{Float64, 1}, IV::Array{Float64, 1})
-
     # http://juliamath.github.io/Interpolations.jl/latest/control/#Gridded-interpolation-1
     interpolated_IV = Interpolations.interpolate((bias,), IV, Gridded(Linear()))
-
-    return find_zero(interpolated_IV, (bias[1], bias[end]))
+    VOC = find_zero(interpolated_IV, (bias[1], bias[end]))
+    return VOC
 end
 
 
@@ -1756,11 +1747,10 @@ end
 
 $(TYPEDSIGNATURES)
 
-Compute the electro-neutral solution for the Boltzmann approximation.
+Compute the electro-neutral solution for the Boltzmann approximation, assuming a bipolar model with electrons and holes.
 It is obtained by setting the left-hand side in
 the Poisson equation equal to zero and solving for ``\\psi``.
 The charge carriers may obey different statistics functions.
-Currently, this one is not well tested for the case of charge carriers beyond electrons and holes.
 """
 function electroNeutralSolution(ctsys)
 
@@ -1768,10 +1758,6 @@ function electroNeutralSolution(ctsys)
     data = ctsys.fvmsys.physics.data
 
     params = data.params
-
-    if params.numberOfCarriers > 2
-        error("this method is currently only working for electrons and holes")
-    end
 
     iphin = data.bulkRecombination.iphin # integer index of φ_n
     iphip = data.bulkRecombination.iphip # integer index of φ_p
@@ -1825,7 +1811,8 @@ Compute the charge density, i.e. the right-hand side of Poisson's equation.
 """
 function charge_density(psi0, phi, UT, EVector, chargeNumbers, dopingVector, dosVector, FVector)
     # https://stackoverflow.com/questions/45667291/how-to-apply-one-argument-to-arrayfunction-1-element-wise-smartly-in-julia
-    return sum(-chargeNumbers .* dopingVector) + sum(chargeNumbers .* dosVector .* (etaFunction(psi0, phi, UT, EVector, chargeNumbers) .|> FVector))
+    sum(-chargeNumbers .* dopingVector) + sum(chargeNumbers .* dosVector .* (etaFunction(psi0, phi, UT, EVector, chargeNumbers) .|> FVector))
+    return
 end
 
 """
@@ -1838,11 +1825,12 @@ the grid and not the exact coordinate. This is only done for the one dimensional
 function printJacobi(node, sys)
     ctdata = data(sys)
     numberOfNodes = ctdata.numberOfNodes
-    return if node == 1
+    if node == 1
         println(sys.matrix[1:3, 1:9])
     elseif node == numberOfNodes
         println(sys.matrix[(3 * numberOfNodes - 2):(3 * numberOfNodes), (3 * numberOfNodes - 8):(3 * numberOfNodes)])
     else
         println(sys.matrix[(3 * node - 2):(3 * node), (3 * node - 5):(3 * node + 3)])
     end
+    return
 end
