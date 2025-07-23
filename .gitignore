@@ -6,3 +6,5 @@ docs/build/*
 .vscode
 *.eps
 docs/build/
+
+*Manifest*.toml
