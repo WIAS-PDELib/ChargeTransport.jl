@@ -288,11 +288,6 @@ mutable struct Params
     ####                   integer numbers                     ####
     ###############################################################
     """
-    Number of nodes used for the discretization of the domain ``\\mathbf{\\Omega}``.
-    """
-    numberOfNodes::Int64
-
-    """
     Number of subregions ``\\mathbf{\\Omega}_k`` within the domain ``\\mathbf{\\Omega}``.
     """
     numberOfRegions::Int64
@@ -910,22 +905,16 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
+Simplified constructor for Params which only takes the numberOfRegions, numberOfBoundaryRegions and numberOfCarriers as argument.
 
 """
-function Params(grid, numberOfCarriers)
-
-    numberOfNodes = num_nodes(grid)
-    numberOfRegions = grid[NumCellRegions]
-    numberOfBoundaryRegions = grid[NumBFaceRegions]
-    ###############################################################
+function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
 
     params = Params()
 
     ###############################################################
     ####                   integer numbers                     ####
     ###############################################################
-    params.numberOfNodes = numberOfNodes
     params.numberOfRegions = numberOfRegions
     params.numberOfBoundaryRegions = numberOfBoundaryRegions
     params.numberOfCarriers = numberOfCarriers
@@ -1000,6 +989,14 @@ function Params(grid, numberOfCarriers)
     return params
 
 end
+
+"""
+$(TYPEDSIGNATURES)
+
+Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
+
+"""
+Params(grid::ExtendableGrid, numberOfCarriers) = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
 
 """
