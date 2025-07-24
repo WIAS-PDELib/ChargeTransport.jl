@@ -42,6 +42,9 @@ function run_all_tests()
         @testset "Examples" begin
             run_tests_from_directory(joinpath(@__DIR__, "..", "examples"), "Ex")
         end
+        @testset "PSC" begin
+            run_tests_from_directory(joinpath(@__DIR__, "..", "examples"), "PSC")
+        end
     end
 end
 
