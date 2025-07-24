@@ -993,10 +993,15 @@ end
 """
 $(TYPEDSIGNATURES)
 
+Deprecated!
+
 Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
 
 """
-Params(grid::ExtendableGrid, numberOfCarriers) = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
+function Params(grid::ExtendableGrid, numberOfCarriers)
+    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChangeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
+    return Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
+end
 
 
 """
