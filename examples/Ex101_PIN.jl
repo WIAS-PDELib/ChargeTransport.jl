@@ -186,7 +186,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     # Define the Params struct. Params contains all necessary physical parameters. If one
     # wants to simulate space-dependent variables, one additionally needs to generate a
     # ParamsNodal struct, see Ex102.
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
     params.UT = (kB * params.temperature) / q

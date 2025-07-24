@@ -215,7 +215,7 @@ function main(;
     end
     ################################################################################
 
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
     params.UT = (kB * params.temperature) / q

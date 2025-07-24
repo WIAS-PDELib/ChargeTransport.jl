@@ -167,7 +167,7 @@ function main(;
         doping doping (or vcat(Nd,Na) = doping).
     """
 
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
     paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
 
     params.temperature = T

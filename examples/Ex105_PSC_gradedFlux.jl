@@ -333,7 +333,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     ## for region dependent parameters
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
     ## for space dependent parameters
     paramsnodal = ParamsNodal(grid, numberOfCarriers)
 

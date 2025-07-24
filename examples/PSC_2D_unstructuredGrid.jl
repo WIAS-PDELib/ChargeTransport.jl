@@ -161,7 +161,7 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        params = Params(grid, numberOfCarriers)
+        params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
         params.temperature = T
         params.UT = (kB * params.temperature) / q

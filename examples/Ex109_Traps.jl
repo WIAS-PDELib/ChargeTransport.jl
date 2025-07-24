@@ -184,7 +184,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     end
     ################################################################################
 
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
     params.UT = (kB * params.temperature) / q
