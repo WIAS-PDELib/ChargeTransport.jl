@@ -51,6 +51,7 @@ for parameter_set in [
     include(parametersdir("$(parameter_set).jl"))
     @eval export $parameter_set
 end
+export generate_Params
 
 include("ct_distributions.jl")
 

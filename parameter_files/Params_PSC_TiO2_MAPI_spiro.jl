@@ -21,6 +21,7 @@
     regionAcceptor = 3
     regions = [regionDonor, regionIntrinsic, regionAcceptor]
     numberOfRegions = length(regions)
+    numberOfBoundaryRegions = 4
 
     # boundary region numbers
     bregionDonor = 1
@@ -91,5 +92,55 @@
     Cn = 1.0e24 / (m^3)
     Cp = 1.0e24 / (m^3)
     Ca = 1.6e25 / (m^3)
+end
 
+"""
+$(SIGNATURES)
+
+Create a ChargeTransport `Params` object directly from `Params_PSC_TiO2_MAPI_spiro`
+"""
+function Params(p::Params_PSC_TiO2_MAPI_spiro)
+
+    CT_Params = Params(
+        p.numberOfRegions,
+        p.numberOfBoundaryRegions,
+        p.numberOfCarriers
+    )
+
+    CT_Params.temperature = p.T
+    CT_Params.UT = (kB * CT_Params.temperature) / q
+    CT_Params.chargeNumbers[p.iphin] = p.zn
+    CT_Params.chargeNumbers[p.iphip] = p.zp
+    CT_Params.chargeNumbers[p.iphia] = p.za
+
+    CT_Params.dielectricConstant = p.ε * ε0
+
+    ## effective DOS, band edge energy and mobilities
+    CT_Params.densityOfStates[p.iphin, :] = p.Nn
+    CT_Params.densityOfStates[p.iphip, :] = p.Np
+    CT_Params.densityOfStates[p.iphia, :] = p.Na
+
+    CT_Params.bandEdgeEnergy[p.iphin, :] = p.En
+    CT_Params.bandEdgeEnergy[p.iphip, :] = p.Ep
+    CT_Params.bandEdgeEnergy[p.iphia, :] = p.Ea
+
+    CT_Params.mobility[p.iphin, :] = p.μn
+    CT_Params.mobility[p.iphip, :] = p.μp
+    CT_Params.mobility[p.iphia, :] = p.μa
+
+    ## recombination parameters
+    for ireg in 1:p.numberOfRegions # region data
+        CT_Params.recombinationRadiative[ireg] = p.r0[ireg]
+        CT_Params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
+        CT_Params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
+        CT_Params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, CT_Params, p.EI[ireg])
+        CT_Params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, CT_Params, p.EI[ireg])
+    end
+
+    ## doping
+    CT_Params.doping[p.iphin, p.regionDonor] = p.Cn
+    CT_Params.doping[p.iphia, p.regionIntrinsic] = p.Ca
+    CT_Params.doping[p.iphip, p.regionAcceptor] = p.Cp
+
+    return CT_Params
 end

@@ -193,45 +193,8 @@ function main(;
     end
     ################################################################################
 
-    params = Params(grid, p.numberOfCarriers)
+    data.params = Params(p)
 
-    params.temperature = p.T
-    params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[p.iphin] = p.zn
-    params.chargeNumbers[p.iphip] = p.zp
-    params.chargeNumbers[p.iphia] = p.za
-
-    for ireg in 1:p.numberOfRegions # region data
-
-        params.dielectricConstant[ireg] = p.ε[ireg] * ε0
-
-        ## effective DOS, band edge energy and mobilities
-        params.densityOfStates[p.iphin, ireg] = p.Nn[ireg]
-        params.densityOfStates[p.iphip, ireg] = p.Np[ireg]
-        params.densityOfStates[p.iphia, ireg] = p.Na[ireg]
-
-        params.bandEdgeEnergy[p.iphin, ireg] = p.En[ireg]
-        params.bandEdgeEnergy[p.iphip, ireg] = p.Ep[ireg]
-        params.bandEdgeEnergy[p.iphia, ireg] = p.Ea[ireg]
-
-        params.mobility[p.iphin, ireg] = p.μn[ireg]
-        params.mobility[p.iphip, ireg] = p.μp[ireg]
-        params.mobility[p.iphia, ireg] = p.μa[ireg]
-
-        ## recombination parameters
-        params.recombinationRadiative[ireg] = p.r0[ireg]
-        params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
-        params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
-        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg])
-        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg])
-    end
-
-    ## doping
-    params.doping[p.iphin, p.regionDonor] = p.Cn
-    params.doping[p.iphia, p.regionIntrinsic] = p.Ca
-    params.doping[p.iphip, p.regionAcceptor] = p.Cp
-
-    data.params = params
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false

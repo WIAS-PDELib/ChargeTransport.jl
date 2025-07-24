@@ -29,6 +29,7 @@
     bregionAcceptor = 2
     bregionJ1 = 3
     bregionJ2 = 4
+    numberOfBoundaryRegions = 4
 
     ## length domains
     h_ndoping = 60.0 * nm
