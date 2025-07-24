@@ -20,6 +20,7 @@
     ########## device geometry ##########
 
     # region numbers
+    numberOfRegions = 5
     regionDonor1 = 1               # n doped regions
     regionDonor2 = 2
     regionDonor3 = 3
@@ -28,7 +29,9 @@
     regionsDonor = [regionDonor1, regionDonor2, regionDonor3]
     regionsAcceptor = [regionAcceptor1, regionAcceptor2]
 
+
     # boundary region numbers
+    numberOfBoundaryRegions = 3
     bregionDonor1 = 1    # bottom boundary
     bregionAcceptor2 = 2    # top boundary
     bregionNoFlux = 3
@@ -128,4 +131,51 @@
         0        5        0
     ]
 
+end
+
+"""
+$(SIGNATURES)
+
+Create a `ChargeTransport.Params` object directly from `Params_Laser_simple`
+"""
+function Params(p::Params_Laser_simple)
+
+    params = Params(
+        p.numberOfRegions,
+        p.numberOfBoundaryRegions,
+        p.numberOfCarriers
+    )
+
+    params.temperature = p.T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[p.iphin] = -1
+    params.dielectricConstant[:] = p.εr .* ε0
+    params.chargeNumbers[p.iphip] = 1
+
+    Nc = params.densityOfStates[p.iphin, :] = p.NC
+    Nv = params.densityOfStates[p.iphip, :] = p.NV
+    Ec = params.bandEdgeEnergy[p.iphin, :] = p.EC
+    Ev = params.bandEdgeEnergy[p.iphip, :] = p.EV
+
+    params.mobility[p.iphin, :] = p.μn
+    params.mobility[p.iphip, :] = p.μp
+
+    ## recombination parameters
+    params.recombinationRadiative[:] = p.r0
+    params.recombinationSRHLifetime[p.iphin, :] = p.τn
+    params.recombinationSRHLifetime[p.iphip, :] = p.τp
+    params.recombinationSRHTrapDensity[p.iphin, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * p.T)))
+    params.recombinationSRHTrapDensity[p.iphip, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * p.T)))
+    params.recombinationAuger[p.iphin, :] = p.Auger_Cn
+    params.recombinationAuger[p.iphip, :] = p.Auger_Cp
+    ## interior doping
+    for ireg in p.regionsDonor   #[1,2,3]            # n-doped regions
+        params.doping[p.iphin, ireg] = p.doping[ireg]
+    end
+
+    for ireg in p.regionsAcceptor  #[4,5]            # p-doped region
+        params.doping[p.iphip, ireg] = p.doping[ireg]
+    end
+
+    return params
 end

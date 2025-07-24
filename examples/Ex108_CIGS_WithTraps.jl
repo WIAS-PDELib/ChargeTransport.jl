@@ -13,20 +13,20 @@ using ExtendableGrids
 using PyPlot
 
 ## function to initialize the grid for a possible extension to other p-i-n devices.
-function initialize_pin_grid(refinementfactor, p.h_ndoping, p.h_pdoping_left, p.h_pdoping_trap, h_pdoing_right)
-    coord_ndoping = collect(range(0.0, stop = p.h_ndoping, length = 2 * refinementfactor))
-    coord_pdoping_left = collect(range(p.h_ndoping, stop = (p.h_ndoping + p.h_pdoping_left), length = 3 * refinementfactor))
+function initialize_pin_grid(refinementfactor, h_ndoping, h_pdoping_left, h_pdoping_trap, h_pdoing_right)
+    coord_ndoping = collect(range(0.0, stop = h_ndoping, length = 2 * refinementfactor))
+    coord_pdoping_left = collect(range(h_ndoping, stop = (h_ndoping + h_pdoping_left), length = 3 * refinementfactor))
     coord_pdoping_plus = collect(
         range(
-            (p.h_ndoping + p.h_pdoping_left),
-            stop = (p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap),
+            (h_ndoping + h_pdoping_left),
+            stop = (h_ndoping + h_pdoping_left + h_pdoping_trap),
             length = refinementfactor
         )
     )
     coord_pdoping_right = collect(
         range(
-            (p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap),
-            stop = (p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap + h_pdoing_right),
+            (h_ndoping + h_pdoping_left + h_pdoping_trap),
+            stop = (h_ndoping + h_pdoping_left + h_pdoping_trap + h_pdoing_right),
             length = 3 * refinementfactor
         )
     )
@@ -67,32 +67,32 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
 
     ## grid
     refinementfactor = 2^(n - 1)
-    p.h_ndoping = 0.5 * μm
-    p.h_pdoping_left = 1.0 * μm
-    p.h_pdoping_trap = 0.1 * μm
+    h_ndoping = 0.5 * μm
+    h_pdoping_left = 1.0 * μm
+    h_pdoping_trap = 0.1 * μm
     h_pdoing_right = 1.0 * μm
     w_device = 0.5 * μm  # width of device
     z_device = 1.0e-4 * cm  # depth of device
-    h_total = p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap + h_pdoing_right
+    h_total = h_ndoping + h_pdoping_left + h_pdoping_trap + h_pdoing_right
     coord = initialize_pin_grid(
         refinementfactor,
-        p.h_ndoping,
-        p.h_pdoping_left,
-        p.h_pdoping_trap,
+        h_ndoping,
+        h_pdoping_left,
+        h_pdoping_trap,
         h_pdoing_right
     )
 
     grid = simplexgrid(coord)
 
     ## set different regions in grid
-    cellmask!(grid, [0.0 * μm], [p.h_ndoping], regionDonor) # n doped
-    cellmask!(grid, [p.h_ndoping], [p.h_ndoping + p.h_pdoping_left], regionAcceptorLeft) # p doped
-    cellmask!(grid, [p.h_ndoping + p.h_pdoping_left], [p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap], regionAcceptorTrap) # p doped with traps
-    cellmask!(grid, [p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap], [h_total], regionAcceptorRight) # p doped
+    cellmask!(grid, [0.0 * μm], [h_ndoping], regionDonor) # n doped
+    cellmask!(grid, [h_ndoping], [h_ndoping + h_pdoping_left], regionAcceptorLeft) # p doped
+    cellmask!(grid, [h_ndoping + h_pdoping_left], [h_ndoping + h_pdoping_left + h_pdoping_trap], regionAcceptorTrap) # p doped with traps
+    cellmask!(grid, [h_ndoping + h_pdoping_left + h_pdoping_trap], [h_total], regionAcceptorRight) # p doped
 
-    bfacemask!(grid, [p.h_ndoping], [p.h_ndoping], bregionDALeft, tol = 1.0e-18)
-    bfacemask!(grid, [p.h_ndoping + p.h_pdoping_left], [p.h_ndoping + p.h_pdoping_left], bregionALeftATrap, tol = 1.0e-18)
-    bfacemask!(grid, [p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap], [p.h_ndoping + p.h_pdoping_left + p.h_pdoping_trap], bregionATrapARight, tol = 1.0e-18)
+    bfacemask!(grid, [h_ndoping], [h_ndoping], bregionDALeft, tol = 1.0e-18)
+    bfacemask!(grid, [h_ndoping + h_pdoping_left], [h_ndoping + h_pdoping_left], bregionALeftATrap, tol = 1.0e-18)
+    bfacemask!(grid, [h_ndoping + h_pdoping_left + h_pdoping_trap], [h_ndoping + h_pdoping_left + h_pdoping_trap], bregionATrapARight, tol = 1.0e-18)
 
     if plotting
         gridplot(grid, Plotter = Plotter, legend = :lt)

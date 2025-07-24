@@ -37,10 +37,10 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        # parameter
-        p = parameter_set()
-
+        # parameter with variation
+        p = parameter_set(numberOfBoundaryRegions = 5)
         bregionNoFlux = 5
+
         height = 5.0e-6 * cm
 
         ## contact voltage
@@ -70,18 +70,18 @@ module PSC_2D_unstructuredGrid
         length_0 = point!(b, 0.0, 0.0)
         length_n = point!(b, p.h_ndoping, 0.0)
         length_ni = point!(b, p.h_ndoping + p.h_intrinsic, 0.0)
-        length_nip = point!(b, h_total, 0.0)
+        length_nip = point!(b, p.h_total, 0.0)
 
         height_0 = point!(b, 0.0, height)
         height_n = point!(b, p.h_ndoping, height)
         height_ni = point!(b, p.h_ndoping + p.h_intrinsic, height)
-        height_nip = point!(b, h_total, height)
+        height_nip = point!(b, p.h_total, height)
 
         ## specify boundary regions
         ## metal interface
-        facetregion!(b, bregionDonor)
+        facetregion!(b, p.bregionDonor)
         facet!(b, length_0, height_0)
-        facetregion!(b, bregionAcceptor)
+        facetregion!(b, p.bregionAcceptor)
         facet!(b, length_nip, height_nip)
 
         ## no flux
@@ -91,17 +91,17 @@ module PSC_2D_unstructuredGrid
         facet!(b, height_0, height_nip)
 
         ## inner interface
-        facetregion!(b, bregionJ1)
+        facetregion!(b, p.bregionJ1)
         facet!(b, length_n, height_n)
-        facetregion!(b, bregionJ2)
+        facetregion!(b, p.bregionJ2)
         facet!(b, length_ni, height_ni)
 
         ## cell regions
-        cellregion!(b, regionDonor)
+        cellregion!(b, p.regionDonor)
         regionpoint!(b, p.h_ndoping / 2, height / 2)
-        cellregion!(b, regionIntrinsic)
+        cellregion!(b, p.regionIntrinsic)
         regionpoint!(b, p.h_ndoping + p.h_intrinsic / 2, height / 2)
-        cellregion!(b, regionAcceptor)
+        cellregion!(b, p.regionAcceptor)
         regionpoint!(b, p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2, height / 2)
 
         options!(b, maxvolume = 1.0e-16)
@@ -124,7 +124,7 @@ module PSC_2D_unstructuredGrid
         ################################################################################
 
         ## Initialize Data instance and fill in data
-        data = Data(grid, numberOfCarriers)
+        data = Data(grid, p.numberOfCarriers)
 
         ## Possible choices: Stationary, Transient
         data.modelType = Transient
@@ -133,7 +133,7 @@ module PSC_2D_unstructuredGrid
         data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
 
         data.bulkRecombination = set_bulk_recombination(;
-            iphin = iphin, iphip = iphip,
+            iphin = p.iphin, iphip = p.iphip,
             bulk_recomb_Auger = false,
             bulk_recomb_radiative = true,
             bulk_recomb_SRH = true
@@ -141,11 +141,11 @@ module PSC_2D_unstructuredGrid
 
         ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
         ## InterfaceRecombination (inner boundary).
-        data.boundaryType[bregionAcceptor] = OhmicContact
-        data.boundaryType[bregionDonor] = OhmicContact
+        data.boundaryType[p.bregionAcceptor] = OhmicContact
+        data.boundaryType[p.bregionDonor] = OhmicContact
 
         ## Present ionic vacancies in perovskite layer
-        enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
+        enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
         ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
         ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
@@ -161,46 +161,7 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
-
-        params.temperature = T
-        params.UT = (kB * params.temperature) / q
-        params.chargeNumbers[iphin] = zn
-        params.chargeNumbers[iphip] = zp
-        params.chargeNumbers[iphia] = za
-
-        for ireg in 1:numberOfRegions # interior region data
-
-            params.dielectricConstant[ireg] = ε[ireg] * ε0
-
-            ## effective DOS, band edge energy and mobilities
-            params.densityOfStates[iphin, ireg] = Nn[ireg]
-            params.densityOfStates[iphip, ireg] = Np[ireg]
-            params.densityOfStates[iphia, ireg] = Na[ireg]
-
-            params.bandEdgeEnergy[iphin, ireg] = En[ireg]
-            params.bandEdgeEnergy[iphip, ireg] = Ep[ireg]
-            params.bandEdgeEnergy[iphia, ireg] = Ea[ireg]
-
-            params.mobility[iphin, ireg] = μn[ireg]
-            params.mobility[iphip, ireg] = μp[ireg]
-            params.mobility[iphia, ireg] = μa[ireg]
-
-            ## recombination parameters
-            params.recombinationRadiative[ireg] = r0[ireg]
-            params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
-            params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
-            params.recombinationSRHTrapDensity[iphin, ireg] = trap_density!(iphin, ireg, params, EI[ireg])
-            params.recombinationSRHTrapDensity[iphip, ireg] = trap_density!(iphip, ireg, params, EI[ireg])
-
-        end
-
-        ## interior doping
-        params.doping[iphin, regionDonor] = Cn
-        params.doping[iphia, regionIntrinsic] = Ca
-        params.doping[iphip, regionAcceptor] = Cp
-
-        data.params = params
+        data.params = Params(p)
         ctsys = System(grid, data, unknown_storage = :sparse)
 
         ## print data
@@ -275,7 +236,7 @@ module PSC_2D_unstructuredGrid
             Δt = t - tvalues[istep - 1] # Time step size
 
             ## Apply new voltage; set non equilibrium boundary conditions
-            set_contact!(ctsys, bregionAcceptor, Δu = Δu)
+            set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
 
             if test == false
                 println("time value: t = $(t) s")
@@ -298,14 +259,14 @@ module PSC_2D_unstructuredGrid
 
         if plotting
             Plotter.figure()
-            Plotter.surf(X[:], Y[:], solution[ipsi, :])
+            Plotter.surf(X[:], Y[:], solution[p.ipsi, :])
             Plotter.title("Electrostatic potential \$ \\psi \$ at end time")
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")
             Plotter.zlabel("potential [V]")
             ## ################
             Plotter.figure()
-            Plotter.surf(X[:], Y[:], solution[iphin, :])
+            Plotter.surf(X[:], Y[:], solution[p.iphin, :])
             Plotter.title("quasi Fermi potential \$ \\varphi_n \$ at end time")
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")

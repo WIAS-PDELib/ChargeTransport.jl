@@ -79,49 +79,49 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
     bregionJ2A = 6
 
     ## grid
-    p.h_ndoping = 9.9e-6 * cm
+    h_ndoping = 9.9e-6 * cm
     h_junction1 = 1.0e-7 * cm
     h_intrinsic = 4.0e-5 * cm
     h_junction2 = 1.0e-7 * cm
     h_pdoping = 1.99e-5 * cm
-    h_total = p.h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping
-    h = [p.h_ndoping, h_junction1, h_intrinsic, h_junction2, h_pdoping]
+    h_total = h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping
+    h = [h_ndoping, h_junction1, h_intrinsic, h_junction2, h_pdoping]
     heightLayers = [
-        p.h_ndoping,
-        p.h_ndoping + h_junction1,
-        p.h_ndoping + h_junction1 + h_intrinsic,
-        p.h_ndoping + h_junction1 + h_intrinsic + h_junction2,
-        p.h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping,
+        h_ndoping,
+        h_ndoping + h_junction1,
+        h_ndoping + h_junction1 + h_intrinsic,
+        h_ndoping + h_junction1 + h_intrinsic + h_junction2,
+        h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping,
     ]
     refinementfactor = 2^(n - 1)
 
-    coord_ndoping = collect(range(0.0, stop = p.h_ndoping, length = 4 * refinementfactor))
+    coord_ndoping = collect(range(0.0, stop = h_ndoping, length = 4 * refinementfactor))
     length_n = length(coord_ndoping)
     coord_junction1 = collect(
         range(
-            p.h_ndoping,
-            stop = p.h_ndoping + h_junction1,
+            h_ndoping,
+            stop = h_ndoping + h_junction1,
             length = 3 * refinementfactor
         )
     )
     coord_intrinsic = collect(
         range(
-            p.h_ndoping + h_junction1,
-            stop = (p.h_ndoping + h_junction1 + h_intrinsic),
+            h_ndoping + h_junction1,
+            stop = (h_ndoping + h_junction1 + h_intrinsic),
             length = 10 * refinementfactor
         )
     )
     coord_junction2 = collect(
         range(
-            p.h_ndoping + h_junction1 + h_intrinsic,
-            stop = (p.h_ndoping + h_junction1 + h_intrinsic + h_junction2),
+            h_ndoping + h_junction1 + h_intrinsic,
+            stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
             length = 3 * refinementfactor
         )
     )
     coord_pdoping = collect(
         range(
-            (p.h_ndoping + h_junction1 + h_intrinsic + h_junction2),
-            stop = (p.h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping),
+            (h_ndoping + h_junction1 + h_intrinsic + h_junction2),
+            stop = (h_ndoping + h_junction1 + h_intrinsic + h_junction2 + h_pdoping),
             length = 4 * refinementfactor
         )
     )

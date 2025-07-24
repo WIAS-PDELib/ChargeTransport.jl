@@ -1,7 +1,7 @@
 # Default parameters of Ionmonger (https://github.com/PerovskiteSCModelling/IonMonger)
 # representing TiO2 | MAPI | spiro-OMeTAD
 
-@kwdef mutable struct Params_PSC_TiO2_MAPI_spiro
+@kwdef struct Params_PSC_TiO2_MAPI_spiro
 
     #####################################################################
     ############################ parameters ############################
@@ -97,50 +97,59 @@ end
 """
 $(SIGNATURES)
 
-Create a ChargeTransport `Params` object directly from `Params_PSC_TiO2_MAPI_spiro`
+Create a `ChargeTransport.Params` object directly from `Params_PSC_TiO2_MAPI_spiro`
 """
 function Params(p::Params_PSC_TiO2_MAPI_spiro)
 
-    CT_Params = Params(
+    params = Params(
         p.numberOfRegions,
         p.numberOfBoundaryRegions,
         p.numberOfCarriers
     )
 
-    CT_Params.temperature = p.T
-    CT_Params.UT = (kB * CT_Params.temperature) / q
-    CT_Params.chargeNumbers[p.iphin] = p.zn
-    CT_Params.chargeNumbers[p.iphip] = p.zp
-    CT_Params.chargeNumbers[p.iphia] = p.za
+    params.temperature = p.T
+    params.UT = (kB * params.temperature) / q
+    params.chargeNumbers[p.iphin] = p.zn
+    params.chargeNumbers[p.iphip] = p.zp
+    params.chargeNumbers[p.iphia] = p.za
 
-    CT_Params.dielectricConstant = p.ε * ε0
+    for ireg in 1:p.numberOfRegions # interior region data
 
-    ## effective DOS, band edge energy and mobilities
-    CT_Params.densityOfStates[p.iphin, :] = p.Nn
-    CT_Params.densityOfStates[p.iphip, :] = p.Np
-    CT_Params.densityOfStates[p.iphia, :] = p.Na
+        params.dielectricConstant[ireg] = p.ε[ireg] * ε0
 
-    CT_Params.bandEdgeEnergy[p.iphin, :] = p.En
-    CT_Params.bandEdgeEnergy[p.iphip, :] = p.Ep
-    CT_Params.bandEdgeEnergy[p.iphia, :] = p.Ea
+        ## effective DOS, band edge energy and mobilities
+        params.densityOfStates[p.iphin, ireg] = p.Nn[ireg]
+        params.densityOfStates[p.iphip, ireg] = p.Np[ireg]
+        params.densityOfStates[p.iphia, ireg] = p.Na[ireg]
 
-    CT_Params.mobility[p.iphin, :] = p.μn
-    CT_Params.mobility[p.iphip, :] = p.μp
-    CT_Params.mobility[p.iphia, :] = p.μa
+        params.bandEdgeEnergy[p.iphin, ireg] = p.En[ireg]
+        params.bandEdgeEnergy[p.iphip, ireg] = p.Ep[ireg]
+        params.bandEdgeEnergy[p.iphia, ireg] = p.Ea[ireg]
 
-    ## recombination parameters
-    for ireg in 1:p.numberOfRegions # region data
-        CT_Params.recombinationRadiative[ireg] = p.r0[ireg]
-        CT_Params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
-        CT_Params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
-        CT_Params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, CT_Params, p.EI[ireg])
-        CT_Params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, CT_Params, p.EI[ireg])
+        params.mobility[p.iphin, ireg] = p.μn[ireg]
+        params.mobility[p.iphip, ireg] = p.μp[ireg]
+        params.mobility[p.iphia, ireg] = p.μa[ireg]
+
+        ## recombination parameters
+        params.recombinationRadiative[ireg] = p.r0[ireg]
+        params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
+        params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
+        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg])
+        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg])
+
+        ## generation parameters
+        params.generationIncidentPhotonFlux[ireg] = p.incidentPhotonFlux[ireg]
+        params.generationAbsorption[ireg] = p.absorption[ireg]
+        params.generationUniform[ireg] = p.generation_uniform[ireg]
     end
 
-    ## doping
-    CT_Params.doping[p.iphin, p.regionDonor] = p.Cn
-    CT_Params.doping[p.iphia, p.regionIntrinsic] = p.Ca
-    CT_Params.doping[p.iphip, p.regionAcceptor] = p.Cp
+    # parameter which passes the shift information in the Beer-Lambert generation
+    params.generationPeak = p.generationPeak
 
-    return CT_Params
+    ## interior doping
+    params.doping[p.iphin, p.regionDonor] = p.Cn
+    params.doping[p.iphia, p.regionIntrinsic] = p.Ca
+    params.doping[p.iphip, p.regionAcceptor] = p.Cp
+
+    return params
 end

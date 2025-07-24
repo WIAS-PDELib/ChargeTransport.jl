@@ -95,18 +95,18 @@ function main(;
     grid = simplexgrid(coord_length, coord_height)
 
     ## specify inner regions
-    cellmask!(grid, [0.0, 0.0], [p.h_ndoping, height], regionDonor, tol = 1.0e-18)
-    cellmask!(grid, [p.h_pdoping, 0.0], [p.h_ndoping + p.h_intrinsic, height], regionIntrinsic, tol = 1.0e-18)
-    cellmask!(grid, [p.h_ndoping + p.h_intrinsic, 0.0], [h_total, height], regionAcceptor, tol = 1.0e-18)
+    cellmask!(grid, [0.0, 0.0], [p.h_ndoping, height], p.regionDonor, tol = 1.0e-18)
+    cellmask!(grid, [p.h_pdoping, 0.0], [p.h_ndoping + p.h_intrinsic, height], p.regionIntrinsic, tol = 1.0e-18)
+    cellmask!(grid, [p.h_ndoping + p.h_intrinsic, 0.0], [p.h_total, height], p.regionAcceptor, tol = 1.0e-18)
 
     ## specify outer regions
     ## metal interfaces
-    bfacemask!(grid, [0.0, 0.0], [0.0, height], bregionDonor)            # BregionNumber = 1
-    bfacemask!(grid, [h_total, 0.0], [h_total, height], bregionAcceptor) # BregionNumber = 2
+    bfacemask!(grid, [0.0, 0.0], [0.0, height], p.bregionDonor)            # BregionNumber = 1
+    bfacemask!(grid, [p.h_total, 0.0], [p.h_total, height], p.bregionAcceptor) # BregionNumber = 2
 
     ## no flux interfaces [xmin, ymin], [xmax, ymax]
-    bfacemask!(grid, [0.0, 0.0], [h_total, 0.0], bregionNoFlux)          # BregionNumber = 3
-    bfacemask!(grid, [0.0, height], [h_total, height], bregionNoFlux)    # BregionNumber = 3
+    bfacemask!(grid, [0.0, 0.0], [p.h_total, 0.0], bregionNoFlux)          # BregionNumber = 3
+    bfacemask!(grid, [0.0, height], [p.h_total, height], bregionNoFlux)    # BregionNumber = 3
 
     if plotting
         gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
@@ -124,7 +124,7 @@ function main(;
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, p.numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
@@ -134,7 +134,7 @@ function main(;
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
 
     data.bulkRecombination = set_bulk_recombination(;
-        iphin = iphin, iphip = iphip,
+        iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
@@ -142,11 +142,11 @@ function main(;
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
-    data.boundaryType[bregionAcceptor] = OhmicContact
-    data.boundaryType[bregionDonor] = OhmicContact
+    data.boundaryType[p.bregionAcceptor] = OhmicContact
+    data.boundaryType[p.bregionDonor] = OhmicContact
 
     ## Present ionic vacancies in perovskite layer
-    enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
+    enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
     ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
@@ -162,46 +162,7 @@ function main(;
     end
     ################################################################################
 
-    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
-
-    params.temperature = T
-    params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[iphin] = zn
-    params.chargeNumbers[iphip] = zp
-    params.chargeNumbers[iphia] = za
-
-    for ireg in 1:numberOfRegions # region data
-
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
-
-        ## effective DOS, band edge energy and mobilities
-        params.densityOfStates[iphin, ireg] = Nn[ireg]
-        params.densityOfStates[iphip, ireg] = Np[ireg]
-        params.densityOfStates[iphia, ireg] = Na[ireg]
-
-        params.bandEdgeEnergy[iphin, ireg] = En[ireg]
-        params.bandEdgeEnergy[iphip, ireg] = Ep[ireg]
-        params.bandEdgeEnergy[iphia, ireg] = Ea[ireg]
-
-        params.mobility[iphin, ireg] = μn[ireg]
-        params.mobility[iphip, ireg] = μp[ireg]
-        params.mobility[iphia, ireg] = μa[ireg]
-
-        ## recombination parameters
-        params.recombinationRadiative[ireg] = r0[ireg]
-        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
-        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
-        params.recombinationSRHTrapDensity[iphin, ireg] = trap_density!(iphin, ireg, params, EI[ireg])
-        params.recombinationSRHTrapDensity[iphip, ireg] = trap_density!(iphip, ireg, params, EI[ireg])
-
-    end
-
-    ## interior doping
-    params.doping[iphin, regionDonor] = Cn
-    params.doping[iphia, regionIntrinsic] = Ca
-    params.doping[iphip, regionAcceptor] = Cp
-
-    data.params = params
+    data.params = Params(p)
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -277,7 +238,7 @@ function main(;
         Δt = t - tvalues[istep - 1] # Time step size
 
         ## Apply new voltage; set non equilibrium boundary conditions
-        set_contact!(ctsys, bregionAcceptor, Δu = Δu)
+        set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
 
         if test == false
             println("time value: t = $(t) s")

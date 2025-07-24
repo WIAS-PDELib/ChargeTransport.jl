@@ -122,12 +122,12 @@ function main(;
     grid = ExtendableGrids.simplexgrid(coord)
 
     ## set different regions in grid
-    cellmask!(grid, [0.0 * μm], [heightLayers[1]], regionDonor, tol = 1.0e-18) # n-doped region   = 1
-    cellmask!(grid, [heightLayers[1]], [heightLayers[2]], regionIntrinsic, tol = 1.0e-18) # intrinsic region = 2
-    cellmask!(grid, [heightLayers[2]], [heightLayers[3]], regionAcceptor, tol = 1.0e-18) # p-doped region   = 3
+    cellmask!(grid, [0.0 * μm], [p.heightLayers[1]], p.regionDonor, tol = 1.0e-18) # n-doped region   = 1
+    cellmask!(grid, [p.heightLayers[1]], [p.heightLayers[2]], p.regionIntrinsic, tol = 1.0e-18) # intrinsic region = 2
+    cellmask!(grid, [p.heightLayers[2]], [p.heightLayers[3]], p.regionAcceptor, tol = 1.0e-18) # p-doped region   = 3
 
-    bfacemask!(grid, [heightLayers[1]], [heightLayers[1]], bregionJ1, tol = 1.0e-18)
-    bfacemask!(grid, [heightLayers[2]], [heightLayers[2]], bregionJ2, tol = 1.0e-18)
+    bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18)
+    bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18)
 
     if plotting
         gridplot(grid, Plotter = Plotter, legend = :lt)
@@ -147,10 +147,10 @@ function main(;
     ## Initialize Data instance and fill in predefined data
     if userdefinedGeneration
 
-        subg1 = subgrid(grid, [regionDonor]); subg2 = subgrid(grid, [regionIntrinsic]); subg3 = subgrid(grid, [regionAcceptor])
+        subg1 = subgrid(grid, [p.regionDonor]); subg2 = subgrid(grid, [p.regionIntrinsic]); subg3 = subgrid(grid, [p.regionAcceptor])
 
         gen1 = zeros(length(subg1[Coordinates]) - 1); gen3 = zeros(length(subg3[Coordinates]) - 1)
-        gen2 = incidentPhotonFlux[regionIntrinsic] .* absorption[regionIntrinsic] .* exp.(- absorption[regionIntrinsic] .* (subg2[Coordinates] .- generationPeak))
+        gen2 = p.incidentPhotonFlux[p.regionIntrinsic] .* p.absorption[p.regionIntrinsic] .* exp.(- p.absorption[p.regionIntrinsic] .* (subg2[Coordinates] .- p.generationPeak))
 
         ## we want to get agreement with the region-wise defined photogeneration
         X1 = subg1[Coordinates]; X2 = subg2[Coordinates]; X3 = subg3[Coordinates]
@@ -171,14 +171,14 @@ function main(;
         generationData = [gen1; gen2'; gen3]
 
         data = Data(
-            grid, numberOfCarriers,
+            grid, p.numberOfCarriers,
             contactVoltageFunction = contactVoltageFunction,
             generationData = generationData
         )
     else
 
         data = Data(
-            grid, numberOfCarriers,
+            grid, p.numberOfCarriers,
             contactVoltageFunction = contactVoltageFunction
         )
 
@@ -188,16 +188,16 @@ function main(;
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
 
     data.bulkRecombination = set_bulk_recombination(;
-        iphin = iphin, iphip = iphip,
+        iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
     )
-    data.boundaryType[bregionAcceptor] = OhmicContact
-    data.boundaryType[bregionDonor] = OhmicContact
+    data.boundaryType[p.bregionAcceptor] = OhmicContact
+    data.boundaryType[p.bregionDonor] = OhmicContact
     data.fluxApproximation .= ExcessChemicalPotential
 
-    enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
+    enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if userdefinedGeneration
         data.generationModel = GenerationUserDefined
@@ -215,53 +215,7 @@ function main(;
     end
     ################################################################################
 
-    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
-
-    params.temperature = T
-    params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[iphin] = zn
-    params.chargeNumbers[iphip] = zp
-    params.chargeNumbers[iphia] = za
-
-    for ireg in 1:numberOfRegions # interior region data
-
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
-
-        ## effective DOS, band edge energy and mobilities
-        params.densityOfStates[iphin, ireg] = Nn[ireg]
-        params.densityOfStates[iphip, ireg] = Np[ireg]
-        params.densityOfStates[iphia, ireg] = Na[ireg]
-
-        params.bandEdgeEnergy[iphin, ireg] = En[ireg]
-        params.bandEdgeEnergy[iphip, ireg] = Ep[ireg]
-        params.bandEdgeEnergy[iphia, ireg] = Ea[ireg]
-
-        params.mobility[iphin, ireg] = μn[ireg]
-        params.mobility[iphip, ireg] = μp[ireg]
-        params.mobility[iphia, ireg] = μa[ireg]
-
-        ## recombination parameters
-        params.recombinationRadiative[ireg] = r0[ireg]
-        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
-        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
-        params.recombinationSRHTrapDensity[iphin, ireg] = trap_density!(iphin, ireg, params, EI[ireg])
-        params.recombinationSRHTrapDensity[iphip, ireg] = trap_density!(iphip, ireg, params, EI[ireg])
-
-        ## generation parameters
-        params.generationIncidentPhotonFlux[ireg] = incidentPhotonFlux[ireg]
-        params.generationAbsorption[ireg] = absorption[ireg]
-        params.generationUniform[ireg] = generation_uniform[ireg]
-    end
-
-    # parameter which passes the shift information in the Beer-Lambert generation
-    params.generationPeak = generationPeak
-
-    ## interior doping
-    params.doping[iphin, regionDonor] = Cn
-    params.doping[iphia, regionIntrinsic] = Ca
-    params.doping[iphip, regionAcceptor] = Cp
-
-    data.params = params
+    data.params = Params(p)
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -317,8 +271,8 @@ function main(;
 
     ## since the constant which represents the constant quasi Fermi potential of anion vacancies is undetermined, we need
     ## to fix it in the bias loop, since we have no applied bias. Otherwise we get convergence errors
-    ctsys.fvmsys.boundary_factors[iphia, bregionJ2] = 1.0e30
-    ctsys.fvmsys.boundary_values[iphia, bregionJ2] = 0.0
+    ctsys.fvmsys.boundary_factors[p.iphia, p.bregionJ2] = 1.0e30
+    ctsys.fvmsys.boundary_values[p.iphia, p.bregionJ2] = 0.0
 
     for istep in 1:(length(I) - 1)
 
@@ -360,8 +314,8 @@ function main(;
     ################################################################################
 
     ## put here back the homogeneous Neumann boundary conditions.
-    ctsys.fvmsys.boundary_factors[iphia, bregionJ2] = 0.0
-    ctsys.fvmsys.boundary_values[iphia, bregionJ2] = 0.0
+    ctsys.fvmsys.boundary_factors[p.iphia, p.bregionJ2] = 0.0
+    ctsys.fvmsys.boundary_values[p.iphia, p.bregionJ2] = 0.0
 
     sol = solve(ctsys, inival = inival, times = (0.0, tend), control = control)
 
@@ -398,7 +352,7 @@ function main(;
     ################################################################################
 
     factory = TestFunctionFactory(ctsys)
-    tf = testfunction(factory, [bregionDonor], [bregionAcceptor])
+    tf = testfunction(factory, [p.bregionDonor], [p.bregionAcceptor])
 
     tvalues = sol.t
     number_tsteps = length(tvalues)
@@ -413,7 +367,7 @@ function main(;
         I = integrate(ctsys, tf, solution, inival, Δt)
 
         current = 0.0
-        for ii in 1:(numberOfCarriers + 1)
+        for ii in 1:(p.numberOfCarriers + 1)
             current = current + I[ii]
         end
 
@@ -434,7 +388,7 @@ function main(;
         I = integrate(ctsys, tf, solution, inival, Δt)
 
         current = 0.0
-        for ii in 1:(numberOfCarriers + 1)
+        for ii in 1:(p.numberOfCarriers + 1)
             current = current + I[ii]
         end
 
@@ -461,7 +415,7 @@ function main(;
         if userdefinedGeneration
             Plotter.plot(coord, data.generationData)
         else
-            for ireg in 1:numberOfRegions
+            for ireg in 1:p.numberOfRegions
                 subg = subgrid(grid, [ireg])
                 Plotter.plot(subg[Coordinates]', BeerLambert(ctsys, ireg, subg[Coordinates])', label = "region $ireg")
             end

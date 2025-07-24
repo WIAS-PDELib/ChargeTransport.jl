@@ -42,17 +42,6 @@ export cm, mm, μm, nm, ms, μs, ns, ps, eV
 export tiny_penalty_value
 ##################################################################
 
-# parameter files (add new parameter sets to the list below)
-for parameter_set in [
-        :Params_Laser_simple,
-        :Params_PSC_PCBM_MAPI_Pedot,
-        :Params_PSC_TiO2_MAPI_spiro,
-    ]
-    include(parametersdir("$(parameter_set).jl"))
-    @eval export $parameter_set
-end
-export generate_Params
-
 include("ct_distributions.jl")
 
 export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk
@@ -131,5 +120,17 @@ include("ct_plotting.jl")
 export set_plotting_labels
 export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBoltzmann
 export plot_solution, plot_IV
+
+#################################################################
+
+# parameter set (add new sets to the list below)
+for parameter_set in [
+        :Params_Laser_simple,
+        :Params_PSC_PCBM_MAPI_Pedot,
+        :Params_PSC_TiO2_MAPI_spiro,
+    ]
+    include(parametersdir("$(parameter_set).jl"))
+    @eval export $parameter_set
+end
 
 end # module
