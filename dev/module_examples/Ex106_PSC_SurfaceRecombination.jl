@@ -14,14 +14,11 @@ using ChargeTransport
 using ExtendableGrids
 using PyPlot
 
-# for convenience
-parametersdir = ChargeTransport.parametersdir
-
 # you can also use other Plotters, if you add them to the example file
 function main(;
         n = 6, Plotter = PyPlot, plotting = false,
         verbose = "", test = false,
-        parameter_file = parametersdir("Params_PSC_PCBM_MAPI_Pedot.jl"), # choose the parameter file
+        parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
     )
 
     if plotting
@@ -34,7 +31,8 @@ function main(;
     end
     ################################################################################
 
-    include(parameter_file) # include the parameter file we specified
+    # parameter
+    p = parameter_set()
 
     ## contact voltage
     voltageAcceptor = 1.2 * V
@@ -62,28 +60,28 @@ function main(;
     t = 0.5 * (cm) / δ # tolerance for geomspace and glue (with factor 10)
     k = 1.5        # the closer to 1, the closer to the boundary geomspace
 
-    coord_n_u = collect(range(0.0, h_ndoping / 2, step = h_ndoping / (0.8 * δ)))
+    coord_n_u = collect(range(0.0, p.h_ndoping / 2, step = p.h_ndoping / (0.8 * δ)))
     coord_n_g = geomspace(
-        h_ndoping / 2, h_ndoping,
-        h_ndoping / (0.7 * δ), h_ndoping / (1.1 * δ),
+        p.h_ndoping / 2, p.h_ndoping,
+        p.h_ndoping / (0.7 * δ), p.h_ndoping / (1.1 * δ),
         tol = t
     )
     coord_i_g1 = geomspace(
-        h_ndoping, h_ndoping + h_intrinsic / k,
-        h_intrinsic / (5.1 * δ), h_intrinsic / (1.1 * δ),
+        p.h_ndoping, p.h_ndoping + p.h_intrinsic / k,
+        p.h_intrinsic / (5.1 * δ), p.h_intrinsic / (1.1 * δ),
         tol = t
     )
     coord_i_g2 = geomspace(
-        h_ndoping + h_intrinsic / k, h_ndoping + h_intrinsic,
-        h_intrinsic / (1.1 * δ), h_intrinsic / (5.1 * δ),
+        p.h_ndoping + p.h_intrinsic / k, p.h_ndoping + p.h_intrinsic,
+        p.h_intrinsic / (1.1 * δ), p.h_intrinsic / (5.1 * δ),
         tol = t
     )
     coord_p_g = geomspace(
-        h_ndoping + h_intrinsic, h_ndoping + h_intrinsic + h_pdoping / 2,
-        h_pdoping / (1.3 * δ), h_pdoping / (0.6 * δ),
+        p.h_ndoping + p.h_intrinsic, p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2,
+        p.h_pdoping / (1.3 * δ), p.h_pdoping / (0.6 * δ),
         tol = t
     )
-    coord_p_u = collect(range(h_ndoping + h_intrinsic + h_pdoping / 2, h_ndoping + h_intrinsic + h_pdoping, step = h_pdoping / (0.8 * δ)))
+    coord_p_u = collect(range(p.h_ndoping + p.h_intrinsic + p.h_pdoping / 2, p.h_ndoping + p.h_intrinsic + p.h_pdoping, step = p.h_pdoping / (0.8 * δ)))
 
     coord = glue(coord_n_u, coord_n_g, tol = 10 * t)
     coord = glue(coord, coord_i_g1, tol = 10 * t)
@@ -93,15 +91,15 @@ function main(;
     grid = ExtendableGrids.simplexgrid(coord)
 
     ## set different regions in grid
-    cellmask!(grid, [0.0 * μm], [heightLayers[1]], regionDonor, tol = 1.0e-18)     # n-doped region   = 1
-    cellmask!(grid, [heightLayers[1]], [heightLayers[2]], regionIntrinsic, tol = 1.0e-18) # intrinsic region = 2
-    cellmask!(grid, [heightLayers[2]], [heightLayers[3]], regionAcceptor, tol = 1.0e-18)  # p-doped region   = 3
+    cellmask!(grid, [0.0 * μm], [p.heightLayers[1]], p.regionDonor, tol = 1.0e-18)     # n-doped region   = 1
+    cellmask!(grid, [p.heightLayers[1]], [p.heightLayers[2]], p.regionIntrinsic, tol = 1.0e-18) # intrinsic region = 2
+    cellmask!(grid, [p.heightLayers[2]], [p.heightLayers[3]], p.regionAcceptor, tol = 1.0e-18)  # p-doped region   = 3
 
     ## bfacemask! for setting different boundary regions
-    bfacemask!(grid, [0.0], [0.0], bregionDonor, tol = 1.0e-18)     # outer left boundary
-    bfacemask!(grid, [h_total], [h_total], bregionAcceptor, tol = 1.0e-18)  # outer right boundary
-    bfacemask!(grid, [heightLayers[1]], [heightLayers[1]], bregionJ1, tol = 1.0e-18) # first  inner interface
-    bfacemask!(grid, [heightLayers[2]], [heightLayers[2]], bregionJ2, tol = 1.0e-18) # second inner interface
+    bfacemask!(grid, [0.0], [0.0], p.bregionDonor, tol = 1.0e-18)     # outer left boundary
+    bfacemask!(grid, [p.h_total], [p.h_total], p.bregionAcceptor, tol = 1.0e-18)  # outer right boundary
+    bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18) # first  inner interface
+    bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18) # second inner interface
 
     if plotting
         gridplot(grid, Plotter = Plotter, legend = :lt)
@@ -119,7 +117,7 @@ function main(;
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, p.numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
@@ -129,7 +127,7 @@ function main(;
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
 
     data.bulkRecombination = set_bulk_recombination(;
-        iphin = iphin, iphip = iphip,
+        iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
@@ -137,13 +135,13 @@ function main(;
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
-    data.boundaryType[bregionAcceptor] = OhmicContact
-    data.boundaryType[bregionJ1] = InterfaceRecombination
-    data.boundaryType[bregionJ2] = InterfaceRecombination
-    data.boundaryType[bregionDonor] = OhmicContact
+    data.boundaryType[p.bregionAcceptor] = OhmicContact
+    data.boundaryType[p.bregionJ1] = InterfaceRecombination
+    data.boundaryType[p.bregionJ2] = InterfaceRecombination
+    data.boundaryType[p.bregionDonor] = OhmicContact
 
     ## Present ionic vacancies in perovskite layer
-    enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
+    enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
     ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
@@ -159,74 +157,7 @@ function main(;
     end
     ################################################################################
 
-    params = Params(grid, numberOfCarriers)
-
-    params.temperature = T
-    params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[iphin] = zn
-    params.chargeNumbers[iphip] = zp
-    params.chargeNumbers[iphia] = za
-
-    for ireg in 1:numberOfRegions ## interior region data
-
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
-
-        ## effective dos, band edge energy and mobilities
-        params.densityOfStates[iphin, ireg] = Nn[ireg]
-        params.densityOfStates[iphip, ireg] = Np[ireg]
-        params.densityOfStates[iphia, ireg] = Na[ireg]
-
-        params.bandEdgeEnergy[iphin, ireg] = En[ireg]
-        params.bandEdgeEnergy[iphip, ireg] = Ep[ireg]
-        params.bandEdgeEnergy[iphia, ireg] = Ea[ireg]
-
-        params.mobility[iphin, ireg] = μn[ireg]
-        params.mobility[iphip, ireg] = μp[ireg]
-        params.mobility[iphia, ireg] = μa[ireg]
-
-        ## recombination parameters
-        params.recombinationRadiative[ireg] = r0[ireg]
-        params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]
-        params.recombinationSRHLifetime[iphip, ireg] = τp[ireg]
-        params.recombinationSRHTrapDensity[iphin, ireg] = trap_density!(iphin, ireg, params, EI[ireg])
-        params.recombinationSRHTrapDensity[iphip, ireg] = trap_density!(iphip, ireg, params, EI[ireg])
-    end
-
-    ##############################################################
-    ## inner boundary region data (we choose the intrinsic values)
-    params.bDensityOfStates[iphin, bregionJ1] = Nn[regionIntrinsic]
-    params.bDensityOfStates[iphip, bregionJ1] = Np[regionIntrinsic]
-
-    params.bDensityOfStates[iphin, bregionJ2] = Nn[regionIntrinsic]
-    params.bDensityOfStates[iphip, bregionJ2] = Np[regionIntrinsic]
-
-    params.bBandEdgeEnergy[iphin, bregionJ1] = En[regionIntrinsic]
-    params.bBandEdgeEnergy[iphip, bregionJ1] = Ep[regionIntrinsic]
-
-    params.bBandEdgeEnergy[iphin, bregionJ2] = En[regionIntrinsic]
-    params.bBandEdgeEnergy[iphip, bregionJ2] = Ep[regionIntrinsic]
-
-    ## for surface recombination
-    params.recombinationSRHvelocity[iphin, bregionJ1] = 1.0e1 * cm / s
-    params.recombinationSRHvelocity[iphip, bregionJ1] = 1.0e5 * cm / s
-
-    params.bRecombinationSRHTrapDensity[iphin, bregionJ1] = params.recombinationSRHTrapDensity[iphin, regionIntrinsic]
-    params.bRecombinationSRHTrapDensity[iphip, bregionJ1] = params.recombinationSRHTrapDensity[iphip, regionIntrinsic]
-
-    params.recombinationSRHvelocity[iphin, bregionJ2] = 1.0e7 * cm / s
-    params.recombinationSRHvelocity[iphip, bregionJ2] = 1.0e1 * cm / s
-
-    params.bRecombinationSRHTrapDensity[iphin, bregionJ2] = params.recombinationSRHTrapDensity[iphin, regionIntrinsic]
-    params.bRecombinationSRHTrapDensity[iphip, bregionJ2] = params.recombinationSRHTrapDensity[iphip, regionIntrinsic]
-
-    ##############################################################
-
-    ## interior doping
-    params.doping[iphin, regionDonor] = Cn
-    params.doping[iphip, regionAcceptor] = Cp
-    params.doping[iphia, regionIntrinsic] = Ca
-
-    data.params = params
+    data.params = Params(p)
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -278,7 +209,7 @@ function main(;
         Δt = t - tvalues[istep - 1] # Time step size
 
         ## Apply new voltage (set non-equilibrium values)
-        set_contact!(ctsys, bregionAcceptor, Δu = Δu)
+        set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
 
         if test == false
             println("time value: Δt = $(t)")

@@ -5,8 +5,7 @@ using ExtendableGrids
 using GridVisualize
 using PyPlot
 
-###########################################################################</code></pre><p>for convenience</p><pre><code class="language-julia hljs">parametersdir = ChargeTransport.parametersdir
-
+###########################################################################
 
 numberOfColoumns = Dict(
     &quot;ref1&quot; =&gt; [2, 4],
@@ -93,10 +92,8 @@ end
 function main(;
         refinement = 1, plotting = false, Plotter = PyPlot, verbose = &quot;&quot;, test = false,
         unknown_storage = :sparse, numberOfEigenvalues = 1,
-        parameter_file = parametersdir(&quot;Params_Laser_simple.jl&quot;)
-    ) # choose the parameter file)
-
-    include(parameter_file)
+        parameter_set = Params_Laser_simple
+    ) # choose the parameter set</code></pre><p>parameter</p><pre><code class="language-julia hljs">    p = parameter_set()
 
     ################################################################################
     if test == false
@@ -116,7 +113,7 @@ function main(;
     ################################################################################
 
     # Initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers, numberOfEigenvalues = numberOfEigenvalues)
+    data = Data(grid, p.numberOfCarriers, numberOfEigenvalues = numberOfEigenvalues)
 
     # Possible choices: Stationary, Transient
     data.modelType = Stationary
@@ -127,7 +124,7 @@ function main(;
     data.F .= FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
-        iphin = iphin, iphip = iphip,
+        iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = true,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
@@ -135,8 +132,8 @@ function main(;
 
     # Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     # InterfaceRecombination (inner boundary).
-    data.boundaryType[bregionAcceptor2] = OhmicContact    # top boundary Dirichlet condition
-    data.boundaryType[bregionDonor1] = OhmicContact    # bottom boundary Dirichlet condition</code></pre><pre><code class="nohighlight hljs">                                                # rest is set to Neumann by default</code></pre><pre><code class="language-julia hljs">    data.fluxApproximation .= ExcessChemicalPotential
+    data.boundaryType[p.bregionAcceptor2] = OhmicContact    # top boundary Dirichlet condition
+    data.boundaryType[p.bregionDonor1] = OhmicContact    # bottom boundary Dirichlet condition</code></pre><pre><code class="nohighlight hljs">                                                # rest is set to Neumann by default</code></pre><pre><code class="language-julia hljs">    data.fluxApproximation .= ExcessChemicalPotential
     #data.fluxApproximation           .= ScharfetterGummel           # if F=Boltzmann
 
     if test == false
@@ -154,55 +151,20 @@ function main(;
         Auger recombination coefficients Auger_Cn, Auger_Cp
         doping doping (or vcat(Nd,Na) = doping).
     &quot;&quot;&quot;
+    paramsoptical = ParamsOptical(grid, p.numberOfCarriers, numberOfEigenvalues)
+    paramsoptical.laserWavelength = p.λ
 
-    params = Params(grid, numberOfCarriers)
-    paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
-
-    params.temperature = T
-    params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[iphin] = -1
-    params.chargeNumbers[iphip] = 1
-    paramsoptical.laserWavelength = λ
-
-    params.dielectricConstant[:] = εr .* ε0
-    paramsoptical.absorption_0[:] = α0
-    paramsoptical.gain_0[:] = gain0
-    paramsoptical.refractiveIndex_0[:] = nTilde
-    paramsoptical.refractiveIndex_d[:] = nTilde_d
-    paramsoptical.refractiveIndex_γ[:] = γn
-
-    Nc = params.densityOfStates[iphin, :] = NC
-    Nv = params.densityOfStates[iphip, :] = NV
-    Ec = params.bandEdgeEnergy[iphin, :] = EC
-    Ev = params.bandEdgeEnergy[iphip, :] = EV
-
-    params.mobility[iphin, :] = μn
-    params.mobility[iphip, :] = μp
-
-    # recombination parameters
-    params.recombinationRadiative[:] = r0
-    params.recombinationSRHLifetime[iphin, :] = τn
-    params.recombinationSRHLifetime[iphip, :] = τp
-    params.recombinationSRHTrapDensity[iphin, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * T)))
-    params.recombinationSRHTrapDensity[iphip, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * T)))
-    params.recombinationAuger[iphin, :] = Auger_Cn
-    params.recombinationAuger[iphip, :] = Auger_Cp
-
-    paramsoptical.absorptionFreeCarriers[iphin, :] = fcnalf
-    paramsoptical.absorptionFreeCarriers[iphip, :] = fcpalf
+    paramsoptical.absorption_0[:] = p.α0
+    paramsoptical.gain_0[:] = p.gain0
+    paramsoptical.refractiveIndex_0[:] = p.nTilde
+    paramsoptical.refractiveIndex_d[:] = p.nTilde_d
+    paramsoptical.refractiveIndex_γ[:] = p.γn
+    paramsoptical.absorptionFreeCarriers[p.iphin, :] = p.fcnalf
+    paramsoptical.absorptionFreeCarriers[p.iphip, :] = p.fcpalf
 
     paramsoptical.eigenvalues .= 1 + 1 * im   # dummy value for initializing
 
-    # interior doping
-    for ireg in regionsDonor   #[1,2,3]            # n-doped regions
-        params.doping[iphin, ireg] = doping[ireg]
-    end
-
-    for ireg in regionsAcceptor  #[4,5]            # p-doped region
-        params.doping[iphip, ireg] = doping[ireg]
-    end
-
-    data.params = params
+    data.params = Params(p)
     data.paramsoptical = paramsoptical
 
     ctsys = System(grid, data, unknown_storage = unknown_storage)
@@ -264,7 +226,7 @@ function main(;
     end
     ################################################################################
 
-    maxBias = U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
+    maxBias = p.U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
     biasValues = range(0, stop = maxBias, length = 40)
     IV = zeros(0)
 
@@ -275,7 +237,7 @@ function main(;
         end
 
         # set non equilibrium boundary conditions
-        set_contact!(ctsys, bregionAcceptor2, Δu = Δu)
+        set_contact!(ctsys, p.bregionAcceptor2, Δu = Δu)
 
         solution = solve(ctsys; inival = inival, control = control)
         inival .= solution
@@ -617,7 +579,7 @@ function main(;
     ############################
     ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
-    ctsys.data.paramsoptical.power = P[2]
+    ctsys.data.paramsoptical.power = p.P[2]
 
     previousSolution = currentSolution
     solution = solve(ctsys; inival = inival, control = control)
@@ -628,7 +590,7 @@ function main(;
 
     ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
-    ctsys.data.paramsoptical.power = P[2]
+    ctsys.data.paramsoptical.power = p.P[2]
 
     previousSolution = currentSolution
     solution = solve(ctsys; inival = inival, control = control)
@@ -672,4 +634,4 @@ if test == false
     println(&quot;This message should show when this module is successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex201_PSC_tensorGrid/">« PSC device on 2D domain (Tensor grid).</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 23 July 2025 13:06">Wednesday 23 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex201_PSC_tensorGrid/">« PSC device on 2D domain (Tensor grid).</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 25 July 2025 11:59">Friday 25 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -13,10 +13,6 @@ using PyPlot
 
 ###########################################################################
 
-# for convenience
-parametersdir = ChargeTransport.parametersdir
-
-
 numberOfColoumns = Dict(
     "ref1" => [2, 4],
     "ref2" => [4, 8],
@@ -105,10 +101,11 @@ end
 function main(;
         refinement = 1, plotting = false, Plotter = PyPlot, verbose = "", test = false,
         unknown_storage = :sparse, numberOfEigenvalues = 1,
-        parameter_file = parametersdir("Params_Laser_simple.jl")
-    ) # choose the parameter file)
+        parameter_set = Params_Laser_simple
+    ) # choose the parameter set
 
-    include(parameter_file)
+    # parameter
+    p = parameter_set()
 
     ################################################################################
     if test == false
@@ -128,7 +125,7 @@ function main(;
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers, numberOfEigenvalues = numberOfEigenvalues)
+    data = Data(grid, p.numberOfCarriers, numberOfEigenvalues = numberOfEigenvalues)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary
@@ -139,7 +136,7 @@ function main(;
     data.F .= FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
-        iphin = iphin, iphip = iphip,
+        iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = true,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
@@ -147,8 +144,8 @@ function main(;
 
     ## Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
     ## InterfaceRecombination (inner boundary).
-    data.boundaryType[bregionAcceptor2] = OhmicContact    # top boundary Dirichlet condition
-    data.boundaryType[bregionDonor1] = OhmicContact    # bottom boundary Dirichlet condition
+    data.boundaryType[p.bregionAcceptor2] = OhmicContact    # top boundary Dirichlet condition
+    data.boundaryType[p.bregionDonor1] = OhmicContact    # bottom boundary Dirichlet condition
     #                                                     # rest is set to Neumann by default
 
     data.fluxApproximation .= ExcessChemicalPotential
@@ -169,55 +166,20 @@ function main(;
         Auger recombination coefficients Auger_Cn, Auger_Cp
         doping doping (or vcat(Nd,Na) = doping).
     """
+    paramsoptical = ParamsOptical(grid, p.numberOfCarriers, numberOfEigenvalues)
+    paramsoptical.laserWavelength = p.λ
 
-    params = Params(grid, numberOfCarriers)
-    paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
-
-    params.temperature = T
-    params.UT = (kB * params.temperature) / q
-    params.chargeNumbers[iphin] = -1
-    params.chargeNumbers[iphip] = 1
-    paramsoptical.laserWavelength = λ
-
-    params.dielectricConstant[:] = εr .* ε0
-    paramsoptical.absorption_0[:] = α0
-    paramsoptical.gain_0[:] = gain0
-    paramsoptical.refractiveIndex_0[:] = nTilde
-    paramsoptical.refractiveIndex_d[:] = nTilde_d
-    paramsoptical.refractiveIndex_γ[:] = γn
-
-    Nc = params.densityOfStates[iphin, :] = NC
-    Nv = params.densityOfStates[iphip, :] = NV
-    Ec = params.bandEdgeEnergy[iphin, :] = EC
-    Ev = params.bandEdgeEnergy[iphip, :] = EV
-
-    params.mobility[iphin, :] = μn
-    params.mobility[iphip, :] = μp
-
-    ## recombination parameters
-    params.recombinationRadiative[:] = r0
-    params.recombinationSRHLifetime[iphin, :] = τn
-    params.recombinationSRHLifetime[iphip, :] = τp
-    params.recombinationSRHTrapDensity[iphin, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * T)))
-    params.recombinationSRHTrapDensity[iphip, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * T)))
-    params.recombinationAuger[iphin, :] = Auger_Cn
-    params.recombinationAuger[iphip, :] = Auger_Cp
-
-    paramsoptical.absorptionFreeCarriers[iphin, :] = fcnalf
-    paramsoptical.absorptionFreeCarriers[iphip, :] = fcpalf
+    paramsoptical.absorption_0[:] = p.α0
+    paramsoptical.gain_0[:] = p.gain0
+    paramsoptical.refractiveIndex_0[:] = p.nTilde
+    paramsoptical.refractiveIndex_d[:] = p.nTilde_d
+    paramsoptical.refractiveIndex_γ[:] = p.γn
+    paramsoptical.absorptionFreeCarriers[p.iphin, :] = p.fcnalf
+    paramsoptical.absorptionFreeCarriers[p.iphip, :] = p.fcpalf
 
     paramsoptical.eigenvalues .= 1 + 1 * im   # dummy value for initializing
 
-    ## interior doping
-    for ireg in regionsDonor   #[1,2,3]            # n-doped regions
-        params.doping[iphin, ireg] = doping[ireg]
-    end
-
-    for ireg in regionsAcceptor  #[4,5]            # p-doped region
-        params.doping[iphip, ireg] = doping[ireg]
-    end
-
-    data.params = params
+    data.params = Params(p)
     data.paramsoptical = paramsoptical
 
     ctsys = System(grid, data, unknown_storage = unknown_storage)
@@ -279,7 +241,7 @@ function main(;
     end
     ################################################################################
 
-    maxBias = U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
+    maxBias = p.U[end]  # = 1.81 = topVoltageAcceptor2 # bias goes until the given voltage at acceptor boundary
     biasValues = range(0, stop = maxBias, length = 40)
     IV = zeros(0)
 
@@ -290,7 +252,7 @@ function main(;
         end
 
         ## set non equilibrium boundary conditions
-        set_contact!(ctsys, bregionAcceptor2, Δu = Δu)
+        set_contact!(ctsys, p.bregionAcceptor2, Δu = Δu)
 
         solution = solve(ctsys; inival = inival, control = control)
         inival .= solution
@@ -636,7 +598,7 @@ function main(;
     ############################
     ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
-    ctsys.data.paramsoptical.power = P[2]
+    ctsys.data.paramsoptical.power = p.P[2]
 
     previousSolution = currentSolution
     solution = solve(ctsys; inival = inival, control = control)
@@ -647,7 +609,7 @@ function main(;
 
     ctsys.data.paramsoptical.eigenvalues = λ1
     ctsys.data.paramsoptical.eigenvectors = v1
-    ctsys.data.paramsoptical.power = P[2]
+    ctsys.data.paramsoptical.power = p.P[2]
 
     previousSolution = currentSolution
     solution = solve(ctsys; inival = inival, control = control)
