@@ -50,6 +50,8 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     end
     ################################################################################
 
+    @local_unitfactors μm cm eV s ns V K ps Hz W m
+
     ## region numbers
     regionDonor = 1                           # n doped region
     regionAcceptorLeft = 2                           # p doped region
@@ -164,11 +166,11 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     μt = [0.0, 0.0, mu_t, 0.0]
 
     ## recombination information parameters
-    ni_ZnO = sqrt(Nc * Nv) * exp(-(Ec_ZnO - Ev_ZnO) / (2 * kB * T))   # intrinsic concentration
-    n0_ZnO = Nc * Boltzmann((Et - Ec_ZnO) / (kB * T))                   # Boltzmann equilibrium concentration
+    ni_ZnO = sqrt(Nc * Nv) * exp(-(Ec_ZnO - Ev_ZnO) / (2 * k_B * T))   # intrinsic concentration
+    n0_ZnO = Nc * Boltzmann((Et - Ec_ZnO) / (k_B * T))                   # Boltzmann equilibrium concentration
     p0_ZnO = ni_ZnO^2 / n0_ZnO                                        # Boltzmann equilibrium concentration
-    ni_CIGS = sqrt(Nc * Nv) * exp(-(Ec_CIGS - Ev_CIGS) / (2 * kB * T)) # intrinsic concentration
-    n0_CIGS = Nc * Boltzmann((Et - Ec_CIGS) / (kB * T))                  # Boltzmann equilibrium concentration
+    ni_CIGS = sqrt(Nc * Nv) * exp(-(Ec_CIGS - Ev_CIGS) / (2 * k_B * T)) # intrinsic concentration
+    n0_CIGS = Nc * Boltzmann((Et - Ec_CIGS) / (k_B * T))                  # Boltzmann equilibrium concentration
     p0_CIGS = ni_CIGS^2 / n0_CIGS                                      # Boltzmann equilibrium concentration
 
     p0 = [p0_ZnO, p0_CIGS, p0_CIGS, p0_CIGS]
@@ -181,8 +183,8 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     Radiative = 1.0e-10 * cm^3 / s
 
     ## Schottky contact information
-    An = 4 * pi * q * mₑ * kB^2 / Planck_constant^3
-    Ap = 4 * pi * q * mₑ * kB^2 / Planck_constant^3
+    An = 4 * pi * q * mₑ * k_B^2 / Planck_constant^3
+    Ap = 4 * pi * q * mₑ * k_B^2 / Planck_constant^3
     vn = An * T^2 / (q * Nc)
     vp = Ap * T^2 / (q * Nv)
     barrier = 0.7 * eV
@@ -244,7 +246,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ## physical parameters
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     if AdditionalTrapSpecies
@@ -253,7 +255,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
 
     for ireg in 1:numberOfRegions           # interior region data
 
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
+        params.dielectricConstant[ireg] = ε[ireg] * ε_0
 
         ## effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = NC[ireg]

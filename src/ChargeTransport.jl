@@ -13,6 +13,8 @@ using ForwardDiff: ForwardDiff
 using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
 # for interpolation of data
 using Interpolations: Interpolations, Gridded, Linear
+# local units and constants
+using LessUnitful: @local_unitfactors, @ufac_str
 # printing
 using Printf: @printf
 # for interpolation of data
@@ -30,15 +32,14 @@ datadir(args...) = joinpath(pkgdir(ChargeTransport), "data", args...)
 examplesdir(args...) = joinpath(pkgdir(ChargeTransport), "examples", args...)
 parametersdir(args...) = joinpath(pkgdir(ChargeTransport), "parameter_files", args...)
 
+# re-export LessUnitful macros
+export @local_unitfactors, @ufac_str
+
 include("ct_constants.jl")
 
 export k_B, Planck_constant, mₑ, q, ε_0
 ##################################################################
 
-include("ct_units.jl")
-
-export K, J, A, V, m, s, C, kg, Hz, kHz, W, kW
-export cm, mm, μm, nm, ms, μs, ns, ps, eV
 export tiny_penalty_value
 ##################################################################
 

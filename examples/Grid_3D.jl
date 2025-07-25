@@ -18,6 +18,8 @@ using GLMakie
 
 function main(; Plotter = GLMakie, plotting = true) # plotting is currently only tested with GLMakie and PyPlot
 
+    @local_unitfactors μm cm eV s ns V K ps Hz W
+
     builder3d = let
 
         b = SimplexGridBuilder(Generator = TetGen)

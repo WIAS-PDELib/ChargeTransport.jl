@@ -48,3 +48,6 @@ function set_unity_constants()
     global eV = 1.0
     return nothing
 end
+
+# Numerical parameters
+const tiny_penalty_value = 1.0e-10        # tiny penalty value

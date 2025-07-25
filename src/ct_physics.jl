@@ -121,6 +121,7 @@ The argument of the statistics function for boundary nodes.
 """
 function etaFunction!(u, bnode::VoronoiFVM.BNode, data, icc) # bnode.index refers to index in overall mesh
 
+
     get_BEE!(icc, bnode::VoronoiFVM.BNode, data)
     E = data.tempBEE1[icc]
 
@@ -587,7 +588,7 @@ function breaction!(f, u, bnode, data, ::Type{InterfaceRecombination})
     n = get_density!(u, bnode, data, iphin)
     p = get_density!(u, bnode, data, iphip)
 
-    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (kB * params.temperature))
+    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (k_B * params.temperature))
     excessDensTerm = n * p * (1.0 - exponentialTerm)
 
     if params.recombinationSRHvelocity[iphip, bnode.region] ≈ 0.0
@@ -740,12 +741,12 @@ function StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)      #
     c0 = 299_792_458
     k0 = 2 * pi / paramsoptical.laserWavelength
     ω0 = k0 * c0
-    kBT = kB * params.temperature
+    kBT = k_B * params.temperature
 
     Ec = params.bandEdgeEnergy[iphin, ireg]
     Ev = params.bandEdgeEnergy[iphip, ireg]
 
-    kBT = kB * params.temperature
+    kBT = k_B * params.temperature
     n0 = paramsoptical.refractiveIndex_0[ireg]
     nd = paramsoptical.refractiveIndex_d[ireg]
     γn = paramsoptical.refractiveIndex_γ[ireg]
@@ -791,7 +792,7 @@ function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
     taup = params.recombinationSRHLifetime[iphip, ireg]
     p0 = params.recombinationSRHTrapDensity[iphip, ireg]
 
-    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (kB * data.params.temperature))
+    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (k_B * data.params.temperature))
     excessDensTerm = n * p * (1.0 - exponentialTerm)
 
     # calculate recombination kernel. If user adjusted Auger, radiative or SRH recombination,
@@ -1063,7 +1064,7 @@ Compute trap densities for a given trap energy.
 """
 function trap_density!(icc, ireg, params, Et)
 
-    return params.densityOfStates[icc, ireg] * exp(params.chargeNumbers[icc] * (params.bandEdgeEnergy[icc, ireg] - Et) / (kB * params.temperature))
+    return params.densityOfStates[icc, ireg] * exp(params.chargeNumbers[icc] * (params.bandEdgeEnergy[icc, ireg] - Et) / (k_B * params.temperature))
 end
 
 # The generation rate ``G``, which occurs in the right-hand side of the
@@ -1572,7 +1573,7 @@ function SRRecombination!(f, u, bnode, data)
     n = get_density!(u, bnode, data, iphin)
     p = get_density!(u, bnode, data, iphip)
 
-    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (kB * params.temperature))
+    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (k_B * params.temperature))
     excessDensTerm = n * p * (1.0 - exponentialTerm)
 
     if params.recombinationSRHvelocity[iphip, bnode.region] ≈ 0.0
@@ -1619,7 +1620,7 @@ function SRHRecombination!(f, u, node, data)
     taup = params.recombinationSRHLifetime[iphip, ireg]
     p0 = params.recombinationSRHTrapDensity[iphip, ireg]
 
-    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (kB * data.params.temperature))
+    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (k_B * data.params.temperature))
     excessDensTerm = n * p * (1.0 - exponentialTerm)
 
     kernelSRH = params.prefactor_SRH / (taup * (n + n0) + taun * (p + p0))
@@ -1649,7 +1650,7 @@ function RadiativeRecombination!(f, u, node, data)
     n = get_density!(u, node, data, iphin)
     p = get_density!(u, node, data, iphip)
 
-    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (kB * data.params.temperature))
+    exponentialTerm = exp((q * u[iphin] - q * u[iphip]) / (k_B * data.params.temperature))
     excessDensTerm = n * p * (1.0 - exponentialTerm)
 
     # calculate recombination kernel. If user adjusted Auger, radiative or SRH recombination,

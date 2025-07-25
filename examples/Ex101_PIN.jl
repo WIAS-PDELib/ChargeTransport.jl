@@ -29,6 +29,9 @@ end
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
 
+    # unit factors and constants
+    @local_unitfactors μm cm eV s ns V K
+
     if plotting
         Plotter.close("all")
     end
@@ -125,7 +128,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     Na = dopingFactorNa * Nv
 
     ## intrinsic concentration
-    ni = sqrt(Nc * Nv) * exp(-(Ec - Ev) / (2 * kB * T))
+    ni = sqrt(Nc * Nv) * exp(-(Ec - Ev) / (2 * k_B * T))
 
     ## contact voltage: we impose an applied voltage only on one boundary.
     ## At the other boundary the applied voltage is zero.
@@ -189,13 +192,13 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 
     for ireg in 1:numberOfRegions # region data
 
-        params.dielectricConstant[ireg] = εr * ε0
+        params.dielectricConstant[ireg] = εr * ε_0
 
         ## effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc
