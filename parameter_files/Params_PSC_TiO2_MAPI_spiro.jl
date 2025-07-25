@@ -108,14 +108,14 @@ function Params(p::Params_PSC_TiO2_MAPI_spiro)
     )
 
     params.temperature = p.T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[p.iphin] = p.zn
     params.chargeNumbers[p.iphip] = p.zp
     params.chargeNumbers[p.iphia] = p.za
 
     for ireg in 1:p.numberOfRegions # interior region data
 
-        params.dielectricConstant[ireg] = p.ε[ireg] * ε0
+        params.dielectricConstant[ireg] = p.ε[ireg] * ε_0
 
         ## effective DOS, band edge energy and mobilities
         params.densityOfStates[p.iphin, ireg] = p.Nn[ireg]

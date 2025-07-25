@@ -392,14 +392,14 @@ begin
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = zn
     params.chargeNumbers[iphip] = zp
     params.chargeNumbers[iphia] = za
 
     for ireg in 1:numberOfRegions # interior region data
 
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
+        params.dielectricConstant[ireg] = ε[ireg] * ε_0
 
         ## effective DOS, band edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nn[ireg]
