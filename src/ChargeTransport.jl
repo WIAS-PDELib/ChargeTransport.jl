@@ -109,7 +109,7 @@ export gridplot
 
 export set_contact!
 export compute_open_circuit_voltage
-export electroNeutralSolution, print_jacobi
+export electroNeutralSolution
 export show_params, show_paramsoptical, trap_density!
 export get_current_val, charge_density
 
@@ -120,5 +120,17 @@ include("ct_plotting.jl")
 export set_plotting_labels
 export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBoltzmann
 export plot_solution, plot_IV
+
+#################################################################
+
+# parameter set (add new sets to the list below)
+for parameter_set in [
+        :Params_Laser_simple,
+        :Params_PSC_PCBM_MAPI_Pedot,
+        :Params_PSC_TiO2_MAPI_spiro,
+    ]
+    include(parametersdir("$(parameter_set).jl"))
+    @eval export $parameter_set
+end
 
 end # module

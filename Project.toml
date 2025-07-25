@@ -1,7 +1,7 @@
 name = "ChargeTransport"
 uuid = "25c3eafe-d88c-11e9-3031-f396758f002a"
-authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>"]
-version = "0.6.0"
+version = "1.0.0"
+authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>", "Patrick Jaap <patrick.jaap@wias-berlin.de>"]
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -26,3 +26,11 @@ PyPlot = "^2.11.2"
 Roots = "^2.0"
 VoronoiFVM = "1.13,2"
 julia = "^1.6"
+
+[extras]
+SimplexGridFactory = "57bfcd06-606e-45d6-baf4-4ba06da0efd5"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
+
+[targets]
+test = ["SimplexGridFactory", "Test", "Triangulate"]

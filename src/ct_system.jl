@@ -288,11 +288,6 @@ mutable struct Params
     ####                   integer numbers                     ####
     ###############################################################
     """
-    Number of nodes used for the discretization of the domain ``\\mathbf{\\Omega}``.
-    """
-    numberOfNodes::Int64
-
-    """
     Number of subregions ``\\mathbf{\\Omega}_k`` within the domain ``\\mathbf{\\Omega}``.
     """
     numberOfRegions::Int64
@@ -910,22 +905,16 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
+Simplified constructor for Params which only takes the numberOfRegions, numberOfBoundaryRegions and numberOfCarriers as argument.
 
 """
-function Params(grid, numberOfCarriers)
-
-    numberOfNodes = num_nodes(grid)
-    numberOfRegions = grid[NumCellRegions]
-    numberOfBoundaryRegions = grid[NumBFaceRegions]
-    ###############################################################
+function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
 
     params = Params()
 
     ###############################################################
     ####                   integer numbers                     ####
     ###############################################################
-    params.numberOfNodes = numberOfNodes
     params.numberOfRegions = numberOfRegions
     params.numberOfBoundaryRegions = numberOfBoundaryRegions
     params.numberOfCarriers = numberOfCarriers
@@ -999,6 +988,19 @@ function Params(grid, numberOfCarriers)
     ###############################################################
     return params
 
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Deprecated!
+
+Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
+
+"""
+function Params(grid::ExtendableGrid, numberOfCarriers)
+    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChangeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
+    return Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 end
 
 
@@ -1176,7 +1178,7 @@ function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for 
     ###############################################################
     ####          Physical parameters as own structs           ####
     ###############################################################
-    data.params = Params(grid, numberOfCarriers)
+    data.params = Params(grid[NumCellRegions], numberOfBoundaryRegions, numberOfCarriers)
     data.paramsnodal = ParamsNodal(grid, numberOfCarriers)
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
 
@@ -1826,23 +1828,4 @@ Compute the charge density, i.e. the right-hand side of Poisson's equation.
 function charge_density(psi0, phi, UT, EVector, chargeNumbers, dopingVector, dosVector, FVector)
     # https://stackoverflow.com/questions/45667291/how-to-apply-one-argument-to-arrayfunction-1-element-wise-smartly-in-julia
     return sum(-chargeNumbers .* dopingVector) + sum(chargeNumbers .* dosVector .* (etaFunction(psi0, phi, UT, EVector, chargeNumbers) .|> FVector))
-end
-
-"""
-
-$(TYPEDSIGNATURES)
-
-First try of debugger. Print the Jacobi matrix for a given node, i.e. the number of node in
-the grid and not the exact coordinate. This is only done for the one dimensional case so far.
-"""
-function printJacobi(node, sys)
-    ctdata = data(sys)
-    numberOfNodes = ctdata.numberOfNodes
-    return if node == 1
-        println(sys.matrix[1:3, 1:9])
-    elseif node == numberOfNodes
-        println(sys.matrix[(3 * numberOfNodes - 2):(3 * numberOfNodes), (3 * numberOfNodes - 8):(3 * numberOfNodes)])
-    else
-        println(sys.matrix[(3 * node - 2):(3 * node), (3 * node - 5):(3 * node + 3)])
-    end
 end

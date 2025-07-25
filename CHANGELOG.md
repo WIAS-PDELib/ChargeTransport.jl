@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.0.0 unreleased
+
+### Added
+  - `Params` can be constructed with `numberOfRegions`, `numberOfBoundaryRegions` and `numberOfCarriers`
+  - `Params` can be constructed directly from problem specific parameter structs
+
+### Changed
+  - parameter files are replaced by parameter structs with explicit parameter access: `p = parameter_set(); p.foo` to access parameter `foo`;
+    you can specify in the examples which `parameter_set` is used.
+  - all examples scripts are overhauled with the new parameter set usage
+
 ## v0.6.0 July 23, 2025
 
 #### Fixed

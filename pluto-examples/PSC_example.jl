@@ -389,7 +389,7 @@ begin
     enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
     ###############################################################################
     ###############################################################################
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
     params.UT = (kB * params.temperature) / q

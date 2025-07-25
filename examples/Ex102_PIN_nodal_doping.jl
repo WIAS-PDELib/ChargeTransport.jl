@@ -148,7 +148,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ################################################################################
 
     # Define the Params and ParamsNodal struct.
-    params = Params(grid, numberOfCarriers)
+    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
     paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
     params.temperature = T
