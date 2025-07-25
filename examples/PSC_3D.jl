@@ -89,7 +89,7 @@ function main(;
     bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, height, 0.0], bregionNoFlux)
     bfacemask!(grid3D, [0.0, 0.0, width], [p.h_total, height, width], bregionNoFlux)
 
-    if plotting == true # plotting is currently only tested with GLMakie and PyPlot
+    if plotting == true && Plotter !== nothing # plotting is currently only tested with GLMakie and PyPlot
         vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
         gridplot!(vis[1, 1], grid1D)
         if nameof(Plotter) == :PyPlot
