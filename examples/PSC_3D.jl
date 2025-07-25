@@ -17,12 +17,11 @@ using ChargeTransport
 using ExtendableGrids
 using GridVisualize
 
-using GLMakie
 using PyPlot
 
-# We strongly emphasize to use GLMakie for the visualization here.
+# We strongly emphasize to use Plotter = GLMakie for the visualization here.
 function main(;
-        Plotter = GLMakie, plotting = false, test = false, verbose = false,
+        Plotter = nothing, plotting = false, test = false, verbose = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
@@ -93,9 +92,9 @@ function main(;
     if plotting == true # plotting is currently only tested with GLMakie and PyPlot
         vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
         gridplot!(vis[1, 1], grid1D)
-        if Plotter == PyPlot
+        if nameof(Plotter) == :PyPlot
             gridplot!(vis[1, 2], grid3D, linewidth = 0.5, xplanes = [5.5e-7], zplanes = [1.5e-7])
-        elseif Plotter == GLMakie
+        elseif nameof(Plotter) == :GLMakie
             gridplot!(vis[1, 2], grid3D, zplane = 1.0e-7, azim = 20, elev = 60, linewidth = 0.5, scene3d = :Axis3, legend = :none)
         end
     end
@@ -180,7 +179,7 @@ function main(;
     if plotting == true
         #################################################
         scalarplot!(vis[2, 1], grid1D, sol1D[ipsi, :]; color = :blue, linewidth = 5, xlabel = "space [m]", ylabel = "potential [V]", title = "Electric potential (1D)")
-        scalarplot!(vis[2, 2], grid3D, sol3D[ipsi, :]; scene3d = :Axis3, levels = 4, levelalpha = 0.9, outlinealpha = 0.0, xplanes = collect(range(0.0, stop = h_total, length = 100)), title = "Electric potential (3D)")
+        scalarplot!(vis[2, 2], grid3D, sol3D[ipsi, :]; scene3d = :Axis3, levels = 4, levelalpha = 0.9, outlinealpha = 0.0, xplanes = collect(range(0.0, stop = p.h_total, length = 100)), title = "Electric potential (3D)")
 
         grids1D = Array{typeof(grid1D), 1}(undef, p.numberOfRegions)
         densityn1D = Array{typeof(sol1D[p.iphin, :]), 1}(undef, p.numberOfRegions)
@@ -199,7 +198,7 @@ function main(;
         end
 
         scalarplot!(vis[3, 1], grids1D, grid1D, densityn1D; color = :green, linewidth = 5, yscale = :log, xlabel = "space [m]", ylabel = "density [\$\\frac{1}{m^3}\$]", title = "Electron concentration (1D)")
-        scalarplot!(vis[3, 2], grids3D, grid3D, densityn3D; scene3d = :Axis3, levels = 4, levelalpha = 0.9, outlinealpha = 0.0, xplanes = collect(range(0.0, stop = h_total, length = 100)), title = "Electron concentration (3D)")
+        scalarplot!(vis[3, 2], grids3D, grid3D, densityn3D; scene3d = :Axis3, levels = 4, levelalpha = 0.9, outlinealpha = 0.0, xplanes = collect(range(0.0, stop = p.h_total, length = 100)), title = "Electron concentration (3D)")
     end
 
     if test == false
