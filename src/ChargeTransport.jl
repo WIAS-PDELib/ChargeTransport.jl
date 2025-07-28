@@ -32,7 +32,7 @@ parametersdir(args...) = joinpath(pkgdir(ChargeTransport), "parameter_files", ar
 
 include("ct_constants.jl")
 
-export kB, Planck_constant, mₑ, q, ε0
+export k_B, Planck_constant, mₑ, q, ε_0
 ##################################################################
 
 include("ct_units.jl")
