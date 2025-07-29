@@ -29,6 +29,10 @@ greater detail.
 We have three layers and two external boundaries. We would like to solve the van Roosbroeck system on a uniform mesh with local grid refinement. We declare subregions and external boundaries.
 
 ```julia
+# unit factors and constants
+@local_unitfactors μm cm s ns V K
+eV = q * V
+
 ## region numbers
 regionAcceptor   = 1          # p doped region
 regionIntrinsic  = 2          # intrinsic region

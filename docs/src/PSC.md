@@ -41,6 +41,9 @@ By default, we assume abrupt inner interfaces. If one wishes to simulate graded 
 We sketch the relevant parts here. First, we need to define two additional thin interface layers
 
 ```julia
+# unit factors
+@local_unitfactors V s
+
 # region numbers
 regionDonor     = 1       # n doped region
 regionJunction1 = 2
