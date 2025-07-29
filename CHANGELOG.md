@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - parameter files are replaced by parameter structs with explicit parameter access: `p = parameter_set(); p.foo` to access parameter `foo`;
     you can specify in the examples which `parameter_set` is used.
   - all examples scripts are overhauled with the new parameter set usage
+  - global unit factors are removed: we rely on local unit factors from `LessUnitFul.jl`, provided by `@local_unitfactors` and `ufac""`
 
 ## v0.6.0 July 23, 2025
 
