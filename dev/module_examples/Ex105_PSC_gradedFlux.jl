@@ -59,6 +59,10 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
     end
     ################################################################################
 
+    @local_unitfactors μm cm s ns V K ps Hz W m
+
+    eV = q * V
+
     ## region numbers
     regionDonor = 1          # n doped region
     regionJunction1 = 2
@@ -338,7 +342,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
     paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 
@@ -371,7 +375,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
         params.mobility[iphin, ireg] = μn[ireg]
         params.mobility[iphip, ireg] = μp[ireg]
 
-        params.dielectricConstant[ireg] = ε[ireg] * ε0
+        params.dielectricConstant[ireg] = ε[ireg] * ε_0
         ## recombination parameters
         params.recombinationRadiative[ireg] = r0[ireg]
         params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]

@@ -27,6 +27,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     end
     ################################################################################
 
+    @local_unitfactors μm cm eV s ns V K ps Hz W m
+
     ## region numbers
     regionflake = 1
 
@@ -77,8 +79,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     Ev = - 5.3 * eV
     Ex = - 4.38 * eV
 
-    Nc = 2 * (2 * pi * 0.55 * mₑ * kB * T / (Planck_constant^2))^(3 / 2) / m^3
-    Nv = 2 * (2 * pi * 0.71 * mₑ * kB * T / (Planck_constant^2))^(3 / 2) / m^3
+    Nc = 2 * (2 * pi * 0.55 * mₑ * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
+    Nv = 2 * (2 * pi * 0.71 * mₑ * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
     Nx = 1.0e28 / (m^3)
 
     μn = 1.0e-4 * (m^2) / (V * s)
@@ -88,8 +90,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ## Schottky contact
     barrierLeft = 0.225 * eV
     barrierRight = 0.215 * eV
-    An = 4 * pi * q * 0.55 * mₑ * kB^2 / Planck_constant^3
-    Ap = 4 * pi * q * 0.71 * mₑ * kB^2 / Planck_constant^3
+    An = 4 * pi * q * 0.55 * mₑ * k_B^2 / Planck_constant^3
+    Ap = 4 * pi * q * 0.71 * mₑ * k_B^2 / Planck_constant^3
     vn = An * T^2 / (q * Nc)
     vp = Ap * T^2 / (q * Nv)
 
@@ -167,15 +169,15 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     params.chargeNumbers[iphix] = 2
 
     for ireg in 1:length([regionflake])           # region data
 
-        params.dielectricConstant[ireg] = εr * ε0
-        params.dielectricConstantImageForce[ireg] = εi * ε0
+        params.dielectricConstant[ireg] = εr * ε_0
+        params.dielectricConstantImageForce[ireg] = εi * ε_0
 
         ## effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc

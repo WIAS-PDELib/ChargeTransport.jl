@@ -26,6 +26,8 @@ function main(;
         otherScanProtocol = false
     ) # you can choose between two scan protocols
 
+    @local_unitfactors μm cm s ns V K ps Hz
+
     if plotting
         Plotter.close("all")
     end

@@ -22,6 +22,10 @@ function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping
     return coord
 end</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = &quot;&quot;, test = false, unknown_storage = :sparse)
 
+    @local_unitfactors μm cm s ns V K ps Hz W m
+
+    eV = q * V
+
     if plotting
         Plotter.close(&quot;all&quot;)
     end
@@ -104,8 +108,8 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     T = 300.0 * K
 
     # recombination parameters
-    ni = sqrt(Nc * Nv) * exp(-(Ec - Ev) / (2 * kB * T))        # intrinsic concentration
-    n0 = Nc * Boltzmann((Et - Ec) / (kB * T))                    # Boltzmann equilibrium concentration
+    ni = sqrt(Nc * Nv) * exp(-(Ec - Ev) / (2 * k_B * T))        # intrinsic concentration
+    n0 = Nc * Boltzmann((Et - Ec) / (k_B * T))                    # Boltzmann equilibrium concentration
     p0 = ni^2 / n0                                             # Boltzmann equilibrium concentration
     Auger = 1.0e-29 * cm^6 / s          # 1.0e-41
     SRH_LifeTime = 1.0e-3 * ns
@@ -177,14 +181,14 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     params.chargeNumbers[iphit] = -1 # trap charge number determines whether hole or electron trap is used
 
     for ireg in 1:numberOfRegions           # region data
 
-        params.dielectricConstant[ireg] = εr * ε0
+        params.dielectricConstant[ireg] = εr * ε_0
 
         # effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc
@@ -371,4 +375,4 @@ if test == false
     println(&quot;This message should show when the PIN module has successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS_WithTraps/">« CIGS: stationary with traps and Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 25 July 2025 12:01">Friday 25 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS_WithTraps/">« CIGS: stationary with traps and Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 29 July 2025 12:08">Tuesday 29 July 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
