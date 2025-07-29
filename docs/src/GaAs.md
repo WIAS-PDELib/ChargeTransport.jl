@@ -120,7 +120,6 @@ Next, we fill in pre-defined or externally read in parameter values.
 # params contains all necessary physical parameters
 params                                              = Params(grid, numberOfCarriers)
 params.temperature                                  = T
-params.UT                                           = (k_B * params.temperature) / q
 params.chargeNumbers[iphin]                         = -1
 params.chargeNumbers[iphip]                         =  1
 

@@ -248,7 +248,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ## physical parameters
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     if AdditionalTrapSpecies

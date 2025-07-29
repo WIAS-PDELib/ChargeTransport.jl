@@ -392,7 +392,6 @@ begin
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = zn
     params.chargeNumbers[iphip] = zp
     params.chargeNumbers[iphia] = za

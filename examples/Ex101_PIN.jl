@@ -194,7 +194,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 

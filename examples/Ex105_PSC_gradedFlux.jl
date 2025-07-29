@@ -342,7 +342,6 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
     paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 

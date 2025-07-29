@@ -102,9 +102,6 @@
     Cn = 2.09e24 / (m^3)
     Cp = 2.09e24 / (m^3)
     Ca = 1.0e24 / (m^3)
-
-    UT = k_B * T / q
-
 end
 
 
@@ -124,7 +121,6 @@ function Params(p::Params_PSC_PCBM_MAPI_Pedot)
     )
 
     params.temperature = p.T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[p.iphin] = p.zn
     params.chargeNumbers[p.iphip] = p.zp
     params.chargeNumbers[p.iphia] = p.za

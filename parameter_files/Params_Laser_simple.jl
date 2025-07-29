@@ -159,7 +159,6 @@ function Params(p::Params_Laser_simple)
     )
 
     params.temperature = p.T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[p.iphin] = -1
     params.dielectricConstant[:] = p.εr .* ε_0
     params.chargeNumbers[p.iphip] = 1

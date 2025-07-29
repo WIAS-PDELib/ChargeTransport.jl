@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - all examples scripts are overhauled with the new parameter set usage
   - global unit factors are removed: we rely on local unit factors from `LessUnitFul.jl`, provided by `@local_unitfactors` and `ufac""`
 
+### Removed
+  - Thermal voltage `UT` is no longer part of the `Params`, since this value may depend on different definitions of the elementary charge `q`
+  - methods taking `UT` as an argument take the temperature now instead
+
 ## v0.6.0 July 23, 2025
 
 #### Fixed

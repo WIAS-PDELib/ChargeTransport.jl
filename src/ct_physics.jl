@@ -91,7 +91,7 @@ function etaFunction!(u, node::VoronoiFVM.Node, data, icc)
 
     E = data.tempBEE1[icc]
 
-    return data.params.chargeNumbers[icc] / data.params.UT * ((u[icc] - u[data.index_psi]) + E / q)
+    return data.params.chargeNumbers[icc] / (k_B * data.params.temperature) * ((u[icc] - u[data.index_psi]) * q + E)
 
 end
 
@@ -110,7 +110,7 @@ function etaFunction(u, data, node, region, icc, in_region::Bool)
         E = data.params.bBandEdgeEnergy[icc, region] + data.paramsnodal.bandEdgeEnergy[icc, node]
     end
 
-    return etaFunction(u[data.index_psi], u[icc], data.params.UT, E, data.params.chargeNumbers[icc])
+    return etaFunction(u[data.index_psi], u[icc], data.params.temperature, E, data.params.chargeNumbers[icc])
 end
 
 
@@ -125,7 +125,7 @@ function etaFunction!(u, bnode::VoronoiFVM.BNode, data, icc) # bnode.index refer
     get_BEE!(icc, bnode::VoronoiFVM.BNode, data)
     E = data.tempBEE1[icc]
 
-    return data.params.chargeNumbers[icc] / data.params.UT * ((u[icc] - u[data.index_psi]) + E / q)
+    return data.params.chargeNumbers[icc] / (k_B * data.params.temperature) * ((u[icc] - u[data.index_psi]) * q + E)
 end
 
 
@@ -141,7 +141,7 @@ function etaFunction!(u, edge::VoronoiFVM.Edge, data, icc)
 
     E1 = data.tempBEE1[icc];  E2 = data.tempBEE2[icc]
 
-    return etaFunction(u[data.index_psi, 1], u[icc, 1], data.params.UT, E1, data.params.chargeNumbers[icc]), etaFunction(u[data.index_psi, 2], u[icc, 2], data.params.UT, E2, data.params.chargeNumbers[icc])
+    return etaFunction(u[data.index_psi, 1], u[icc, 1], data.params.temperature, E1, data.params.chargeNumbers[icc]), etaFunction(u[data.index_psi, 2], u[icc, 2], data.params.temperature, E2, data.params.chargeNumbers[icc])
 end
 
 """
@@ -159,7 +159,7 @@ function etaFunction(sol, ireg::Int, ctsys, icc::QType)
     solcc = view(sol[icc, :], subgrid(grid, [ireg]))
     solpsi = view(sol[data.index_psi, :], subgrid(grid, [ireg]))
 
-    return data.params.chargeNumbers[icc] ./ data.params.UT .* ((solcc .- solpsi) .+ Ecc ./ q)
+    return @. data.params.chargeNumbers[icc] / (k_B * data.params.temperature) * ((solcc - solpsi) * q + Ecc)
 end
 
 
@@ -169,14 +169,14 @@ $(TYPEDSIGNATURES)
 The argument of the statistics function for given ``\\varphi_\\alpha``
 and ``\\psi``
 
-``z_\\alpha / U_T  ( (\\varphi_\\alpha - \\psi) + E_\\alpha / q ).``
+``z_\\alpha / (k_B  T)   ( (\\varphi_\\alpha - \\psi) * q + E_\\alpha ).``
 
 The parameters ``E_\\alpha`` and ``z_\\alpha`` are given as vectors.
 This function may be used to compute the charge density, i.e. the
 right-hand side of the Poisson equation.
 """
-function etaFunction(psi, phi, UT, E, z)
-    return z ./ UT .* ((phi - psi) .+ E / q)
+function etaFunction(psi, phi, temperature, E, z)
+    return @. z / (k_B * temperature) * ((phi - psi) * q + E)
 end
 
 ##########################################################
@@ -273,7 +273,7 @@ function get_density(sol, data, icc, ireg, ; inode)
     E = data.params.bandEdgeEnergy[icc, ireg]
     z = data.params.chargeNumbers[icc]
 
-    eta = etaFunction(sol[data.index_psi, inode], sol[icc, inode], data.params.UT, E, z)
+    eta = etaFunction(sol[data.index_psi, inode], sol[icc, inode], data.params.temperature, E, z)
 
     return N .* data.F[icc].(eta)
 end
@@ -470,7 +470,7 @@ function breaction!(f, u, bnode, data, ::Type{SchottkyContact})
         get_DOS!(icc, bnode, data);  get_BEE!(icc, bnode, data)
         Ni = data.tempDOS1[icc]
         Ei = data.tempBEE1[icc]
-        etaFix = - params.chargeNumbers[icc] / params.UT * (((Ec - Ei) - params.SchottkyBarrier[bnode.region]) / q)
+        etaFix = - params.chargeNumbers[icc] / (k_B * params.temperature) * (((Ec - Ei) - params.SchottkyBarrier[bnode.region]))
 
         ncc = get_density!(u, bnode, data, icc)
 
@@ -1269,12 +1269,12 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ScharfetterGummel})
     nodek = edge.node[1]   # left node
     nodel = edge.node[2]   # right node
     ireg = edge.region
-    j0 = params.UT * params.mobility[icc, ireg]
+    j0 = k_B * params.temperature / q * params.mobility[icc, ireg]
 
     dpsi = u[ipsi, 2] - u[ipsi, 1]
     bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
 
-    bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi - bandEdgeDiff / q) / params.UT)
+    bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature))
     ncck, nccl = get_density!(u, edge, data, icc)
 
     return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
@@ -1296,15 +1296,15 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ScharfetterGummelGrade
     ireg = edge.region
 
     mobility = params.mobility[icc, ireg] + (paramsnodal.mobility[icc, nodel] + paramsnodal.mobility[icc, nodek]) / 2
-    j0 = params.UT * mobility
+    j0 = (k_B * params.temperature / q) * mobility
 
     dpsi = u[ipsi, 2] - u[ipsi, 1]
     bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
 
     if paramsnodal.densityOfStates[icc, nodel] ≈ 0.0 || paramsnodal.densityOfStates[icc, nodek] ≈ 0.0
-        bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi - bandEdgeDiff / q) / params.UT)
+        bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature))
     else
-        bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi - bandEdgeDiff / q) / params.UT - (log(paramsnodal.densityOfStates[icc, nodel]) - log(paramsnodal.densityOfStates[icc, nodek])))
+        bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature) - (log(paramsnodal.densityOfStates[icc, nodel]) - log(paramsnodal.densityOfStates[icc, nodek])))
     end
 
     ncck, nccl = get_density!(u, edge, data, icc)
@@ -1325,14 +1325,14 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ExcessChemicalPotentia
     nodek = edge.node[1]   # left node
     nodel = edge.node[2]   # right node
     ireg = edge.region
-    j0 = params.UT * params.mobility[icc, ireg]
+    j0 = (k_B * params.temperature / q) * params.mobility[icc, ireg]
 
     dpsi = u[ipsi, 2] - u[ipsi, 1]
     bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
 
     etak, etal = etaFunction!(u, edge, data, icc)
 
-    Q = params.chargeNumbers[icc] * ((dpsi - bandEdgeDiff / q) / params.UT) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
+    Q = params.chargeNumbers[icc] * ((dpsi * q - bandEdgeDiff) / (k_B * params.temperature)) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
     bp, bm = fbernoulli_pm(Q)
 
     ncck, nccl = get_density!(u, edge, data, icc)
@@ -1371,13 +1371,13 @@ function ExcessChemicalPotentialDiffusive(f, u, edge, data)
         nodek = edge.node[1]   # left node
         nodel = edge.node[2]   # right node
         ireg = edge.region
-        j0 = params.UT * params.mobility[icc, ireg]
+        j0 = (k_B * params.temperature / q) * params.mobility[icc, ireg]
 
         bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
 
         etak, etal = etaFunction!(u, edge, data, icc)
 
-        Q = params.chargeNumbers[icc] * ((- bandEdgeDiff / q) / params.UT) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
+        Q = params.chargeNumbers[icc] * ((- bandEdgeDiff) / (k_B * params.temperature)) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
         bp, bm = fbernoulli_pm(Q)
 
         ncck, nccl = get_density!(u, edge, data, icc)
@@ -1403,7 +1403,7 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ExcessChemicalPotentia
     ireg = edge.region
 
     mobility = params.mobility[icc, ireg] + (paramsnodal.mobility[icc, nodel] + paramsnodal.mobility[icc, nodek]) / 2
-    j0 = params.UT * mobility
+    j0 = (k_B * params.temperature / q) * mobility
 
     dpsi = u[ipsi, 2] - u[ipsi, 1]
     bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
@@ -1411,9 +1411,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ExcessChemicalPotentia
     etak, etal = etaFunction!(u, edge, data, icc)
 
     if paramsnodal.densityOfStates[icc, nodel] ≈ 0.0 || paramsnodal.densityOfStates[icc, nodek] ≈ 0.0
-        Q = params.chargeNumbers[icc] * ((dpsi - bandEdgeDiff / q) / params.UT) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
+        Q = params.chargeNumbers[icc] * ((dpsi * q - bandEdgeDiff) / (k_B * params.temperature)) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
     else
-        Q = params.chargeNumbers[icc] * ((dpsi - bandEdgeDiff / q) / data.UT) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak) - (log(paramsnodal.densityOfStates[icc, nodel]) - log(paramsnodal.densityOfStates[icc, nodek])))
+        Q = params.chargeNumbers[icc] * ((dpsi * q - bandEdgeDiff) / (k_B * data.temperature)) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak) - (log(paramsnodal.densityOfStates[icc, nodel]) - log(paramsnodal.densityOfStates[icc, nodek])))
     end
 
     bp, bm = fbernoulli_pm(Q)
@@ -1450,9 +1450,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{DiffusionEnhanced})
         g = (etal - etak) / (log(data.F[icc](etal)) - log(data.F[icc](etak)))
     end
 
-    j0 = params.UT * params.mobility[icc, ireg] * g
+    j0 = (k_B * params.temperature / q) * params.mobility[icc, ireg] * g
 
-    bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi - bandEdgeDiff / q) / (params.UT * g))
+    bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature * g))
     ncck, nccl = get_density!(u, edge, data, icc)
 
     return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
@@ -1485,9 +1485,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{DiffusionEnhancedModif
         g = (etal - etak) / (log(data.F[icc](etal)) - log(data.F[icc](etak)))
     end
 
-    j0 = params.UT * params.mobility[icc, ireg]
+    j0 = (k_B * params.temperature / q) * params.mobility[icc, ireg]
 
-    bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi - bandEdgeDiff / q) / (params.UT * g))
+    bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature * g))
     ncck, nccl = get_density!(u, edge, data, icc)
 
     return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
@@ -1515,20 +1515,20 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{GeneralizedSG})
     nodek = edge.node[1]   # left node
     nodel = edge.node[2]   # right node
     ireg = edge.region
-    j0 = params.UT * params.mobility[icc, ireg]
+    j0 = (k_B * params.temperature / q) * params.mobility[icc, ireg]
 
     dpsi = u[ipsi, 2] - u[ipsi, 1]
     bandEdgeDiff = paramsnodal.bandEdgeEnergy[icc, nodel] - paramsnodal.bandEdgeEnergy[icc, nodek]
     etak, etal = etaFunction!(u, edge, data, icc)
 
     # use Sedan flux as starting guess
-    Q = params.chargeNumbers[icc] * ((dpsi - bandEdgeDiff / q) / params.UT) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
+    Q = params.chargeNumbers[icc] * ((dpsi * q - bandEdgeDiff) / (k_B * params.temperature)) + (etal - etak) - log(data.F[icc](etal)) + log(data.F[icc](etak))
     bp, bm = fbernoulli_pm(Q)
     ncck, nccl = get_density!(u, edge, data, icc)
 
     jInitial = (bm * nccl - bp * ncck)
 
-    implicitEq(j::Real) = (fbernoulli_pm(params.chargeNumbers[icc] * ((dpsi - bandEdgeDiff / q)) / params.UT + params.γ * j)[2] * exp(etal) - fbernoulli_pm(params.chargeNumbers[icc] * ((dpsi - bandEdgeDiff / q) / params.UT) - params.γ * j)[1] * exp(etak)) - j
+    implicitEq(j::Real) = (fbernoulli_pm(params.chargeNumbers[icc] * ((dpsi * q - bandEdgeDiff)) / (k_B * params.temperature) + params.γ * j)[2] * exp(etal) - fbernoulli_pm(params.chargeNumbers[icc] * ((dpsi * q - bandEdgeDiff) / (k_B * params.temperature)) - params.γ * j)[1] * exp(etak)) - j
 
     delta = 1.0e-18 + 1.0e-14 * abs(value(jInitial))
     oldup = 1.0
