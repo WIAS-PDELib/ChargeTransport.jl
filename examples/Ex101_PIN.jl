@@ -30,7 +30,9 @@ end
 function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
 
     # unit factors and constants
-    @local_unitfactors μm cm eV s ns V K
+    @local_unitfactors μm cm s ns V K
+
+    eV = q * V
 
     if plotting
         Plotter.close("all")

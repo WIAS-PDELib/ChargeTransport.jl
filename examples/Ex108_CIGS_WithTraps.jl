@@ -50,7 +50,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     end
     ################################################################################
 
-    @local_unitfactors μm cm eV s ns V K ps Hz W m
+    @local_unitfactors μm cm s ns V K ps Hz W m
+
+    eV = q * V
 
     ## region numbers
     regionDonor = 1                           # n doped region

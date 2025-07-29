@@ -32,7 +32,9 @@ end
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
 
-    @local_unitfactors μm cm eV s ns V K ps Hz W m
+    @local_unitfactors μm cm s ns V K ps Hz W m
+
+    eV = q * V
 
     if plotting
         Plotter.close("all")

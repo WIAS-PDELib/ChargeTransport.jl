@@ -29,7 +29,7 @@ function main(;
         userdefinedGeneration = false
     ) # you can choose between predefined and user-defined generation profiles
 
-    @local_unitfactors μm cm eV s ns V K ps Hz W m
+    @local_unitfactors μm cm s ns V K ps Hz W m
 
     if plotting
         Plotter.close("all")

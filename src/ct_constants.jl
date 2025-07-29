@@ -28,7 +28,6 @@ function set_pdelib_constants()
     global k_B = 1.3806503e-23
     global q = 1.602176462e-19
     global ε_0 = 8.85418781762039e-12
-    global eV = q * V
     return nothing
 end
 
@@ -36,7 +35,6 @@ function set_TeSCA_constants()
     global k_B = 1.380662e-23
     global q = 1.6021e-19
     global ε_0 = 8.85419e-12
-    global eV = q * V
     return nothing
 end
 
@@ -45,7 +43,6 @@ function set_unity_constants()
     global k_B = 1.0
     global q = 1.0
     global ε_0 = 1.0
-    global eV = 1.0
     return nothing
 end
 
