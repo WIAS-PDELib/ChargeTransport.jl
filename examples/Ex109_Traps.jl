@@ -32,6 +32,10 @@ end
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
 
+    @local_unitfactors μm cm s ns V K ps Hz W m
+
+    eV = q * V
+
     if plotting
         Plotter.close("all")
     end
@@ -114,8 +118,8 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     T = 300.0 * K
 
     ## recombination parameters
-    ni = sqrt(Nc * Nv) * exp(-(Ec - Ev) / (2 * kB * T))        # intrinsic concentration
-    n0 = Nc * Boltzmann((Et - Ec) / (kB * T))                    # Boltzmann equilibrium concentration
+    ni = sqrt(Nc * Nv) * exp(-(Ec - Ev) / (2 * k_B * T))        # intrinsic concentration
+    n0 = Nc * Boltzmann((Et - Ec) / (k_B * T))                    # Boltzmann equilibrium concentration
     p0 = ni^2 / n0                                             # Boltzmann equilibrium concentration
     Auger = 1.0e-29 * cm^6 / s          # 1.0e-41
     SRH_LifeTime = 1.0e-3 * ns
@@ -187,14 +191,14 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     params.chargeNumbers[iphit] = -1 # trap charge number determines whether hole or electron trap is used
 
     for ireg in 1:numberOfRegions           # region data
 
-        params.dielectricConstant[ireg] = εr * ε0
+        params.dielectricConstant[ireg] = εr * ε_0
 
         ## effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc

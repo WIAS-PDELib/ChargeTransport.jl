@@ -19,6 +19,8 @@ module Non_RectangularGrid_2D
 
     function main(; Plotter = PyPlot, plotting = false)
 
+        @local_unitfactors μm cm s ns V K ps Hz W
+
         ## region numbers
         regionDonor = 1                           # n doped region
         regionIntrinsic = 2                           # intrinsic region

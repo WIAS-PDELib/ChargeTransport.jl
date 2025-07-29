@@ -29,6 +29,10 @@ greater detail.
 We have three layers and two external boundaries. We would like to solve the van Roosbroeck system on a uniform mesh with local grid refinement. We declare subregions and external boundaries.
 
 ```julia
+# unit factors and constants
+@local_unitfactors μm cm s ns V K
+eV = q * V
+
 ## region numbers
 regionAcceptor   = 1          # p doped region
 regionIntrinsic  = 2          # intrinsic region
@@ -116,13 +120,13 @@ Next, we fill in pre-defined or externally read in parameter values.
 # params contains all necessary physical parameters
 params                                              = Params(grid, numberOfCarriers)
 params.temperature                                  = T
-params.UT                                           = (kB * params.temperature) / q
+params.UT                                           = (k_B * params.temperature) / q
 params.chargeNumbers[iphin]                         = -1
 params.chargeNumbers[iphip]                         =  1
 
 for ireg in 1:numberOfRegions           # region data
 
-    params.dielectricConstant[ireg]                 = εr  * ε0
+    params.dielectricConstant[ireg]                 = εr  * ε_0
 
     # effective DOS, band-edge energy and mobilities
     params.densityOfStates[iphin, ireg]             = Nc

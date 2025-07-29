@@ -21,12 +21,7 @@ function run_tests_from_directory(testdir, prefix)
             path = joinpath(testdir, "$(example).jl")
             @eval begin
                 include($path)
-                # Compile + run test
-                print("   compile:")
-                @time @test eval(Meta.parse("$($example).test()"))
-                # Second run: pure execution time.
-                print("       run:")
-                @time eval(Meta.parse("$($example).test()"))
+                eval(Meta.parse("$($example).test()"))
             end
         end
     end

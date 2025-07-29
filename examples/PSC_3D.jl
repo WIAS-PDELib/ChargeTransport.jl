@@ -33,7 +33,9 @@ function main(;
     end
     ################################################################################
 
-    # parameter with variance
+    @local_unitfactors μm cm s ns V K ps Hz W
+
+    # parameter with variation
     p = parameter_set(numberOfBoundaryRegions = 5)
     bregionNoFlux = 5
 

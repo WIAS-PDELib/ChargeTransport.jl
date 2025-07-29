@@ -1,8 +1,20 @@
 # Parameters for a simple laser simulation
 @kwdef struct Params_Laser_simple
 
+
     #####################################################################
     ############################ parameters ############################
+
+    # used unit factors
+    nm = ufac"nm"
+    cm = ufac"cm"
+    K = ufac"K"
+    m = ufac"m"
+    V = ufac"V"
+    s = ufac"s"
+    W = ufac"W"
+
+    eV = q * V
 
     ########## charge carriers ##########
     iphin = 1 # electron quasi Fermi potential
@@ -147,9 +159,9 @@ function Params(p::Params_Laser_simple)
     )
 
     params.temperature = p.T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[p.iphin] = -1
-    params.dielectricConstant[:] = p.εr .* ε0
+    params.dielectricConstant[:] = p.εr .* ε_0
     params.chargeNumbers[p.iphip] = 1
 
     Nc = params.densityOfStates[p.iphin, :] = p.NC
@@ -164,8 +176,8 @@ function Params(p::Params_Laser_simple)
     params.recombinationRadiative[:] = p.r0
     params.recombinationSRHLifetime[p.iphin, :] = p.τn
     params.recombinationSRHLifetime[p.iphip, :] = p.τp
-    params.recombinationSRHTrapDensity[p.iphin, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * p.T)))
-    params.recombinationSRHTrapDensity[p.iphip, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (kB * p.T)))
+    params.recombinationSRHTrapDensity[p.iphin, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (k_B * p.T)))
+    params.recombinationSRHTrapDensity[p.iphip, :] = Nintr = sqrt.(Nc .* Nv .* exp.(-(Ec .- Ev) ./ (k_B * p.T)))
     params.recombinationAuger[p.iphin, :] = p.Auger_Cn
     params.recombinationAuger[p.iphip, :] = p.Auger_Cp
     ## interior doping

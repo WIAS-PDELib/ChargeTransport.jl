@@ -33,6 +33,8 @@ numberOfRows = Dict(
 """ Initializing X and Y coords for the tesca grid"""
 function tesca_grid(; refinement = 1, showplot = false, airbox = false)
 
+    @local_unitfactors μm
+
     ncol = numberOfColoumns["ref$(refinement)"]
     nrow = numberOfRows["ref$(refinement)"]
 

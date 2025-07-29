@@ -8,6 +8,16 @@
     #####################################################################
     ############################ parameters ############################
 
+    # used unit factors
+    nm = ufac"nm"
+    cm = ufac"cm"
+    K = ufac"K"
+    m = ufac"m"
+    V = ufac"V"
+    s = ufac"s"
+
+    eV = q * V
+
     ########## charge carriers ##########
 
     iphin = 1 # electron quasi Fermi potential
@@ -93,7 +103,7 @@
     Cp = 2.09e24 / (m^3)
     Ca = 1.0e24 / (m^3)
 
-    UT = kB * T / q
+    UT = k_B * T / q
 
 end
 
@@ -105,6 +115,8 @@ Create a `ChargeTransport.Params` object directly from `Params_PSC_PCBM_MAPI_Ped
 """
 function Params(p::Params_PSC_PCBM_MAPI_Pedot)
 
+    @local_unitfactors cm s
+
     params = Params(
         p.numberOfRegions,
         p.numberOfBoundaryRegions,
@@ -112,12 +124,12 @@ function Params(p::Params_PSC_PCBM_MAPI_Pedot)
     )
 
     params.temperature = p.T
-    params.UT = (kB * params.temperature) / q
+    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[p.iphin] = p.zn
     params.chargeNumbers[p.iphip] = p.zp
     params.chargeNumbers[p.iphia] = p.za
 
-    params.dielectricConstant = p.ε * ε0
+    params.dielectricConstant = p.ε * ε_0
 
     ## effective DOS, band edge energy and mobilities
     params.densityOfStates[p.iphin, :] = p.Nn

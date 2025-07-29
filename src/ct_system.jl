@@ -910,6 +910,8 @@ Simplified constructor for Params which only takes the numberOfRegions, numberOf
 """
 function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
 
+    @local_unitfactors K s
+
     params = Params()
 
     ###############################################################
@@ -924,7 +926,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####                     real numbers                      ####
     ###############################################################
     params.temperature = 300 * K
-    params.UT = (kB * 300 * K) / q # thermal voltage
+    params.UT = (k_B * 300 * K) / q # thermal voltage
     params.γ = 0.27                # parameter for Blakemore statistics
     params.r0 = 0.0                 # r0 prefactor electro-chemical reaction
     params.prefactor_SRH = 1.0
@@ -1791,9 +1793,9 @@ function electroNeutralSolution(ctsys)
         Nc = params.densityOfStates[iphin, ireg]
         Nv = params.densityOfStates[iphip, ireg]
         C = params.doping[iphin, ireg] - params.doping[iphip, ireg]       # N_D - N_A
-        Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-kB * T)))
+        Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
 
-        psi0Values[ireg] = (Ec + Ev) / (2 * q) - 0.5 * (kB * T / q) * log(Nc / Nv) + (kB * T / q) * asinh(C / (2 * Nintr))
+        psi0Values[ireg] = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
 
     end
 
