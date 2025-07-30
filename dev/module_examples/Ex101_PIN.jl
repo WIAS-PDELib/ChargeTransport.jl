@@ -27,12 +27,7 @@ end
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
-
-    # unit factors and constants
-    @local_unitfactors μm cm s ns V K
-
-    eV = q * V
+function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
     if plotting
         Plotter.close("all")
@@ -42,6 +37,16 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
         println("Set up grid and regions")
     end
     ################################################################################
+
+    # unit factors
+    @local_unitfactors μm cm s ns V K
+
+    # constants
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0) = constants
+
+    eV = q * V
+
 
     ## region numbers
     regionAcceptor = 1          # p doped region
@@ -194,7 +199,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 

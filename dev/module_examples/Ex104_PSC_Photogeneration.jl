@@ -22,7 +22,7 @@ parametersdir = ChargeTransport.parametersdir
 function main(;
         n = 5,
         Plotter = PyPlot,
-        plotting = false, verbose = "", test = false,
+        plotting = false, verbose = false, test = false,
         ########################
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         ########################

@@ -17,7 +17,7 @@ using PyPlot
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
 function main(;
-        n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false,
+        n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
     )
 

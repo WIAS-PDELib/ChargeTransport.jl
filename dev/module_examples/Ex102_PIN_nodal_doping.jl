@@ -15,12 +15,13 @@ using PyPlot
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
+function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K ps
+    constants = ChargeTransport.constants
 
-    eV = q * V
+    eV = constants.q * V
 
     if plotting
         Plotter.close("all")
@@ -157,13 +158,12 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 
     for ireg in 1:numberOfRegions           # region data
 
-        params.dielectricConstant[ireg] = εr * ε_0
+        params.dielectricConstant[ireg] = εr * constants.ε_0
 
         ## effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc

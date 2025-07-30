@@ -39,7 +39,7 @@ end
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, AdditionalTrapSpecies = false)
+function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false, AdditionalTrapSpecies = false)
 
     if plotting
         Plotter.close("all")
@@ -51,6 +51,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     @local_unitfactors μm cm s ns V K ps Hz W m
+
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0, Planck_constant, m_e) = constants
 
     eV = q * V
 
@@ -185,8 +188,8 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     Radiative = 1.0e-10 * cm^3 / s
 
     ## Schottky contact information
-    An = 4 * pi * q * mₑ * k_B^2 / Planck_constant^3
-    Ap = 4 * pi * q * mₑ * k_B^2 / Planck_constant^3
+    An = 4 * pi * q * m_e * k_B^2 / Planck_constant^3
+    Ap = 4 * pi * q * m_e * k_B^2 / Planck_constant^3
     vn = An * T^2 / (q * Nc)
     vp = Ap * T^2 / (q * Nv)
     barrier = 0.7 * eV
@@ -248,7 +251,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ## physical parameters
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     if AdditionalTrapSpecies

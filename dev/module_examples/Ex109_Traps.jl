@@ -30,9 +30,12 @@ end
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
+function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
     @local_unitfactors μm cm s ns V K ps Hz W m
+
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0) = constants
 
     eV = q * V
 
@@ -191,7 +194,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
     params.chargeNumbers[iphit] = -1 # trap charge number determines whether hole or electron trap is used
