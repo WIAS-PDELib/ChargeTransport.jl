@@ -113,7 +113,7 @@ function main(;
 
     ## Initialize Data instance and fill in predefined data
     ## Note that we define the data struct with respect to the three-dimensional grid, since we also defined there the outer no flux boundary conditions.
-    data = Data(grid3D, p.numberOfCarriers)
+    data = Data(grid3D, p.numberOfCarriers, p.constants)
     data.modelType = Transient
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
     data.bulkRecombination = set_bulk_recombination(;

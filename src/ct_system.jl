@@ -862,6 +862,11 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     paramsoptical::ParamsOptical
 
+    """
+    A struct holding the dimensionless physical constants used for the simulations.
+    """
+    constants::Constants
+
     ###############################################################
     Data{TFuncs, TVoltageFunc, TGenerationData}() where {TFuncs, TVoltageFunc, TGenerationData} = new()
 
@@ -995,7 +1000,7 @@ Simplified constructor for Params which only takes the grid and the numberOfCarr
 
 """
 function Params(grid::ExtendableGrid, numberOfCarriers)
-    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChangeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
+    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChargeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
     return Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 end
 
@@ -1094,7 +1099,7 @@ including the physical parameters, but also some numerical information
 are located.
 
 """
-function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
+function Data(grid, numberOfCarriers, constants; contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
 
     numberOfBoundaryRegions = grid[NumBFaceRegions]
 
@@ -1179,6 +1184,8 @@ function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for 
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
 
     ###############################################################
+
+    data.constants = constants
 
     return data
 
@@ -1624,6 +1631,8 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
     paramsnodal = ctsys.fvmsys.physics.data.paramsnodal
     bnode = grid[BFaceNodes]
     ipsi = data.index_psi
+    (; k_B, q) = data.constants
+
 
     # We set zero voltage for each charge carrier at all outer boundaries for equilibrium calculations.
     for ibreg in grid[BFaceRegions]
@@ -1764,6 +1773,8 @@ function electroNeutralSolution(ctsys)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
+    (; k_B, q) = data.constants
+
 
     params = data.params
 

@@ -52,6 +52,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
 
     @local_unitfactors μm cm s ns V K ps Hz W m
 
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0, Planck_constant, m_e) = constants
+
     eV = q * V
 
     ## region numbers
@@ -185,8 +188,8 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     Radiative = 1.0e-10 * cm^3 / s
 
     ## Schottky contact information
-    An = 4 * pi * q * mₑ * k_B^2 / Planck_constant^3
-    Ap = 4 * pi * q * mₑ * k_B^2 / Planck_constant^3
+    An = 4 * pi * q * m_e * k_B^2 / Planck_constant^3
+    Ap = 4 * pi * q * m_e * k_B^2 / Planck_constant^3
     vn = An * T^2 / (q * Nc)
     vp = Ap * T^2 / (q * Nv)
     barrier = 0.7 * eV
@@ -208,7 +211,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     ## initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers, constants)
     data.modelType = Stationary # R = Rn = Rp, since the model type is stationary
     if AdditionalTrapSpecies
         data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]

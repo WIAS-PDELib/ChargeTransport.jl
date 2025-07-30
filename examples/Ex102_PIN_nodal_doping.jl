@@ -19,8 +19,9 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K ps
+    constants = ChargeTransport.constants
 
-    eV = q * V
+    eV = constants.q * V
 
     if plotting
         Plotter.close("all")
@@ -117,7 +118,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ################################################################################
 
     # We initialize the Data instance and fill in predefined data.
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers, constants)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary
@@ -162,7 +163,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
 
     for ireg in 1:numberOfRegions           # region data
 
-        params.dielectricConstant[ireg] = εr * ε_0
+        params.dielectricConstant[ireg] = εr * constants.ε_0
 
         ## effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc

@@ -127,7 +127,7 @@ function main(;
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, p.numberOfCarriers, numberOfEigenvalues = numberOfEigenvalues)
+    data = Data(grid, p.numberOfCarriers, p.constants, numberOfEigenvalues = numberOfEigenvalues)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary

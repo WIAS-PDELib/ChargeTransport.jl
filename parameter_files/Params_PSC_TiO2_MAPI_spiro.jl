@@ -6,6 +6,9 @@
     #####################################################################
     ############################ parameters ############################
 
+    # physical constants
+    constants = ChargeTransport.constants
+
     # used unit factors
     nm = ufac"nm"
     K = ufac"K"
@@ -13,7 +16,7 @@
     V = ufac"V"
     s = ufac"s"
 
-    eV = q * V
+    eV = constants.q * V
 
     ########## charge carriers ##########
 
@@ -123,7 +126,7 @@ function Params(p::Params_PSC_TiO2_MAPI_spiro)
 
     for ireg in 1:p.numberOfRegions # interior region data
 
-        params.dielectricConstant[ireg] = p.ε[ireg] * ε_0
+        params.dielectricConstant[ireg] = p.ε[ireg] * p.constants.ε_0
 
         ## effective DOS, band edge energy and mobilities
         params.densityOfStates[p.iphin, ireg] = p.Nn[ireg]
@@ -142,8 +145,8 @@ function Params(p::Params_PSC_TiO2_MAPI_spiro)
         params.recombinationRadiative[ireg] = p.r0[ireg]
         params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
         params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
-        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg])
-        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg])
+        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg], p.constants)
+        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg], p.constants)
 
         ## generation parameters
         params.generationIncidentPhotonFlux[ireg] = p.incidentPhotonFlux[ireg]

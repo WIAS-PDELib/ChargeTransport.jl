@@ -127,7 +127,7 @@ contactVoltageFunction = [zeroVoltage, linearScanProtocol]
 ```
 And then, need to be parsed into the data construction method
 ```julia
-data = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
+data = Data(grid, numberOfCarriers, ChargeTransport.constants, contactVoltageFunction = contactVoltageFunction)
 ```
 This makes it possible to use the internal time solving method
 

@@ -29,6 +29,10 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
 
     @local_unitfactors μm cm eV s ns V K ps Hz W m
 
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0, Planck_constant, m_e) = constants
+
+
     ## region numbers
     regionflake = 1
 
@@ -79,8 +83,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     Ev = - 5.3 * eV
     Ex = - 4.38 * eV
 
-    Nc = 2 * (2 * pi * 0.55 * mₑ * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
-    Nv = 2 * (2 * pi * 0.71 * mₑ * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
+    Nc = 2 * (2 * pi * 0.55 * m_e * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
+    Nv = 2 * (2 * pi * 0.71 * m_e * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
     Nx = 1.0e28 / (m^3)
 
     μn = 1.0e-4 * (m^2) / (V * s)
@@ -90,8 +94,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ## Schottky contact
     barrierLeft = 0.225 * eV
     barrierRight = 0.215 * eV
-    An = 4 * pi * q * 0.55 * mₑ * k_B^2 / Planck_constant^3
-    Ap = 4 * pi * q * 0.71 * mₑ * k_B^2 / Planck_constant^3
+    An = 4 * pi * q * 0.55 * m_e * k_B^2 / Planck_constant^3
+    Ap = 4 * pi * q * 0.71 * m_e * k_B^2 / Planck_constant^3
     vn = An * T^2 / (q * Nc)
     vp = Ap * T^2 / (q * Nv)
 
@@ -135,7 +139,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ################################################################################
 
     ## Initialize Data instance and fill in predefined data
-    data = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
+    data = Data(grid, numberOfCarriers, constants, contactVoltageFunction = contactVoltageFunction)
     data.modelType = Transient
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
     data.bulkRecombination = set_bulk_recombination(;

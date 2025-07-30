@@ -34,6 +34,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
 
     @local_unitfactors μm cm s ns V K ps Hz W m
 
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0) = constants
+
     eV = q * V
 
     if plotting
@@ -145,7 +148,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers, constants)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient

@@ -29,11 +29,6 @@ end
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = false, unknown_storage = :sparse)
 
-    # unit factors and constants
-    @local_unitfactors μm cm s ns V K
-
-    eV = q * V
-
     if plotting
         Plotter.close("all")
     end
@@ -42,6 +37,16 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
         println("Set up grid and regions")
     end
     ################################################################################
+
+    # unit factors
+    @local_unitfactors μm cm s ns V K
+
+    # constants
+    constants = ChargeTransport.constants
+    (; q, k_B, ε_0) = constants
+
+    eV = q * V
+
 
     ## region numbers
     regionAcceptor = 1          # p doped region
@@ -146,7 +151,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     # We initialize the Data instance and fill in predefined data.
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers, constants)
 
     ## Following variable declares, if we want to solve stationary or transient problem
     data.modelType = Stationary

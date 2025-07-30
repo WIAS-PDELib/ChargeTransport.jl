@@ -61,7 +61,9 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
 
     @local_unitfactors μm cm s ns V K ps Hz W m
 
-    eV = q * V
+    constants = ChargeTransport.constants
+
+    eV = constants.q * V
 
     ## region numbers
     regionDonor = 1          # n doped region
@@ -305,7 +307,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     ## Initialize Data instance and fill in predefined data
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers, constants)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary
@@ -374,7 +376,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = "", test = 
         params.mobility[iphin, ireg] = μn[ireg]
         params.mobility[iphip, ireg] = μp[ireg]
 
-        params.dielectricConstant[ireg] = ε[ireg] * ε_0
+        params.dielectricConstant[ireg] = ε[ireg] * constants.ε_0
         ## recombination parameters
         params.recombinationRadiative[ireg] = r0[ireg]
         params.recombinationSRHLifetime[iphin, ireg] = τn[ireg]

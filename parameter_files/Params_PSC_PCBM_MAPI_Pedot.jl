@@ -8,6 +8,9 @@
     #####################################################################
     ############################ parameters ############################
 
+    # physical constants
+    constants = ChargeTransport.constants
+
     # used unit factors
     nm = ufac"nm"
     cm = ufac"cm"
@@ -16,7 +19,7 @@
     V = ufac"V"
     s = ufac"s"
 
-    eV = q * V
+    eV = constants.q * V
 
     ########## charge carriers ##########
 
@@ -125,7 +128,7 @@ function Params(p::Params_PSC_PCBM_MAPI_Pedot)
     params.chargeNumbers[p.iphip] = p.zp
     params.chargeNumbers[p.iphia] = p.za
 
-    params.dielectricConstant = p.ε * ε_0
+    params.dielectricConstant = p.ε * p.constants.ε_0
 
     ## effective DOS, band edge energy and mobilities
     params.densityOfStates[p.iphin, :] = p.Nn
@@ -146,8 +149,8 @@ function Params(p::Params_PSC_PCBM_MAPI_Pedot)
         params.recombinationRadiative[ireg] = p.r0[ireg]
         params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
         params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
-        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg])
-        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg])
+        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg], p.constants)
+        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg], p.constants)
     end
 
     ##############################################################

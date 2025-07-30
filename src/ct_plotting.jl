@@ -113,6 +113,8 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
     data = ctsys.fvmsys.physics.data
     coord = grid[Coordinates]
 
+    (; q) = data.constants
+
     if length(coord[1]) != 1
         println("plot_energies is so far only implemented in 1D")
     end
@@ -236,6 +238,8 @@ function plot_energies(Plotter, ctsys, label_BEE)
     data = ctsys.fvmsys.physics.data
     params = data.params
     paramsnodal = data.paramsnodal
+
+    q = data.constants.q
 
     coord = grid[Coordinates]
     cellregions = grid[CellRegions]
