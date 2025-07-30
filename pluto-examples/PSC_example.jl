@@ -463,7 +463,7 @@ end
 begin
     control = SolverControl()
     control.maxiters = 300
-    control.verbose = ""
+    control.verbose = false
     control.max_round = 5
     control.damp_initial = 0.5
     control.damp_growth = 1.21 # >= 1
