@@ -1,5 +1,6 @@
 module ChargeTransport
-
+# for @compat
+using Compat: @compat
 # for documentation
 using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF,
     TYPEDFIELDS, TYPEDSIGNATURES
@@ -14,7 +15,7 @@ using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
 # for interpolation of data
 using Interpolations: Interpolations, Gridded, Linear
 # local units and constants
-using LessUnitful: @local_unitfactors, @ufac_str
+using LessUnitful: @local_unitfactors, @ufac_str, @ph_str
 # printing
 using Printf: @printf
 # for interpolation of data
@@ -33,11 +34,13 @@ examplesdir(args...) = joinpath(pkgdir(ChargeTransport), "examples", args...)
 parametersdir(args...) = joinpath(pkgdir(ChargeTransport), "parameter_files", args...)
 
 # re-export LessUnitful macros
-export @local_unitfactors, @ufac_str
+export @local_unitfactors, @ufac_str, @ph_str
 
 include("ct_constants.jl")
 
-export k_B, Planck_constant, mₑ, q, ε_0
+# mark public, but do not export (compat needed for julia < 1.11)
+@compat public constants, teSCA_constants, pdelib_constants, unity_constants
+
 ##################################################################
 
 export tiny_penalty_value
