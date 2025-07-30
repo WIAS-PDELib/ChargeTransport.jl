@@ -18,10 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     you can specify in the examples which `parameter_set` is used.
   - all examples scripts are overhauled with the new parameter set usage
   - global unit factors are removed: we rely on local unit factors from `LessUnitFul.jl`, provided by `@local_unitfactors` and `ufac""`
+  - new globally available dimensionless `constants` object, containing the default physical constants
+  - new application specific `teSCA_constants`, `pdelib_constants`, `unit_constants` are also available
+  - `Data` needs a `constants` object as an argument
 
 ### Removed
   - Thermal voltage `UT` is no longer part of the `Params`, since this value may depend on different definitions of the elementary charge `q`
   - methods taking `UT` as an argument take the temperature now instead
+  - exported global physical constants
 
 ## v0.6.0 July 23, 2025
 
