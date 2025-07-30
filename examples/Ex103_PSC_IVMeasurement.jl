@@ -155,7 +155,7 @@ function main(;
 
     ## Initialize Data instance and fill in predefined data
     ## Currently, the way to go is to pass a contact voltage function exactly here.
-    data = Data(grid, p.numberOfCarriers, p.constants)
+    data = Data(grid, p.numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient

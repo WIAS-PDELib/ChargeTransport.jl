@@ -126,7 +126,7 @@ module PSC_2D_unstructuredGrid
         ################################################################################
 
         ## Initialize Data instance and fill in data
-        data = Data(grid, p.numberOfCarriers, p.constants)
+        data = Data(grid, p.numberOfCarriers)
 
         ## Possible choices: Stationary, Transient
         data.modelType = Transient

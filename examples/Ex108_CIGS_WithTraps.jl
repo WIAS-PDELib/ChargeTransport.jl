@@ -211,7 +211,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     ## initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers, constants)
+    data = Data(grid, numberOfCarriers)
     data.modelType = Stationary # R = Rn = Rp, since the model type is stationary
     if AdditionalTrapSpecies
         data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]

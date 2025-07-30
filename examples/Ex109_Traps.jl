@@ -148,7 +148,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = "", test = 
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, numberOfCarriers, constants)
+    data = Data(grid, numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient

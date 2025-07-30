@@ -4,11 +4,11 @@
     Default physical constants (dimensionless) from PhysicalConstants.jl via LessUnitful.jl
 """
 @kwdef struct Constants
-    k_B = ph"BoltzmannConstant"          # (k_B) JK^{-1}
-    Planck_constant = ph"PlanckConstant"  # (h)   Js
-    m_e = ph"ElectronMass"               # (m_e) kg
-    q = ph"ElementaryCharge"             # (e)   C
-    ε_0 = ph"VacuumElectricPermittivity" # (ε_0) C/(V*m)
+    k_B::Float64 = ph"BoltzmannConstant"           # (k_B) JK^{-1}
+    Planck_constant::Float64 = ph"PlanckConstant"  # (h)   Js
+    m_e::Float64 = ph"ElectronMass"                # (m_e) kg
+    q::Float64 = ph"ElementaryCharge"              # (e)   C
+    ε_0::Float64 = ph"VacuumElectricPermittivity"  # (ε_0) C/(V*m)
 end
 
 """

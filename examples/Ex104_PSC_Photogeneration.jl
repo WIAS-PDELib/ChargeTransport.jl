@@ -172,14 +172,14 @@ function main(;
         generationData = [gen1; gen2'; gen3]
 
         data = Data(
-            grid, p.numberOfCarriers, p.constants,
+            grid, p.numberOfCarriers,
             contactVoltageFunction = contactVoltageFunction,
             generationData = generationData
         )
     else
 
         data = Data(
-            grid, p.numberOfCarriers, p.constants,
+            grid, p.numberOfCarriers,
             contactVoltageFunction = contactVoltageFunction
         )
 

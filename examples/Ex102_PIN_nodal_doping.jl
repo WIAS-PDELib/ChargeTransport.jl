@@ -118,7 +118,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ################################################################################
 
     # We initialize the Data instance and fill in predefined data.
-    data = Data(grid, numberOfCarriers, constants)
+    data = Data(grid, numberOfCarriers)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary

@@ -139,7 +139,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = "", test = false, 
     ################################################################################
 
     ## Initialize Data instance and fill in predefined data
-    data = Data(grid, numberOfCarriers, constants, contactVoltageFunction = contactVoltageFunction)
+    data = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
     data.modelType = Transient
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
     data.bulkRecombination = set_bulk_recombination(;
