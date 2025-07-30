@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Thermal voltage `UT` is no longer part of the `Params`, since this value may depend on different definitions of the elementary charge `q`
   - methods taking `UT` as an argument take the temperature now instead
   - exported global physical constants
+  - `enable_trap_carrier!()` method as the underlying model and discretization were not correctly set up
 
 ## v0.6.0 July 23, 2025
 
