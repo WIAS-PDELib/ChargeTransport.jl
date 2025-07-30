@@ -162,9 +162,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     ## Here, we need to specify which numbers are associated with electron and hole quasi
     ## Fermi potential. Further, the desired recombination processes can be chosen here.
-    ## Note that, if you choose a SRH recombination you can further specify a transient SRH
-    ## recombination by the method enable_trap_carrier! and adjusting the modelType. Otherwise, by
-    ## default we use the stationary model for this type of recombination.
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
         bulk_recomb_Auger = true,

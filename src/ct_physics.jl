@@ -366,24 +366,6 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     end
 
-    # # if trap carriers are present
-    # for iicc ∈ data.trapCarrierList # ∈ Array{TrapCarrier, 1}
-    #     # add trap carriers only in defined regions (otherwise get NaN error)
-    #     if bnode.cellregions[1] ∈ iicc.regions
-    #         icc     = iicc.trapCarrier           # species number chosen by user
-    #         icc     = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
-
-    #         ncc     = get_density!(u, bnode, data, icc)
-
-    #         # subtract doping
-    #         f[ipsi] = f[ipsi] - params.chargeNumbers[icc] * ( params.bDoping[icc, bnode.region] )
-    #         # add charge carrier
-    #         f[ipsi] = f[ipsi] + params.chargeNumbers[icc] * ncc
-
-    #     end
-
-    # end
-
     f[ipsi] = f[ipsi] - paramsnodal.doping[bnode.index]
     f[ipsi] = - data.λ1 * 1 / tiny_penalty_value * data.constants.q * f[ipsi]
 
@@ -721,16 +703,6 @@ function reaction!(f, u, node, data, ::Type{InEquilibrium})
         end
     end
 
-    for iicc in data.trapCarrierList # ∈ Array{TrapCarrier, 1}
-        # add trap carriers only in defined regions (otherwise get NaN error)
-        if node.region ∈ iicc.regions
-            icc = iicc.trapCarrier            # species number chosen by user
-            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
-
-            f[icc] = u[icc]
-        end
-    end
-
     return
 end
 
@@ -818,61 +790,6 @@ function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
 end
 
 
-function addRecombination!(f, u, node, data, ::SRHWithTrapsType)
-
-    params = data.params
-    ireg = node.region
-
-    q = data.constants.q
-
-    # indices (∈IN) used by user
-    iphin = data.bulkRecombination.iphin
-    iphip = data.bulkRecombination.iphip
-
-    # based on user index and regularity of solution quantities or integers are used and depicted here
-    iphin = data.chargeCarrierList[iphin]
-    iphip = data.chargeCarrierList[iphip]
-
-    n = get_density!(u, node, data, iphin)
-    p = get_density!(u, node, data, iphip)
-
-    taun = params.recombinationSRHLifetime[iphin, ireg]
-    n0 = params.recombinationSRHTrapDensity[iphin, ireg]
-    taup = params.recombinationSRHLifetime[iphip, ireg]
-    p0 = params.recombinationSRHTrapDensity[iphip, ireg]
-
-    for iicc in data.trapCarrierList
-        # add trap carriers only in defined regions (otherwise get NaN error)
-        if node.region ∈ iicc.regions
-
-            icc = iicc.trapCarrier
-            itrap = data.chargeCarrierList[icc]
-
-            Nt = params.densityOfStates[itrap, ireg]
-            t = get_density!(u, node, data, itrap)
-
-            # Rn, Rp agree up to sign with *On the Shockley-Read-Hall Model: Generation-Recombination
-            # in Semiconductors* in SIAM Journal on Applied Mathematics, Vol. 67, No. 4 (2007), pp. 1183-1201.
-            # The sign is chosen according to *Supporting Information: Consistent Device Simulation Model
-            # Describing Perovskite Solar Cells in Steady-State, Transient and Frequency Domain* in ACS (2018)
-            if params.chargeNumbers[itrap] == -1
-                Rn = 1 / taun * (n * (1 - t / Nt) - n0 * t / Nt)
-                Rp = 1 / taup * (p * t / Nt - p0 * (1 - t / Nt))
-            elseif params.chargeNumbers[itrap] == 1
-                Rn = 1 / taun * (n * t / Nt - n0 * (1 - t / Nt))
-                Rp = 1 / taup * (p * (1 - t / Nt) - p0 * t / Nt)
-            end
-
-            f[itrap] = q * params.chargeNumbers[itrap] * (Rp - Rn)
-            f[iphin] = q * params.chargeNumbers[iphin] * Rn
-            f[iphip] = q * params.chargeNumbers[iphip] * Rp
-        end
-
-    end
-
-    return
-end
-
 function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOff})
     return nothing
 end
@@ -949,25 +866,11 @@ function RHSPoisson!(f, u, node, data, ipsi)
         end
     end
 
-    for iicc in data.trapCarrierList # ∈ Array{TrapCarrier, 1}
-        # add trap carriers only in defined regions (otherwise get NaN error)
-        if node.region ∈ iicc.regions
-
-            icc = iicc.trapCarrier            # species number chosen by user
-            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
-            ncc = get_density!(u, node, data, icc)
-
-            f[ipsi] = f[ipsi] - data.params.chargeNumbers[icc] * (data.params.doping[icc, node.region])  # subtract doping
-            f[ipsi] = f[ipsi] + data.params.chargeNumbers[icc] * ncc   # add charge carrier
-        end
-    end
-
     f[ipsi] = f[ipsi] - data.paramsnodal.doping[node.index]
 
     f[ipsi] = - data.constants.q * data.λ1 * f[ipsi]
 
-    ## This is the trap density for the stationary case without traps as own charge carrier
-    return addTrapDensity!(f, u, node, data)
+    return
 
 end
 
@@ -1018,54 +921,12 @@ function reaction!(f, u, node, data, ::Type{OutOfEquilibrium})
     end
 
     # Then, add RHS of continuity equations based on user information
-    return RHSContinuityEquations!(f, u, node, data) # RHS of Charge Carriers with special treatment of recombination
+    RHSContinuityEquations!(f, u, node, data) # RHS of Charge Carriers with special treatment of recombination
 
-end
-
-# Function which adds additional trap density to right-hand side of Poisson equation
-# without modeling traps as own charge carrier.
-# Note that this one may be deleted in future version.
-addTrapDensity!(f, u, node, data) = addTrapDensity!(f, u, node, data, data.bulkRecombination.SRH_2species_trap)
-
-
-function addTrapDensity!(f, u, node, data, ::SRHWithoutTrapsType)
     return
-end
-
-function addTrapDensity!(f, u, node, data, ::Type{SRH2SpeciesPresentTrapDens})
-
-    params = data.params
-    ireg = node.region
-    ipsi = data.index_psi
-
-    # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
-    iphin = data.bulkRecombination.iphin
-    iphip = data.bulkRecombination.iphip
-
-    # based on user index and regularity of solution quantities or integers are used and depicted here
-    iphin = data.chargeCarrierList[iphin]
-    iphip = data.chargeCarrierList[iphip]
-
-    n = get_density!(u, node, data, iphin)
-    p = get_density!(u, node, data, iphip)
-
-    n0 = params.recombinationSRHTrapDensity[iphin, ireg]
-    p0 = params.recombinationSRHTrapDensity[iphip, ireg]
-    taun = params.recombinationSRHLifetime[iphin, ireg]
-    taup = params.recombinationSRHLifetime[iphip, ireg]
-    zt = data.AuxTrapValues.zt
-    Nt = data.AuxTrapValues.Nt[ireg]
-
-    q = data.constants.q
-
-    # add trap density
-    return if zt == 1
-        f[ipsi] = f[ipsi] - q * zt * data.λ1 * Nt * (1 - (taun * p0 + taup * n) / (taun * (p0 + p) + taup * (n0 + n)))
-    elseif zt == -1
-        f[ipsi] = f[ipsi] + q * zt * data.λ1 * Nt * ((taun * p0 + taup * n) / (taun * (p0 + p) + taup * (n0 + n)))
-    end
 
 end
+
 
 
 """
@@ -1174,19 +1035,9 @@ function storage!(f, u, node, data, ::Type{OutOfEquilibrium})
         f[icc] = q * params.chargeNumbers[icc] * ncc
     end
 
-    for iicc in data.trapCarrierList # ∈ Array{TrapCarrier, 1}
-        # Here we do not need to check, if carrier is present in a specific region.
-        # This is directly handled by VoronoiFVM.
-        icc = iicc.trapCarrier            # species number chosen by user
-        icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+    f[ipsi] = 0.0
 
-        ncc = get_density!(u, node, data, icc)
-
-        f[icc] = q * params.chargeNumbers[icc] * ncc
-    end
-
-
-    return f[ipsi] = 0.0
+    return
 
 end
 
@@ -1257,11 +1108,6 @@ function flux!(f, u, edge, data, ::Type{OutOfEquilibrium})
 
     for icc in data.ionicCarrierList
         icc = icc.ionicCarrier       # correct index number chosen by user of Type Int64
-        chargeCarrierFlux!(f, u, edge, data, icc, data.fluxApproximation[icc])
-    end
-
-    for icc in data.trapCarrierList
-        icc = icc.trapCarrier       # correct index number chosen by user of Type Int64
         chargeCarrierFlux!(f, u, edge, data, icc, data.fluxApproximation[icc])
     end
 

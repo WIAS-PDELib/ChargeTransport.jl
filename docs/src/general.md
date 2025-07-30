@@ -18,7 +18,7 @@ the semiconductor drift-diffusion equations via the Voronoi finite volume method
 - an arbitrary amount of charge carriers (electrons, heavy holes, light holes, ions, ...)
 - thermodynamically consistent, physics preserving numerical methods
 - different charge carrier statistics per species (Boltzmann, Blakemore, Fermi-Dirac)
-- Auger, radiative, Shockley-Read-Hall recombination including transient traps
+- Auger, radiative, Shockley-Read-Hall recombination
 - uniform and Beer-Lambert generation
 
 Installation and first steps
