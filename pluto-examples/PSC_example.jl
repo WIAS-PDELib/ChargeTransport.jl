@@ -392,7 +392,6 @@ begin
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
     params.temperature = T
-    params.UT = (k_B * params.temperature) / q
     params.chargeNumbers[iphin] = zn
     params.chargeNumbers[iphip] = zp
     params.chargeNumbers[iphia] = za
@@ -464,7 +463,7 @@ end
 begin
     control = SolverControl()
     control.maxiters = 300
-    control.verbose = ""
+    control.verbose = false
     control.max_round = 5
     control.damp_initial = 0.5
     control.damp_growth = 1.21 # >= 1

@@ -101,7 +101,7 @@ function tesca_grid(; refinement = 1, showplot = false, airbox = false)
 end
 
 function main(;
-        refinement = 1, plotting = false, Plotter = PyPlot, verbose = "", test = false,
+        refinement = 1, plotting = false, Plotter = PyPlot, verbose = false, test = false,
         unknown_storage = :sparse, numberOfEigenvalues = 1,
         parameter_set = Params_Laser_simple
     ) # choose the parameter set

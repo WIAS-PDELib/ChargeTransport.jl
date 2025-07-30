@@ -320,11 +320,6 @@ mutable struct Params
     temperature::Float64
 
     """
-    The thermal voltage, which reads  ``U_T = k_B T / q``.
-    """
-    UT::Float64
-
-    """
     The parameter of the Blakemore statistics (needed for the generalizedSG flux).
     """
     γ::Float64
@@ -867,6 +862,11 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     paramsoptical::ParamsOptical
 
+    """
+    A struct holding the dimensionless physical constants used for the simulations.
+    """
+    constants::Constants
+
     ###############################################################
     Data{TFuncs, TVoltageFunc, TGenerationData}() where {TFuncs, TVoltageFunc, TGenerationData} = new()
 
@@ -926,7 +926,6 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####                     real numbers                      ####
     ###############################################################
     params.temperature = 300 * K
-    params.UT = (k_B * 300 * K) / q # thermal voltage
     params.γ = 0.27                # parameter for Blakemore statistics
     params.r0 = 0.0                 # r0 prefactor electro-chemical reaction
     params.prefactor_SRH = 1.0
@@ -1001,7 +1000,7 @@ Simplified constructor for Params which only takes the grid and the numberOfCarr
 
 """
 function Params(grid::ExtendableGrid, numberOfCarriers)
-    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChangeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
+    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChargeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
     return Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 end
 
@@ -1100,7 +1099,7 @@ including the physical parameters, but also some numerical information
 are located.
 
 """
-function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
+function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
 
     numberOfBoundaryRegions = grid[NumBFaceRegions]
 
@@ -1185,6 +1184,8 @@ function Data(grid, numberOfCarriers; contactVoltageFunction = [zeroVoltage for 
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
 
     ###############################################################
+
+    data.constants = constants
 
     return data
 
@@ -1630,6 +1631,8 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
     paramsnodal = ctsys.fvmsys.physics.data.paramsnodal
     bnode = grid[BFaceNodes]
     ipsi = data.index_psi
+    (; k_B, q) = data.constants
+
 
     # We set zero voltage for each charge carrier at all outer boundaries for equilibrium calculations.
     for ibreg in grid[BFaceRegions]
@@ -1675,7 +1678,7 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
             Ncc = params.bDensityOfStates[icc, ibreg] + paramsnodal.densityOfStates[icc, bnode[ibreg]]
             Ecc = params.bBandEdgeEnergy[icc, ibreg] + paramsnodal.bandEdgeEnergy[icc, bnode[ibreg]]
 
-            eta = params.chargeNumbers[icc] / params.UT * ((sol[icc, bnode[ibreg]] - sol[ipsi, bnode[ibreg]]) + Ecc / q)
+            eta = params.chargeNumbers[icc] / (k_B * params.temperature / q) * ((sol[icc, bnode[ibreg]] - sol[ipsi, bnode[ibreg]]) + Ecc / q)
             params.bDensityEQ[icc, ibreg] = Ncc * data.F[icc](eta)
         end
     end
@@ -1770,6 +1773,8 @@ function electroNeutralSolution(ctsys)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
+    (; k_B, q) = data.constants
+
 
     params = data.params
 
@@ -1827,7 +1832,7 @@ $(TYPEDSIGNATURES)
 Compute the charge density, i.e. the right-hand side of Poisson's equation.
 
 """
-function charge_density(psi0, phi, UT, EVector, chargeNumbers, dopingVector, dosVector, FVector)
+function charge_density(psi0, phi, temperature, EVector, chargeNumbers, dopingVector, dosVector, FVector)
     # https://stackoverflow.com/questions/45667291/how-to-apply-one-argument-to-arrayfunction-1-element-wise-smartly-in-julia
-    return sum(-chargeNumbers .* dopingVector) + sum(chargeNumbers .* dosVector .* (etaFunction(psi0, phi, UT, EVector, chargeNumbers) .|> FVector))
+    return sum(-chargeNumbers .* dopingVector) + sum(chargeNumbers .* dosVector .* (etaFunction(psi0, phi, temperature, EVector, chargeNumbers) .|> FVector))
 end

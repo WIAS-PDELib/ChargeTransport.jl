@@ -4,6 +4,7 @@ version = "1.0.0"
 authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>", "Patrick Jaap <patrick.jaap@wias-berlin.de>"]
 
 [deps]
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
@@ -18,6 +19,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
 
 [compat]
+Compat = "4.18.0"
 DocStringExtensions = "0.8,0.9"
 ExtendableGrids = "^0.9,1"
 ForwardDiff = "^0.10"

@@ -17,7 +17,7 @@ using PyPlot
 # you can also use other Plotters, if you add them to the example file
 function main(;
         n = 6, Plotter = PyPlot, plotting = false,
-        verbose = "", test = false,
+        verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
     )
 
