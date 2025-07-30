@@ -928,7 +928,6 @@ function reaction!(f, u, node, data, ::Type{OutOfEquilibrium})
 end
 
 
-
 """
 $(SIGNATURES)
 Compute trap densities for a given trap energy.
