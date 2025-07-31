@@ -1,12 +1,12 @@
 #=
-# CIGS: stationary with traps and Schottky contacts.
+# CIGS: stationary with Schottky contacts.
 ([source code](@__SOURCE_URL__))
 
-Simulating stationary charge transport for CIGS with hole traps and mixed Schottky/Ohmic
+Simulating stationary charge transport for CIGS with mixed Schottky/Ohmic
 contact conditions. Assume that SRH recombination only happens within a small regime.
 =#
 
-module Ex108_CIGS_WithTraps
+module Ex108_CIGS
 
 using ChargeTransport
 using ExtendableGrids
@@ -39,7 +39,7 @@ end
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false, AdditionalTrapSpecies = false)
+function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false)
 
     if plotting
         Plotter.close("all")
@@ -118,12 +118,7 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     iphin = 1 # index electron quasi Fermi potential
     iphip = 2 # index hole quasi Fermi potential
-    if AdditionalTrapSpecies
-        iphit = 3 # index trap quasi Fermi potential
-        numberOfCarriers = 3 # electrons, holes and traps
-    else
-        numberOfCarriers = 2 # electrons and holes
-    end
+    numberOfCarriers = 2 # electrons and holes
 
     ## physical data
     T = 300.0 * K
@@ -137,6 +132,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     EC = [Ec_ZnO, Ec_CIGS, Ec_CIGS, Ec_CIGS]
     EV = [Ev_ZnO, Ev_CIGS, Ev_CIGS, Ev_CIGS]
+
+    # hole trap energy
+    Et = 2.8 * eV
 
     ## effective densities of states
     Nc = 4.35195989587969e17 / (cm^3)
@@ -160,23 +158,13 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     ε = [εr_ZnO, εr_CIGS, εr_CIGS, εr_CIGS]
 
-    ## trap information
-    zt = 1 # hole traps
-    Et = 2.8 * eV
-    ET = [0.0, 0.0, Et, 0.0]
-    Nt = 1.0e18 / (cm^3)
-    NT = [0, 0, Nt, 0]
-
-    mu_t = 0 * (cm^2) / (V * s)
-    μt = [0.0, 0.0, mu_t, 0.0]
-
     ## recombination information parameters
-    ni_ZnO = sqrt(Nc * Nv) * exp(-(Ec_ZnO - Ev_ZnO) / (2 * k_B * T))   # intrinsic concentration
+    ni_ZnO = sqrt(Nc * Nv) * exp(-(Ec_ZnO - Ev_ZnO) / (2 * k_B * T))     # intrinsic concentration
     n0_ZnO = Nc * Boltzmann((Et - Ec_ZnO) / (k_B * T))                   # Boltzmann equilibrium concentration
-    p0_ZnO = ni_ZnO^2 / n0_ZnO                                        # Boltzmann equilibrium concentration
-    ni_CIGS = sqrt(Nc * Nv) * exp(-(Ec_CIGS - Ev_CIGS) / (2 * k_B * T)) # intrinsic concentration
-    n0_CIGS = Nc * Boltzmann((Et - Ec_CIGS) / (k_B * T))                  # Boltzmann equilibrium concentration
-    p0_CIGS = ni_CIGS^2 / n0_CIGS                                      # Boltzmann equilibrium concentration
+    p0_ZnO = ni_ZnO^2 / n0_ZnO                                           # Boltzmann equilibrium concentration
+    ni_CIGS = sqrt(Nc * Nv) * exp(-(Ec_CIGS - Ev_CIGS) / (2 * k_B * T))  # intrinsic concentration
+    n0_CIGS = Nc * Boltzmann((Et - Ec_CIGS) / (k_B * T))                 # Boltzmann equilibrium concentration
+    p0_CIGS = ni_CIGS^2 / n0_CIGS                                        # Boltzmann equilibrium concentration
 
     p0 = [p0_ZnO, p0_CIGS, p0_CIGS, p0_CIGS]
     n0 = [n0_ZnO, n0_CIGS, n0_CIGS, n0_CIGS]
@@ -212,12 +200,8 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     ## initialize Data instance and fill in data
     data = Data(grid, numberOfCarriers)
-    data.modelType = Stationary # R = Rn = Rp, since the model type is stationary
-    if AdditionalTrapSpecies
-        data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
-    else
-        data.F .= FermiDiracOneHalfTeSCA
-    end
+    data.modelType = Stationary
+    data.F .= FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
@@ -229,14 +213,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     data.boundaryType[bregionAcceptor] = SchottkyContact
     data.boundaryType[bregionDonor] = OhmicContact
     data.fluxApproximation .= ExcessChemicalPotential
-
-    if AdditionalTrapSpecies
-        ## Here, we enable the traps and parse the respective index and the regions where the trap is defined.
-        enable_trap_carrier!(; data = data, trapCarrier = iphit, regions = [regionAcceptorTrap])
-    else
-        ## pass trap data in stationary setting since there is no separate trap species
-        add_trap_density_Poisson!(data = data, zt = zt, Nt = NT)
-    end
 
     if test == false
         println("*** done\n")
@@ -253,9 +229,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     params.temperature = T
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
-    if AdditionalTrapSpecies
-        params.chargeNumbers[iphit] = zt
-    end
 
     for ireg in 1:numberOfRegions           # interior region data
 
@@ -268,12 +241,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
         params.bandEdgeEnergy[iphip, ireg] = EV[ireg]
         params.mobility[iphin, ireg] = μn[ireg]
         params.mobility[iphip, ireg] = μp[ireg]
-
-        if AdditionalTrapSpecies
-            params.densityOfStates[iphit, ireg] = NT[ireg]
-            params.bandEdgeEnergy[iphit, ireg] = ET[ireg]
-            params.mobility[iphit, ireg] = μt[ireg]
-        end
 
         ## recombination parameters
         params.recombinationRadiative[ireg] = Radiative
@@ -335,12 +302,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     if plotting
         label_solution, label_density, label_energy = set_plotting_labels(data)
-
-        if AdditionalTrapSpecies
-            ## add labels for traps
-            label_energy[1, iphit] = "\$E_{\\tau}-q\\psi\$"; label_energy[2, iphit] = "\$ - q \\varphi_{\\tau}\$"
-            label_density[iphit] = "\$n_{\\tau}\$";        label_solution[iphit] = "\$ \\varphi_{\\tau}\$"
-        end
 
         ## ##### set legend for plotting routines #####
         Plotter.figure()
@@ -409,10 +370,12 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
         plot_IV(Plotter, biasValues, chargeDensities, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
         Plotter.title("Charge density in donor region")
         Plotter.ylabel("Charge density [C]")
+        Plotter.tight_layout()
         Plotter.figure()
         plot_IV(Plotter, biasValues, staticCapacitance, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
         Plotter.title("Static capacitance in donor region")
         Plotter.ylabel("Static capacitance [C/V]")
+        Plotter.tight_layout()
 
     end
 
@@ -426,10 +389,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 end #  main
 
 function test()
-    testval = 1.484831264268335
-    testvalAdditionalSpecies = 1.1334257649339574
+    testval = 1.3561479172035813
 
-    return main(test = true, AdditionalTrapSpecies = false) ≈ testval && main(test = true, AdditionalTrapSpecies = true) ≈ testvalAdditionalSpecies
+    return main(test = true) ≈ testval
 end
 
 if test == false
