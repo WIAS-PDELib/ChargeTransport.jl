@@ -95,25 +95,6 @@ function etaFunction!(u, node::VoronoiFVM.Node, data, icc)
 
 end
 
-
-### DA: DELETE THISSSSS
-"""
-$(TYPEDSIGNATURES)
-
-The argument of the distribution function for floats.
-"""
-function etaFunction(u, data, node, region, icc, in_region::Bool)
-
-    if in_region == true
-        E = data.params.bandEdgeEnergy[icc, region] + data.paramsnodal.bandEdgeEnergy[icc, node]
-    elseif in_region == false
-        E = data.params.bBandEdgeEnergy[icc, region] + data.paramsnodal.bandEdgeEnergy[icc, node]
-    end
-
-    return etaFunction(u[data.index_psi], u[icc], data.params.temperature, E, data.params.chargeNumbers[icc], data.constants)
-end
-
-
 """
 $(TYPEDSIGNATURES)
 
@@ -254,7 +235,7 @@ function get_density(sol, ireg::Int, ctsys, icc::QType)
     data = ctsys.fvmsys.physics.data
 
     Ncc = get_DOS(icc, ireg, ctsys)
-    eta = etaFunction(sol, ireg, ctsys, icc, data.constants)
+    eta = etaFunction(sol, ireg, ctsys, icc)
 
     return Ncc .* data.F[icc].(eta)
 
