@@ -14,6 +14,7 @@ modules = modules = [
     "Ex106_PSC_SurfaceRecombination.jl",
     "Ex107_MoS2_withIons_BarrierLowering.jl",
     "Ex108_CIGS.jl",
+    "Ex109_PSC_NonDimensional.jl",
     "Ex201_PSC_tensorGrid.jl",
     "Ex202_Laser_simple.jl",
 ]
