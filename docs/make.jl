@@ -1,4 +1,4 @@
-using Documenter, ExampleJuggler, Literate, ChargeTransport, PlutoSliderServer
+using Documenter, ExampleJuggler, Literate, ChargeTransport, PlutoSliderServer, VoronoiFVM
 
 DocMeta.setdocmeta!(ExampleJuggler, :DocTestSetup, :(using ExampleJuggler); recursive = true)
 
