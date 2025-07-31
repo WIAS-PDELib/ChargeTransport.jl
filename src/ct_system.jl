@@ -38,13 +38,6 @@ mutable struct BulkRecombination
     """
     bulk_recomb_SRH::SRHModelType
 
-    """
-    Data type with which you can include a stationary trap density
-    to the right-hand side of the Poisson equation. This stationary trap
-    density corresponds to the number of unoccupied trap states.
-    """
-    SRH_2species_trap::AuxModelSRHType
-
     BulkRecombination() = new()
 
 end
@@ -72,105 +65,15 @@ function set_bulk_recombination(;
 
     if bulk_recomb_SRH == true
         bulkRecombination.bulk_recomb_SRH = SRHStationary
-        bulkRecombination.SRH_2species_trap = SRHStationary
     else
         bulkRecombination.bulk_recomb_SRH = SRHOff
-        bulkRecombination.SRH_2species_trap = SRHOff
     end
 
     return bulkRecombination
 
 end
 
-###########################################################
-###########################################################
 
-"""
-$(TYPEDEF)
-
-A struct holding all information necessary for enabling traps in the SRH recombination.
-With help of this constructor we can read out the index the user chooses for trap quasi Fermi
-potentials and the respective regions in which they are defined.
-
-$(TYPEDFIELDS)
-
-"""
-mutable struct TrapCarrier
-
-    """
-    Index of trap carrier user defines.
-    """
-    trapCarrier::Int64
-
-    """
-    Corresponding regions where trap carrier is assumed to be present.
-    """
-    regions::Array{Int64, 1}
-
-    TrapCarrier() = new()
-
-end
-
-"""
-$(SIGNATURES)
-This method takes the user information concerning present trap charge carriers,
-builds a struct of Type TrapCarrier and add this struct to the trapCarrierList.
-"""
-function enable_trap_carrier!(; data = data::Data, trapCarrier::Int64, regions::Array{Int64, 1})
-
-    enableTraps = TrapCarrier()
-
-    enableTraps.trapCarrier = trapCarrier
-    enableTraps.regions = regions
-
-    if data.modelType == Transient
-        data.bulkRecombination.bulk_recomb_SRH = SRHTrapsTransient
-    else
-        data.bulkRecombination.bulk_recomb_SRH = SRHTrapsStationary
-    end
-
-    return push!(data.trapCarrierList, enableTraps)
-
-end
-
-"""
-$(TYPEDEF)
-Auxiliary struct with the charge number zt and the effective density of trap states Nt
-for a stationary trap density which corresponds to the number of unoccupied states.
-$(TYPEDFIELDS)
-"""
-
-mutable struct AuxiliaryStationaryTrapValues
-
-    """
-    Index of traps.
-    """
-    zt::Int64
-
-    """
-    Array with the corresponding effective density of trap states.
-    """
-    Nt::Array{Float64, 1}
-
-    AuxiliaryStationaryTrapValues() = new()
-
-end
-
-"""
-$(SIGNATURES)
-This method includes traps for a simplified model, where the trap carriers are not
-considered as additional carrier with an own continuity equation. In this case the trap
-density is additionally added to the right-hand side of Poisson equation.
-"""
-function add_trap_density_Poisson!(; data = data::Data, zt = 1::Int64, Nt = 5.0e20 * ones(Float64, data.params.numberOfRegions)::Array{Float64, 1})
-
-    data.bulkRecombination.SRH_2species_trap = SRH2SpeciesPresentTrapDens
-    aux_trap_values = AuxiliaryStationaryTrapValues()
-    aux_trap_values.zt = zt
-    aux_trap_values.Nt = Nt
-    return data.AuxTrapValues = aux_trap_values
-
-end
 ###########################################################
 ###########################################################
 
@@ -747,17 +650,6 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     ionicCarrierList::Array{IonicCarrier, 1}
 
     """
-    This list contains all defined trap carriers for the SRH recombination
-    as a struct of Type TrapCarrier with all needed information on the trap carriers.
-    """
-    trapCarrierList::Array{TrapCarrier, 1}
-
-    """
-    A struct which contains auxiliary trap values for the stationary setting.
-    """
-    AuxTrapValues::AuxiliaryStationaryTrapValues
-
-    """
     This variable stores the index of the electric potential. Based on the user choice we have
     with this new type the opportunity to simulate discontinuous unknowns.
     """
@@ -1149,8 +1041,6 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.chargeCarrierList = QType[ii  for ii in 1:numberOfCarriers]
     data.electricCarrierList = Int64[ii for ii in 1:2]                       # electrons and holes
     data.ionicCarrierList = IonicCarrier[]
-    data.trapCarrierList = TrapCarrier[]
-    data.AuxTrapValues = AuxiliaryStationaryTrapValues()
     data.index_psi = numberOfCarriers + 1
     data.barrierLoweringInfo = BarrierLoweringSpecies()
     data.barrierLoweringInfo.BarrierLoweringOn = BarrierLoweringOff # set in general case barrier lowering off
@@ -1319,11 +1209,6 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         enable_species!(ctsys, icc.ionicCarrier, icc.regions)
     end
 
-    # if trap carriers are present
-    for icc in data.trapCarrierList
-        enable_species!(ctsys, icc.trapCarrier, icc.regions)
-    end
-
     # we need no loop for interface carriers, since in this case there are not present.
 
     # enable lastly the electric potential on whole domain
@@ -1429,17 +1314,8 @@ function build_system(grid, data, ::Type{DiscontQF}; kwargs...)
     for icc in data.ionicCarrierList
         enable_species!(ctsys, icc.ionicCarrier, icc.regions)
     end
-
     #########################################
-    # if trap carriers are present
-    for icc in data.trapCarrierList
-        enable_species!(ctsys, icc.trapCarrier, icc.regions)
-    end
-
-    #########################################
-
     data.index_psi = ContinuousQuantity(fvmsys, 1:data.params.numberOfRegions)
-
 
     #########################################
     # Fill in boundary parameters. Note the convention that left boundary = 1, right boundary = 2

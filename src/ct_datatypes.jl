@@ -213,27 +213,14 @@ const CalculationType = Union{Type{InEquilibrium}, Type{OutOfEquilibrium}}
 abstract type SRHStationary end
 abstract type SRHOff        end
 
-abstract type SRHTrapsStationary end
-abstract type SRHTrapsTransient end
-
-##########################################################
-
-abstract type SRH2SpeciesPresentTrapDens end
-
 ##########################################################
 """
 Possible type for SRH recombination without traps.
+Here, additional SRH model can be included, possibly also with dynamic traps.
 """
 const SRHWithoutTrapsType = Union{Type{SRHStationary}, Type{SRHOff}}
 
-const AuxModelSRHType = Union{Type{SRH2SpeciesPresentTrapDens}, SRHWithoutTrapsType}
-
-"""
-Possible types for SRH recombination without traps.
-"""
-const SRHWithTrapsType = Union{Type{SRHTrapsTransient}, Type{SRHTrapsStationary}}
-
-const SRHModelType = Union{SRHWithoutTrapsType, SRHWithTrapsType}
+const SRHModelType = Union{SRHWithoutTrapsType}
 
 ##########################################################
 ##########################################################
