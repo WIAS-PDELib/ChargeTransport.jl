@@ -15,13 +15,15 @@ using ExtendableGrids  # grid initializer
 using PyPlot           # solution visualizer
 
 # you can set verbose also to true to display some solver information
-function main(;n = 3,               # for number of nodes in each layer
-               Cn = 10, Cp = 10,    # doping
-               λ = 1.0,             # Debye length
-               DirichletVal = 1.0,  # Dirichlet value
-               G0 = 1.0,            # photogeneration prefactor
-               Plotter = PyPlot, plotting = false,
-               verbose = false, test = false, unknown_storage = :sparse)
+function main(;
+        n = 3,               # for number of nodes in each layer
+        Cn = 10, Cp = 10,    # doping
+        λ = 1.0,             # Debye length
+        DirichletVal = 1.0,  # Dirichlet value
+        G0 = 1.0,            # photogeneration prefactor
+        Plotter = PyPlot, plotting = false,
+        verbose = false, test = false, unknown_storage = :sparse
+    )
 
     if plotting
         Plotter.close("all")
@@ -54,18 +56,18 @@ function main(;n = 3,               # for number of nodes in each layer
     h1 = 1.0; h2 = 4.0; h3 = 2.0
     h_total = h1 + h2 + h3
 
-    coord1 = collect(range(0.0;     stop = h1,      length = n))
-    coord2 = collect(range(h1;      stop = h1 + h2, length = 4*n))
-    coord3 = collect(range(h1 + h2; stop = h_total, length = 2*n))
+    coord1 = collect(range(0.0; stop = h1, length = n))
+    coord2 = collect(range(h1; stop = h1 + h2, length = 4 * n))
+    coord3 = collect(range(h1 + h2; stop = h_total, length = 2 * n))
     coord = glue(coord1, coord2)
     coord = glue(coord, coord3)
 
     grid = simplexgrid(coord)
 
     ## cellmask! for defining the subregions and assigning region number
-    cellmask!(grid, [0.0],   [h1],      region1)
-    cellmask!(grid, [h1],    [h1+h2],   region2)
-    cellmask!(grid, [h1+h2], [h_total], region3)
+    cellmask!(grid, [0.0], [h1], region1)
+    cellmask!(grid, [h1], [h1 + h2], region2)
+    cellmask!(grid, [h1 + h2], [h_total], region3)
 
     ## bfacemask! for setting different boundary regions.
     bfacemask!(grid, [0.0], [0.0], bregion1)
@@ -113,9 +115,9 @@ function main(;n = 3,               # for number of nodes in each layer
     DirichletVal = DirichletVal
 
     # photogeneration
-    G(x) = G0.*exp.(- (x.-h1))
+    G(x) = G0 .* exp.(- (x .- h1))
     genData = zeros(length(coord))
-    genData[length(coord1):length(coord1)+length(coord2)-1] = G.(coord2)
+    genData[length(coord1):(length(coord1) + length(coord2) - 1)] = G.(coord2)
 
     if test == false
         println("*** done\n")
@@ -208,11 +210,11 @@ function main(;n = 3,               # for number of nodes in each layer
     ## boundary model
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion1, 0.0)
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion1, 0.0)
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi,  bregion1, asinh(Cn/2))
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion1, asinh(Cn / 2))
 
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion2, DirichletVal)
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion2, DirichletVal)
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi,  bregion2, asinh(-Cp/2) + DirichletVal)
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion2, asinh(-Cp / 2) + DirichletVal)
 
     if test == false
         println("*** done\n")
@@ -244,9 +246,9 @@ function main(;n = 3,               # for number of nodes in each layer
     ################################################################################
 
     inival = ChargeTransport.unknowns(ctsys)
-    inival[iphin, :] = 0.0 .+ DirichletVal./h_total .* coord
-    inival[iphip, :] = 0.0 .+ DirichletVal./h_total .* coord
-    inival[ipsi, :]  = asinh(Cn/2) .+ ((asinh(-Cp/2) + DirichletVal) -  asinh(Cn/2))./h_total .* coord
+    inival[iphin, :] = 0.0 .+ DirichletVal ./ h_total .* coord
+    inival[iphip, :] = 0.0 .+ DirichletVal ./ h_total .* coord
+    inival[ipsi, :] = asinh(Cn / 2) .+ ((asinh(-Cp / 2) + DirichletVal) - asinh(Cn / 2)) ./ h_total .* coord
 
     sol = ChargeTransport.solve(ctsys, inival = inival, control = control)
 
@@ -260,33 +262,33 @@ function main(;n = 3,               # for number of nodes in each layer
     end
     ################################################################################
 
-    nn = exp.(zn*(sol[iphin,:]- sol[ipsi,:]))
-    np = exp.(zp*(sol[iphip,:]- sol[ipsi,:]))
+    nn = exp.(zn * (sol[iphin, :] - sol[ipsi, :]))
+    np = exp.(zp * (sol[iphip, :] - sol[ipsi, :]))
 
     if plotting
 
         figure()
-        PyPlot.plot(coord, sol[iphin,:], color = "green", linewidth = 5, label = "\$ \\varphi_{\\mathrm{n}}}\$")
-        PyPlot.plot(coord, sol[iphip,:], color = "red",   linewidth = 5, linestyle = "--", label = "\$ \\varphi_{\\mathrm{p}}}\$")
-        PyPlot.plot(coord, sol[ipsi,:],  color = "blue",  linewidth = 5, label = "\$ \\psi\$")
-        axvspan(0.0, 1.0, facecolor=[243/255 192/255 192/255])
-        axvspan(1.0, 5.0, facecolor=[233/255 226/255 215/255])
-        axvspan(5.0, 7.0, facecolor=[211/255 232/255 208/255])
-        xlabel("\$ x \$", fontsize=17)
-        ylabel("Potential", fontsize=17)
+        PyPlot.plot(coord, sol[iphin, :], color = "green", linewidth = 5, label = "\$ \\varphi_{\\mathrm{n}}}\$")
+        PyPlot.plot(coord, sol[iphip, :], color = "red", linewidth = 5, linestyle = "--", label = "\$ \\varphi_{\\mathrm{p}}}\$")
+        PyPlot.plot(coord, sol[ipsi, :], color = "blue", linewidth = 5, label = "\$ \\psi\$")
+        axvspan(0.0, 1.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        axvspan(5.0, 7.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        xlabel("\$ x \$", fontsize = 17)
+        ylabel("Potential", fontsize = 17)
         tight_layout()
         PyPlot.legend(loc = "center right", fontsize = 14)
         ########################################################
 
         figure()
         PyPlot.semilogy(coord, nn, color = "green", linewidth = 5, label = "\$ n_{\\mathrm{n}}}\$")
-        PyPlot.semilogy(coord, np, color = "red",  linewidth = 5, label = "\$ n_{\\mathrm{p}}}\$")
+        PyPlot.semilogy(coord, np, color = "red", linewidth = 5, label = "\$ n_{\\mathrm{p}}}\$")
         PyPlot.legend(loc = "center right", fontsize = 14)
-        axvspan(0.0, 1.0, facecolor=[211/255 232/255 208/255])
-        axvspan(1.0, 5.0, facecolor=[233/255 226/255 215/255])
-        axvspan(5.0, 7.0, facecolor=[243/255 192/255 192/255])
-        xlabel("\$ x \$", fontsize=17)
-        ylabel("Density", fontsize=17)
+        axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        xlabel("\$ x \$", fontsize = 17)
+        ylabel("Density", fontsize = 17)
         tight_layout()
 
     end
