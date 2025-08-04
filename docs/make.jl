@@ -19,9 +19,10 @@ modules = modules = [
     "Ex202_Laser_simple.jl",
 ]
 
-module_examples = @docmodules(exampledir, modules, use_module_titles = true)
 
 cleanexamples()
+
+module_examples = @docmodules(exampledir, modules, use_module_titles = true)
 
 #############################################################################
 
