@@ -36,20 +36,31 @@ Differences to the previous example include
 A quick survey on how to use `ChargeTransport.jl` to adjust the input parameters such that these features can be simulated will be given in the following.
 
 ## Example 1: Graded interfaces
-By default, we assume abrupt inner interfaces. If one wishes to simulate graded interfaces, where for example the effective density of states and the band-edge energy may vary, we refer to [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex104_PSC_gradedFlux_Schottky_contacts.jl) or [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex105_PSC_gradedFlux.jl) example.
+By default, we assume abrupt inner interfaces. If one wishes to simulate graded interfaces, where for example the effective density of states and the band-edge energy may vary, we refer to [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex105_PSC_gradedFlux.jl) example.
 
-We sketch the relevant parts here. First, we need to define two additional thin interface layers
-
+We sketch the relevant parts here.
+First, we need to import the constants and units.
 ```julia
 # unit factors
-@local_unitfactors V s
+@local_unitfactors μm cm s ns V K
+
+# constants
+constants = ChargeTransport.constants
+(; q, k_B, ε_0) = constants
+
+eV = q * V
+```
+
+Then, we need to define two additional thin interface layers
+
+```julia
 
 # region numbers
-regionDonor     = 1       # n doped region
+regionDonor = 1      # n doped region
 regionJunction1 = 2
-regionIntrinsic = 3       # intrinsic region
+regionIntrinsic = 3  # intrinsic region
 regionJunction2 = 4
-regionAcceptor  = 5       # p doped region
+regionAcceptor = 5   # p doped region
 ```
 which need to be taken into account by the initialization of the grid.
 
@@ -58,45 +69,47 @@ Second, since we allow varying parameters within the thin interface layers, the 
 ```julia
 data.fluxApproximation = ScharfetterGummelGraded
 
-paramsnodal            = ParamsNodal(grid, numberOfCarriers)
+paramsnodal = ParamsNodal(grid, numberOfCarriers)
 ```
 
 Finally, we introduce graded parameters. Currently, only a linear grading is implemented.
 
 ```julia
-paramsnodal.bandEdgeEnergy[iphin, :] = grading_parameter!(paramsnodal.bandEdgeEnergy[iphin, :],
-                                                         coord, regionTransportLayers, regionJunctions,
-                                                         h, heightLayers, lengthLayers, EC)
+paramsnodal.bandEdgeEnergy[iphin, :] = grading_parameter!(
+    paramsnodal.bandEdgeEnergy[iphin, :],
+    coord, regionTransportLayers, regionJunctions, h,
+    heightLayers, lengthLayers, EC
+)
 ```
 
 ## Example 2: Linear IV scan protocol
-Here, we summarize the main parts of [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex106_PSC_withIons_IVMeasurement.jl) example.
+Here, we summarize the main parts of [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex103_PSC_IVMeasurement.jl) example.
 Define three charge carriers.
 ```julia
-iphin                    = 2 # electrons
-iphip                    = 1 # holes
-iphia                    = 3 # anion vacancies
-numberOfCarriers         = 3
+iphin = 1 # electrons
+iphip = 2 # holes
+iphia = 3 # anion vacancies
+numberOfCarriers = 3
 ```
 Consider the transient problem and enable the ionic charge carriers only in the active layer:
 ```julia
-data.modelType           = Transient
+data.modelType = Transient
 enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [regionIntrinsic])
 ```
 
 Following specification is needed for a linear I-V scan protocol.
 
 ```julia
-scanrate                 = 1.0 * V/s
-number_tsteps            = 31
-endVoltage               = voltageAcceptor # bias goes until the given voltage at acceptor boundary
-tend                     = endVoltage/scanrate
+scanrate = 1.0 * V / s
+number_tsteps = 31
+endVoltage = voltageAcceptor # bias goes until the given voltage at acceptor boundary
+tend = endVoltage / scanrate
 ```
 
 ### Variant A: Solve the transient problem manually
 ```julia
 ## with fixed timestep sizes we can calculate the times a priori
-tvalues                    = range(0, stop = tend, length = number_tsteps)
+tvalues = range(0, stop = tend, length = number_tsteps)
 
 for istep = 2:number_tsteps
 
@@ -136,7 +149,7 @@ sol = solve(ctsys, inival = inival, times=(0.0, tend), control = control)
 ```
 
 ## Example 3: Illumination
-Add uniform illumination to the previous code by setting
+Add uniform photogeneration to the previous code by setting
 
 ```julia
 data.generationModel = GenerationUniform
@@ -151,18 +164,18 @@ end
 for given data stored in `generationUniform`.
 If one wishes to use the Beer-Lambert generation, then the corresponding code would be
 ```julia
-data.generationModel                          = GenerationBeerLambert
+data.generationModel = GenerationBeerLambert
 
 for ireg in 1:numberOfRegions
     params.generationIncidentPhotonFlux[ireg] = incidentPhotonFlux[ireg]
-    params.generationAbsorption[ireg]         = absorption[ireg]
+    params.generationAbsorption[ireg] = absorption[ireg]
 end
 
-params.generationPeak                         = generationPeak
+params.generationPeak = generationPeak
 ```
 If one wishes to invert the illumination, one needs to define
 ```julia
-params.invertedIllumination                   = -1
+params.invertedIllumination = -1
 ```
 where this value is by default set to one (for light entering from the left).
 Furthermore, we recommend performing a time loop while increasing the generation rate and afterwards applying the scan protocol with a full generation due to numerical stability, see this [example](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex104_PSC_Photogeneration.jl).
@@ -173,4 +186,4 @@ It is also possible to perform multi-dimensional simulations.
 For a 2D mesh you may use a structured grid via [ExtendableGrids.jl](https://github.com/WIAS-PDELib/ExtendableGrids.jl) or an unstructured mesh via the Julia wrapper [Triangulate.jl](https://github.com/JuliaGeometry/Triangulate.jl) for Jonathan Richard Shewchuk's Triangle mesh generator.
 Respective examples can be likewise found within this package.
 
-Lastly, with help of the [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) wrapper, three dimensional tetrahedral meshes can be generated, see [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Grid_3D.jl) example.
+Lastly, with help of the [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) wrapper, three-dimensional tetrahedral meshes can be generated, see [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Grid_3D.jl) example.

@@ -49,9 +49,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
 
     ## region numbers
-    regionAcceptor = 1          # p doped region
+    regionAcceptor = 1           # p doped region
     regionIntrinsic = 2          # intrinsic region
-    regionDonor = 3          # n doped region
+    regionDonor = 3              # n doped region
     regions = [regionAcceptor, regionIntrinsic, regionDonor]
     numberOfRegions = length(regions)
 
@@ -223,9 +223,9 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     end
 
     ## doping
-    params.doping[iphin, regionDonor] = Nd     # data.doping   = [0.0  Na;
-    params.doping[iphin, regionIntrinsic] = ni     #                  ni  0.0;
-    params.doping[iphip, regionAcceptor] = Na     #                  Nd  0.0]
+    params.doping[iphin, regionDonor] = Nd      # data.doping   = [0.0  Na;
+    params.doping[iphin, regionIntrinsic] = ni  #                  ni  0.0;
+    params.doping[iphip, regionAcceptor] = Na   #                  Nd  0.0]
 
     # Region dependent params is now a substruct of data which is again a substruct of the
     # system and will be parsed in next step.

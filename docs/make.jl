@@ -45,7 +45,7 @@ makedocs(
         "Changelog" => "changes.md",
         "Mathematical drift-diffusion models" => "backgroundinfo.md",
         "How to get started" => [
-            "GeneralInformation.md",
+            #"GeneralInformation.md",
             "GaAs.md",
             "PSC.md",
         ],
