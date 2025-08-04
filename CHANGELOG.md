@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - new globally available dimensionless `constants` object, containing the default physical constants
   - new application specific `teSCA_constants`, `pdelib_constants`, `unit_constants` are also available
   - `Data` needs a `constants` object as an argument
+  - notebook folder name from `pluto-examples` to `notebooks`
 
 ### Removed
   - Thermal voltage `UT` is no longer part of the `Params`, since this value may depend on different definitions of the elementary charge `q`
