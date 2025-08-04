@@ -2,7 +2,6 @@ using Test, VoronoiFVM
 using Aqua
 using ChargeTransport
 
-
 # Mitigate https://github.com/JuliaLang/julia/issues/58634
 function treshape(X::AbstractArray, n, m)
     Y = reshape(X, n, m)
