@@ -218,14 +218,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ################################################################################
 
     control = SolverControl()
-    if verbose == true
-        control.verbose = verbose
-    else
-        control.verbose = "eda" # still print the time values
-    end
-    if test == true
-        control.verbose = false # do not show time values in testing case
-    end
+    control.verbose = verbose
     control.damp_initial = 0.9
     control.damp_growth = 1.61 # >= 1
     control.max_round = 5
