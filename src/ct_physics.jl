@@ -721,7 +721,8 @@ function StimulatedRecombination(u, node, data)
 
     g0 = paramsoptical.gain_0[ireg]
 
-    eValue = paramsoptical.eigenvalues[1]; beta = sqrt(-eValue)
+    eValue = paramsoptical.eigenvalues[1]
+    beta = sqrt(-eValue)
     eVector = paramsoptical.eigenvectors[node.index, 1]
 
     power = paramsoptical.power
