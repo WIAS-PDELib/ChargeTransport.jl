@@ -119,7 +119,9 @@ function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
 
-    return push!(data.ionicCarrierList, enableIons)
+    push!(data.ionicCarrierList, enableIons)
+
+    return
 
 end
 
@@ -1421,7 +1423,8 @@ set_contact!(ctsys, ibreg, ; Δu) = __set_contact!(ctsys, ibreg, Δu, ctsys.data
 function __set_contact!(ctsys, ibreg, Δu, ::Type{SchottkyContact})
 
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1434,7 +1437,8 @@ end
 function __set_contact!(ctsys, ibreg, Δu, ::Type{SchottkyBarrierLowering})
 
     # set Schottky barrier and applied voltage
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1442,7 +1446,8 @@ end
 function __set_contact!(ctsys, ibreg, Δu, ::Type{OhmicContact})
 
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1450,7 +1455,8 @@ end
 function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
 
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 

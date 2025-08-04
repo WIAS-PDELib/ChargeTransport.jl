@@ -8,14 +8,18 @@ Defining locally the effective DOS for interior nodes (analogously for boundary 
 """
 function get_DOS!(icc::QType, node::VoronoiFVM.Node, data)
 
-    return data.tempDOS1[icc] = data.params.densityOfStates[icc, node.region] + data.paramsnodal.densityOfStates[icc, node.index]
+    data.tempDOS1[icc] = data.params.densityOfStates[icc, node.region] + data.paramsnodal.densityOfStates[icc, node.index]
+
+    return
 
 end
 
 # Defining locally the effective DOS for boundary nodes.
 function get_DOS!(icc::QType, bnode::VoronoiFVM.BNode, data)
 
-    return data.tempDOS1[icc] = data.params.bDensityOfStates[icc, bnode.region] + data.paramsnodal.densityOfStates[icc, bnode.index]
+    data.tempDOS1[icc] = data.params.bDensityOfStates[icc, bnode.region] + data.paramsnodal.densityOfStates[icc, bnode.index]
+
+    return
 
 end
 
@@ -25,7 +29,7 @@ function get_DOS!(icc::QType, edge::VoronoiFVM.Edge, data)
     data.tempDOS1[icc] = data.params.densityOfStates[icc, edge.region] + data.paramsnodal.densityOfStates[icc, edge.node[1]]
     data.tempDOS2[icc] = data.params.densityOfStates[icc, edge.region] + data.paramsnodal.densityOfStates[icc, edge.node[2]]
 
-    return data.tempDOS1, data.tempDOS2
+    return
 end
 
 # Calculate the DOS on a given interior region.
@@ -47,14 +51,18 @@ Defining locally the band-edge energy for interior nodes (analogously for bounda
 """
 function get_BEE!(icc::QType, node::VoronoiFVM.Node, data)
 
-    return data.tempBEE1[icc] = data.params.bandEdgeEnergy[icc, node.region] + data.paramsnodal.bandEdgeEnergy[icc, node.index]
+    data.tempBEE1[icc] = data.params.bandEdgeEnergy[icc, node.region] + data.paramsnodal.bandEdgeEnergy[icc, node.index]
+
+    return
 
 end
 
 # Defining locally the band-edge energy for boundary nodes.
 function get_BEE!(icc::QType, bnode::VoronoiFVM.BNode, data)
 
-    return data.tempBEE1[icc] = data.params.bBandEdgeEnergy[icc, bnode.region] + data.paramsnodal.bandEdgeEnergy[icc, bnode.index]
+    data.tempBEE1[icc] = data.params.bBandEdgeEnergy[icc, bnode.region] + data.paramsnodal.bandEdgeEnergy[icc, bnode.index]
+
+    return
 
 end
 
@@ -64,7 +72,7 @@ function get_BEE!(icc::QType, edge::VoronoiFVM.Edge, data)
     data.tempBEE1[icc] = data.params.bandEdgeEnergy[icc, edge.region] + data.paramsnodal.bandEdgeEnergy[icc, edge.node[1]]
     data.tempBEE2[icc] = data.params.bandEdgeEnergy[icc, edge.region] + data.paramsnodal.bandEdgeEnergy[icc, edge.node[2]]
 
-    return data.tempBEE1, data.tempBEE2
+    return
 
 end
 
@@ -357,7 +365,8 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
     Δu = params.contactVoltage[bnode.region] + data.contactVoltageFunction[bnode.region](bnode.time)
 
     boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
-    return boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
+    boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
+    return
 
 end
 
@@ -395,7 +404,8 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactDirichlet})
 
     boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
     boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
-    return boundary_dirichlet!(f, u, bnode, species = ipsi, region = bnode.region, value = ψ0 + Δu)
+    boundary_dirichlet!(f, u, bnode, species = ipsi, region = bnode.region, value = ψ0 + Δu)
+    return
 
 end
 
@@ -446,7 +456,8 @@ function breaction!(f, u, bnode, data, ::Type{SchottkyContact})
     Δu = params.contactVoltage[bnode.region] + data.contactVoltageFunction[bnode.region](bnode.time)
 
     ipsiIndex = length(data.chargeCarrierList) + 1 # This is necessary, since passing something other than an Integer in boundary_dirichlet!() causes allocations
-    return boundary_dirichlet!(f, u, bnode, species = ipsiIndex, region = bnode.region, value = (- (params.SchottkyBarrier[bnode.region] - Ec) / data.constants.q) + Δu)
+    boundary_dirichlet!(f, u, bnode, species = ipsiIndex, region = bnode.region, value = (- (params.SchottkyBarrier[bnode.region] - Ec) / data.constants.q) + Δu)
+    return
 
 end
 
@@ -481,7 +492,8 @@ function breaction!(f, u, bnode, data, ::Type{MixedOhmicSchottkyContact})
 
     # electrons and holes boundary condition
     boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
-    return boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
+    boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
+    return
 
 end
 
@@ -530,7 +542,8 @@ function breaction!(f, u, bnode, data, ::Type{SchottkyBarrierLowering})
     end
 
     f[ipsiStandard] = 1 / tiny_penalty_value * (u[ipsi] + (params.SchottkyBarrier[bnode.region] - Ec) / q - PsiS - Δu)
-    return f[ipsi] = 1 / tiny_penalty_value * (u[ipsiStandard] + (params.SchottkyBarrier[bnode.region] - Ec) / q - Δu)
+    f[ipsi] = 1 / tiny_penalty_value * (u[ipsiStandard] + (params.SchottkyBarrier[bnode.region] - Ec) / q - Δu)
+    return
 
 end
 
@@ -577,7 +590,6 @@ function breaction!(f, u, bnode, data, ::Type{InterfaceRecombination})
         f[icc] = q * params.chargeNumbers[icc] * kernelSRH * excessDensTerm
     end
 
-
     return
 end
 
@@ -604,7 +616,8 @@ function generic_operator!(f, u, fvmsys)
     idx = barrierLoweringInfo.idx
 
     f[idx[ipsiGrad, 1]] = u[idx[ipsiGrad, 1]] - (-1) * (u[idx[ipsiStandard, 2]] - u[idx[ipsiStandard, 1]]) / (coord[2] - coord[1])
-    return f[idx[ipsiGrad, n]] = u[idx[ipsiGrad, n]] - (u[idx[ipsiStandard, n]] - u[idx[ipsiStandard, n - 1]]) / (coord[n] - coord[n - 1])
+    f[idx[ipsiGrad, n]] = u[idx[ipsiGrad, n]] - (u[idx[ipsiStandard, n]] - u[idx[ipsiStandard, n - 1]]) / (coord[n] - coord[n - 1])
+    return
 
 
 end
@@ -812,7 +825,6 @@ function addGeneration!(f, u, node, data)
         f[icc] = f[icc] - data.constants.q * data.params.chargeNumbers[icc] * generationTerm
     end
 
-
     return
 end
 
@@ -853,7 +865,6 @@ function RHSPoisson!(f, u, node, data, ipsi)
     end
 
     f[ipsi] = f[ipsi] - data.paramsnodal.doping[node.index]
-
     f[ipsi] = - data.constants.q * data.λ1 * f[ipsi]
 
     return
@@ -1069,17 +1080,20 @@ function displacementFlux!(f, u, edge, data)
     dielConst = params.dielectricConstant[ireg] + (paramsnodal.dielectricConstant[nodel] + paramsnodal.dielectricConstant[nodek]) / 2
     f[ipsi] = - dielConst * dpsi
 
-    return if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn # additional Poisson in case of Barrier Lowering
+    if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn # additional Poisson in case of Barrier Lowering
         ipsiStandard = data.barrierLoweringInfo.ipsiStandard
         f[ipsiStandard] = - dielConst * (u[ipsiStandard, 2] - u[ipsiStandard, 1])
     end
+
+    return
 
 end
 
 
 function flux!(f, u, edge, data, ::Type{InEquilibrium})
     ## discretization of the displacement flux (LHS of Poisson equation)
-    return displacementFlux!(f, u, edge, data)
+    displacementFlux!(f, u, edge, data)
+    return
 end
 
 function flux!(f, u, edge, data, ::Type{OutOfEquilibrium})
@@ -1122,7 +1136,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ScharfetterGummel})
     bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature))
     ncck, nccl = get_density!(u, edge, data, icc)
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    return
 
 end
 
@@ -1155,7 +1171,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ScharfetterGummelGrade
 
     ncck, nccl = get_density!(u, edge, data, icc)
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    return
 
 end
 
@@ -1185,7 +1203,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ExcessChemicalPotentia
 
     ncck, nccl = get_density!(u, edge, data, icc)
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    return
 
 end
 
@@ -1204,7 +1224,8 @@ function ConcentrationGradient(f, u, edge, data)
     npk, npl = get_density!(u, edge, data, iphip)
 
     f[iphin] = - data.params.chargeNumbers[iphin] * (nnl - nnk)
-    return f[iphip] = - data.params.chargeNumbers[iphip] * (npl - npk)
+    f[iphip] = - data.params.chargeNumbers[iphip] * (npl - npk)
+    return
 
 end
 
@@ -1271,7 +1292,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{ExcessChemicalPotentia
     bp, bm = fbernoulli_pm(Q)
     ncck, nccl = get_density!(u, edge, data, icc)
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    return
 
 end
 
@@ -1309,7 +1332,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{DiffusionEnhanced})
     bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature * g))
     ncck, nccl = get_density!(u, edge, data, icc)
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    return
 
 end
 
@@ -1346,7 +1371,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{DiffusionEnhancedModif
     bp, bm = fbernoulli_pm(params.chargeNumbers[icc] * (dpsi * q - bandEdgeDiff) / (k_B * params.temperature * g))
     ncck, nccl = get_density!(u, edge, data, icc)
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * (bm * nccl - bp * ncck)
+
+    return
 
 end
 
@@ -1411,7 +1438,9 @@ function chargeCarrierFlux!(f, u, edge, data, icc, ::Type{GeneralizedSG})
         damp = min(damp * 1.2, 1.0)
     end
 
-    return f[icc] = - params.chargeNumbers[icc] * q * j0 * jInitial
+    f[icc] = - params.chargeNumbers[icc] * q * j0 * jInitial
+
+    return
 
 end
 
@@ -1456,7 +1485,6 @@ function SRRecombination!(f, u, bnode, data)
         f[icc] = q * params.chargeNumbers[icc] * kernelSRH * excessDensTerm
     end
 
-
     return
 end
 
@@ -1492,7 +1520,9 @@ function SRHRecombination!(f, u, node, data)
     ####       for φ_n and φ_p (bipolar reaction)          ####
     ###########################################################
     f[iphin] = q * params.chargeNumbers[iphin] * kernelSRH * excessDensTerm
-    return f[iphip] = q * params.chargeNumbers[iphip] * kernelSRH * excessDensTerm
+    f[iphip] = q * params.chargeNumbers[iphip] * kernelSRH * excessDensTerm
+
+    return
 
 end
 
@@ -1526,7 +1556,9 @@ function RadiativeRecombination!(f, u, node, data)
     ####       for φ_n and φ_p (bipolar reaction)          ####
     ###########################################################
     f[iphin] = q * params.chargeNumbers[iphin] * kernelRad * excessDensTerm
-    return f[iphip] = q * params.chargeNumbers[iphip] * kernelRad * excessDensTerm
+    f[iphip] = q * params.chargeNumbers[iphip] * kernelRad * excessDensTerm
+
+    return
 
 end
 
@@ -1538,7 +1570,6 @@ function Photogeneration!(f, u, node, data)
         icc = data.chargeCarrierList[icc] # based on user index and regularity of solution quantities or integers are used and depicted here
         f[icc] = data.constants.q * data.params.chargeNumbers[icc] * generationTerm
     end
-
 
     return
 end
