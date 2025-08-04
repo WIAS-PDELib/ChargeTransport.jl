@@ -51,9 +51,7 @@ Defining locally the band-edge energy for interior nodes (analogously for bounda
 """
 function get_BEE!(icc::QType, node::VoronoiFVM.Node, data)
 
-    data.tempBEE1[icc] = data.params.bandEdgeEnergy[icc, node.region] + data.paramsnodal.bandEdgeEnergy[icc, node.index]
-
-    return
+    return data.tempBEE1[icc] = data.params.bandEdgeEnergy[icc, node.region] + data.paramsnodal.bandEdgeEnergy[icc, node.index]
 
 end
 
@@ -930,7 +928,7 @@ $(SIGNATURES)
 Compute trap densities for a given trap energy.
 [Currently, only done for the Boltzmann statistics and for region dependent parameters.]
 """
-function trap_density!(icc, ireg, params, Et, constants)
+function trap_density(icc, ireg, params, Et, constants)
 
     return params.densityOfStates[icc, ireg] * exp(params.chargeNumbers[icc] * (params.bandEdgeEnergy[icc, ireg] - Et) / (constants.k_B * params.temperature))
 end
