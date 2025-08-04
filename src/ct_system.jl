@@ -459,57 +459,57 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ###############################################################
     ####              number of boundary regions               ####
     ###############################################################
-    params.SchottkyBarrier = spzeros(Float64, numberOfBoundaryRegions)
-    params.contactVoltage = spzeros(Float64, numberOfBoundaryRegions)
-    params.bψEQ = spzeros(Float64, numberOfBoundaryRegions)
+    params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
+    params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
+    params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####
     ###############################################################
-    params.chargeNumbers = spzeros(Float64, numberOfCarriers)
+    params.chargeNumbers = zeros(Float64, numberOfCarriers)
 
     ###############################################################
     ####     number of carriers x number of boundary regions   ####
     ###############################################################
-    params.bBandEdgeEnergy = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bDensityOfStates = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bMobility = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bDoping = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bVelocity = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bBandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bDensityOfStates = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bMobility = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bDoping = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bVelocity = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
     params.bReactionCoefficient = 1.0e15 / s * ones(numberOfCarriers, numberOfBoundaryRegions)
 
     ###############################################################
     ####   2 x number of bregions (for electrons and holes!)   ####
     ###############################################################
-    params.recombinationSRHvelocity = spzeros(Float64, 2, numberOfBoundaryRegions)
-    params.bRecombinationSRHTrapDensity = spzeros(Float64, 2, numberOfBoundaryRegions)
-    params.bRecombinationSRHLifetime = spzeros(Float64, 2, numberOfBoundaryRegions)
-    params.bDensityEQ = spzeros(Float64, 2, numberOfBoundaryRegions)
+    params.recombinationSRHvelocity = zeros(Float64, 2, numberOfBoundaryRegions)
+    params.bRecombinationSRHTrapDensity = zeros(Float64, 2, numberOfBoundaryRegions)
+    params.bRecombinationSRHLifetime = zeros(Float64, 2, numberOfBoundaryRegions)
+    params.bDensityEQ = zeros(Float64, 2, numberOfBoundaryRegions)
 
     ###############################################################
     ####        number of carriers x number of regions         ####
     ###############################################################
-    params.doping = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.densityOfStates = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.bandEdgeEnergy = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.mobility = spzeros(Float64, numberOfCarriers, numberOfRegions)
+    params.doping = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.densityOfStates = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.mobility = zeros(Float64, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     #### 2 x number of regions (for electrons and holes only!) ####
     ###############################################################
-    params.recombinationSRHLifetime = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.recombinationSRHTrapDensity = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.recombinationAuger = spzeros(Float64, numberOfCarriers, numberOfRegions)
+    params.recombinationSRHLifetime = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.recombinationSRHTrapDensity = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.recombinationAuger = zeros(Float64, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     ####                   number of regions                   ####
     ###############################################################
-    params.dielectricConstant = spzeros(Float64, numberOfRegions)
-    params.dielectricConstantImageForce = spzeros(Float64, numberOfRegions)
-    params.generationUniform = spzeros(Float64, numberOfRegions)
-    params.generationIncidentPhotonFlux = spzeros(Float64, numberOfRegions)
-    params.generationAbsorption = spzeros(Float64, numberOfRegions)
-    params.recombinationRadiative = spzeros(Float64, numberOfRegions)
+    params.dielectricConstant = zeros(Float64, numberOfRegions)
+    params.dielectricConstantImageForce = zeros(Float64, numberOfRegions)
+    params.generationUniform = zeros(Float64, numberOfRegions)
+    params.generationIncidentPhotonFlux = zeros(Float64, numberOfRegions)
+    params.generationAbsorption = zeros(Float64, numberOfRegions)
+    params.recombinationRadiative = zeros(Float64, numberOfRegions)
 
     ###############################################################
     return params
@@ -600,15 +600,15 @@ function ParamsNodal(grid, numberOfCarriers)
     ###############################################################
     ####                    number of nodes                    ####
     ###############################################################
-    paramsnodal.dielectricConstant = spzeros(Float64, numberOfNodes)
-    paramsnodal.doping = spzeros(Float64, numberOfNodes)
+    paramsnodal.dielectricConstant = zeros(Float64, numberOfNodes)
+    paramsnodal.doping = zeros(Float64, numberOfNodes)
 
     ###############################################################
     ####          number of nodes x number of carriers         ####
     ###############################################################
-    paramsnodal.mobility = spzeros(Float64, numberOfCarriers, numberOfNodes)
-    paramsnodal.densityOfStates = spzeros(Float64, numberOfCarriers, numberOfNodes)
-    paramsnodal.bandEdgeEnergy = spzeros(Float64, numberOfCarriers, numberOfNodes)
+    paramsnodal.mobility = zeros(Float64, numberOfCarriers, numberOfNodes)
+    paramsnodal.densityOfStates = zeros(Float64, numberOfCarriers, numberOfNodes)
+    paramsnodal.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfNodes)
 
     ###############################################################
     return paramsnodal
@@ -731,31 +731,31 @@ function ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
     ###############################################################
     ####                   number of regions                   ####
     ###############################################################
-    paramsoptical.absorption_0 = spzeros(Float64, numberOfRegions)
-    paramsoptical.gain_0 = spzeros(Float64, numberOfRegions)
-    paramsoptical.refractiveIndex_0 = spzeros(Float64, numberOfRegions)
-    paramsoptical.refractiveIndex_d = spzeros(Float64, numberOfRegions)
-    paramsoptical.refractiveIndex_γ = spzeros(Float64, numberOfRegions)
+    paramsoptical.absorption_0 = zeros(Float64, numberOfRegions)
+    paramsoptical.gain_0 = zeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_0 = zeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_d = zeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_γ = zeros(Float64, numberOfRegions)
 
     ###############################################################
     ####                 number of eigenvalues                 ####
     ###############################################################
-    paramsoptical.eigenvalues = spzeros(Complex, numberOfEigenvalues)
+    paramsoptical.eigenvalues = zeros(Complex, numberOfEigenvalues)
 
     ###############################################################
     ####        number of carriers x number of regions         ####
     ###############################################################
-    paramsoptical.absorptionFreeCarriers = spzeros(Float64, numberOfCarriers, numberOfRegions)
+    paramsoptical.absorptionFreeCarriers = zeros(Float64, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     ####        number of nodes x number of eigenvalues        ####
     ###############################################################
-    paramsoptical.eigenvectors = spzeros(Complex, numberOfNodes, numberOfEigenvalues)
+    paramsoptical.eigenvectors = zeros(Complex, numberOfNodes, numberOfEigenvalues)
 
     ###############################################################
     ####        number of carriers + 1 x number of nodes       ####
     ###############################################################
-    paramsoptical.oldSolution = spzeros(Float64, numberOfCarriers + 1, numberOfNodes)
+    paramsoptical.oldSolution = zeros(Float64, numberOfCarriers + 1, numberOfNodes)
 
     ###############################################################
     return paramsoptical
@@ -1045,10 +1045,10 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ####             Templates for DOS and BEE                 ####
     ###############################################################
 
-    data.tempBEE1 = spzeros(Float64, numberOfCarriers)
-    data.tempBEE2 = spzeros(Float64, numberOfCarriers)
-    data.tempDOS1 = spzeros(Float64, numberOfCarriers)
-    data.tempDOS2 = spzeros(Float64, numberOfCarriers)
+    data.tempBEE1 = zeros(Float64, numberOfCarriers)
+    data.tempBEE2 = zeros(Float64, numberOfCarriers)
+    data.tempDOS1 = zeros(Float64, numberOfCarriers)
+    data.tempDOS2 = zeros(Float64, numberOfCarriers)
 
     ###############################################################
     ####          Physical parameters as own structs           ####
