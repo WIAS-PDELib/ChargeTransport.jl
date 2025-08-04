@@ -21,11 +21,11 @@ end
 begin
     import Pkg
     Pkg.activate(@__DIR__) # activate a temporary environment
-	# use most current version of ChargeTransport.jl
-	Pkg.add(path = "https://github.com/WIAS-PDELib/ChargeTransport.jl.git")
-	using ChargeTransport
+    # use most current version of ChargeTransport.jl
+    Pkg.add(path = "https://github.com/WIAS-PDELib/ChargeTransport.jl.git")
+    using ChargeTransport
     using ExtendableGrids
-	using LessUnitful: @unitfactors # this is needed for Pluto notebooks as @local_unitfactors do not work here.
+    using LessUnitful: @unitfactors # this is needed for Pluto notebooks as @local_unitfactors do not work here.
     using PlutoVista
     using PlutoUI
     nothing
@@ -38,19 +38,19 @@ md"""
 
 # ╔═╡ 8d25fad0-ff69-4bd5-ae01-d10b36fef92f
 begin
-	parameter_set = Params_PSC_TiO2_MAPI_spiro # choose the parameter set
-	# parameters
+    parameter_set = Params_PSC_TiO2_MAPI_spiro # choose the parameter set
+    # parameters
     p = parameter_set()
 
-	@unitfactors nm μm cm m s ns V K ps Hz W
+    @unitfactors nm μm cm m s ns V K ps Hz W
 
-	# constants
+    # constants
     constants = ChargeTransport.constants
     (; q, k_B, ε_0) = constants
 
     eV = q * V
 
-	nothing
+    nothing
 end
 
 # ╔═╡ 6511e625-2af2-44c9-bc5c-d24e08109c3f
@@ -139,7 +139,7 @@ begin
 
     bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18)
     bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18)
-	nothing
+    nothing
 end
 
 # ╔═╡ bb701b88-6a76-4e77-ad81-a776ebfa5ec4
@@ -352,8 +352,8 @@ begin
     ######################################
     data.params = Params(p)
 
-	data.params.generationIncidentPhotonFlux[2] = 1.5e19 / (m^2 * s)
-	data.params.generationAbsorption[2] = 1.3e7 / m
+    data.params.generationIncidentPhotonFlux[2] = 1.5e19 / (m^2 * s)
+    data.params.generationAbsorption[2] = 1.3e7 / m
 
     ctsys = System(grid, data, unknown_storage = :sparse)
     # otherwise there is a print in the terminal.
@@ -363,19 +363,19 @@ end
 
 # ╔═╡ 6f76b5cd-65a2-499c-a0be-0f3a0916e70c
 begin
-	vis=PlutoVistaPlot(resolution=(500,300),titlefontsize=20)
-	#####
-	ireg = 1
+    vis = PlutoVistaPlot(resolution = (500, 300), titlefontsize = 20)
+    #####
+    ireg = 1
     subg = subgrid(grid, [ireg])
     plot!(vis, vec(subg[Coordinates]), vec(BeerLambert2(ctsys, ireg, subg[Coordinates])), label = "region $ireg")
-	#####
-	ireg = 2
+    #####
+    ireg = 2
     subg = subgrid(grid, [ireg])
     plot!(vis, vec(subg[Coordinates]), vec(BeerLambert2(ctsys, ireg, subg[Coordinates])), label = "region $ireg")
-	#####
-	ireg = 3
+    #####
+    ireg = 3
     subg = subgrid(grid, [ireg])
-    plot!(vis, vec(subg[Coordinates]), vec(BeerLambert2(ctsys, ireg, subg[Coordinates])), label = "region $ireg", legend=:rt)
+    plot!(vis, vec(subg[Coordinates]), vec(BeerLambert2(ctsys, ireg, subg[Coordinates])), label = "region $ireg", legend = :rt)
 
 end
 
@@ -393,7 +393,7 @@ end
 
 # ╔═╡ d6e4a543-d2e5-42a2-91af-1cf8b4d4632d
 begin
-	inival = unknowns(ctsys)
+    inival = unknowns(ctsys)
     ## calculate equilibrium solution and as initial guess
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
@@ -546,10 +546,10 @@ begin
     efficiency = bias[indexPD] * -IV[indexPD] / (IncidentLightPowerDens * area) * 100
     fillfactor = (bias[indexPD] * -IV[indexPD]) / (-IV[1] * open_circuit) * 100
 
-	visX=PlutoVistaPlot(resolution=(500,300),titlefontsize=20)
+    visX = PlutoVistaPlot(resolution = (500, 300), titlefontsize = 20)
 
     plot!(visX, biasValues[2:end], -IV * (area * cm) * 1.0e3, linewidth = 5, label = "forward")
-    plot!(visX, biasValuesReverse[2:end], -IVReverse * (area * cm) * 1.0e3, linestyle = ":", linewidth = 5, label = "reverse", legend=:rt, xlabel = "applied bias [V]", ylabel="current density [Acm\$^{-2} \$]")
+    plot!(visX, biasValuesReverse[2:end], -IVReverse * (area * cm) * 1.0e3, linestyle = ":", linewidth = 5, label = "reverse", legend = :rt, xlabel = "applied bias [V]", ylabel = "current density [Acm\$^{-2} \$]")
 
 end
 
@@ -583,67 +583,67 @@ begin
         params = data.params
         colors = ["green", "red", "gold", "purple", "orange"]
 
-		vis2=PlutoVistaPlot(resolution=(500,300),titlefontsize=20)
+        vis2 = PlutoVistaPlot(resolution = (500, 300), titlefontsize = 20)
 
-		####### electrons
-		icc = p.iphin
-		label_icc = label_density[icc]
-		## ireg = 1
-		ireg = 1
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
-		## ireg = 2
-		ireg = 2
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
-		## ireg = 3
-		ireg = 3
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ####### electrons
+        icc = p.iphin
+        label_icc = label_density[icc]
+        ## ireg = 1
+        ireg = 1
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ## ireg = 2
+        ireg = 2
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ## ireg = 3
+        ireg = 3
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
 
-		####### holes
-		icc = p.iphip
-		label_icc = label_density[icc]
-		## ireg = 1
-		ireg = 1
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
-		## ireg = 2
-		ireg = 2
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
-		## ireg = 3
-		ireg = 3
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]", title = title)
+        ####### holes
+        icc = p.iphip
+        label_icc = label_density[icc]
+        ## ireg = 1
+        ireg = 1
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ## ireg = 2
+        ireg = 2
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ## ireg = 3
+        ireg = 3
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]", title = title)
 
-		#############################################################
-		vis3=PlutoVistaPlot(resolution=(500,300),titlefontsize=20)
+        #############################################################
+        vis3 = PlutoVistaPlot(resolution = (500, 300), titlefontsize = 20)
 
-		####### vacancies
-		icc = p.iphia
-		label_icc = label_density[icc]
-		## ireg = 1
-		ireg = 1
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
-		## ireg = 2
-		ireg = 2
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
-		## ireg = 3
-		ireg = 3
-		subg = subgrid(grid, [ireg])
-		ncc = get_density(solution, ireg, ctsys, icc)
-		plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale=:log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]", title = title)
+        ####### vacancies
+        icc = p.iphia
+        label_icc = label_density[icc]
+        ## ireg = 1
+        ireg = 1
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ## ireg = 2
+        ireg = 2
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]")
+        ## ireg = 3
+        ireg = 3
+        subg = subgrid(grid, [ireg])
+        ncc = get_density(solution, ireg, ctsys, icc)
+        return plot!(vis2, vec(subg[Coordinates]), vec(1.0e-6 .* ncc), yscale = :log, marker = marker, label = label_icc, color = colors[icc], linewidth = 2, xlabel = "space [\$m\$]", title = title)
 
     end
     nothing
@@ -757,7 +757,7 @@ end
 
 # ╔═╡ 2c2d9521-5511-4766-9f27-cd524e7124f3
 begin
-    plot(vec(EgTest), vec(FillfactorVec), marker = "o", xlabel = "band gap (perovskite) [eV]", ylabel ="Fill factor [%]")
+    plot(vec(EgTest), vec(FillfactorVec), marker = "o", xlabel = "band gap (perovskite) [eV]", ylabel = "Fill factor [%]")
 end
 
 # ╔═╡ Cell order:
