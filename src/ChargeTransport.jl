@@ -108,7 +108,7 @@ export gridplot
 export set_contact!
 export compute_open_circuit_voltage
 export electroNeutralSolution
-export show_params, show_paramsoptical, trap_density!
+export show_params, show_paramsoptical, trap_density
 export get_current_val, charge_density
 
 ##################################################################

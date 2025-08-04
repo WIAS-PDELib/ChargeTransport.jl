@@ -262,7 +262,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test
     τn = [τn_d, τn_j1, τn_i, τn_j2, τn_a]
     τp = [τp_d, τp_j1, τp_i, τp_j2, τp_a]
 
-    ## SRH trap energies (needed for calculation of trap_density! (SRH))
+    ## SRH trap energies (needed for calculation of trap_density (SRH))
     # Ei_d             = -5.0                 * eV
     # Ei_i             = -4.55                * eV
     # Ei_a             = -4.1                 * eV
