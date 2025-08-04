@@ -119,7 +119,9 @@ function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
 
-    return push!(data.ionicCarrierList, enableIons)
+    push!(data.ionicCarrierList, enableIons)
+
+    return
 
 end
 
@@ -427,6 +429,110 @@ mutable struct Params
 
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Simplified constructor for Params which only takes the numberOfRegions, numberOfBoundaryRegions and numberOfCarriers as argument.
+
+"""
+function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
+
+    @local_unitfactors K s
+
+    params = Params()
+
+    ###############################################################
+    ####                   integer numbers                     ####
+    ###############################################################
+    params.numberOfRegions = numberOfRegions
+    params.numberOfBoundaryRegions = numberOfBoundaryRegions
+    params.numberOfCarriers = numberOfCarriers
+    params.invertedIllumination = 1                       # we assume that light enters from the left.
+
+    ###############################################################
+    ####                     real numbers                      ####
+    ###############################################################
+    params.temperature = 300 * K
+    params.γ = 0.27                # parameter for Blakemore statistics
+    params.r0 = 0.0                 # r0 prefactor electro-chemical reaction
+    params.prefactor_SRH = 1.0
+    params.generationPeak = 0.0                 # parameter which shifts Beer-Lambert generation peak
+
+    ###############################################################
+    ####              number of boundary regions               ####
+    ###############################################################
+    params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
+    params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
+    params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
+
+    ###############################################################
+    ####                  number of carriers                   ####
+    ###############################################################
+    params.chargeNumbers = zeros(Float64, numberOfCarriers)
+
+    ###############################################################
+    ####     number of carriers x number of boundary regions   ####
+    ###############################################################
+    params.bBandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bDensityOfStates = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bMobility = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bDoping = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bVelocity = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bReactionCoefficient = 1.0e15 / s * ones(numberOfCarriers, numberOfBoundaryRegions)
+
+    ###############################################################
+    ####   2 x number of bregions (for electrons and holes!)   ####
+    ###############################################################
+    params.recombinationSRHvelocity = zeros(Float64, 2, numberOfBoundaryRegions)
+    params.bRecombinationSRHTrapDensity = zeros(Float64, 2, numberOfBoundaryRegions)
+    params.bRecombinationSRHLifetime = zeros(Float64, 2, numberOfBoundaryRegions)
+    params.bDensityEQ = zeros(Float64, 2, numberOfBoundaryRegions)
+
+    ###############################################################
+    ####        number of carriers x number of regions         ####
+    ###############################################################
+    params.doping = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.densityOfStates = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.mobility = zeros(Float64, numberOfCarriers, numberOfRegions)
+
+    ###############################################################
+    #### 2 x number of regions (for electrons and holes only!) ####
+    ###############################################################
+    params.recombinationSRHLifetime = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.recombinationSRHTrapDensity = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.recombinationAuger = zeros(Float64, numberOfCarriers, numberOfRegions)
+
+    ###############################################################
+    ####                   number of regions                   ####
+    ###############################################################
+    params.dielectricConstant = zeros(Float64, numberOfRegions)
+    params.dielectricConstantImageForce = zeros(Float64, numberOfRegions)
+    params.generationUniform = zeros(Float64, numberOfRegions)
+    params.generationIncidentPhotonFlux = zeros(Float64, numberOfRegions)
+    params.generationAbsorption = zeros(Float64, numberOfRegions)
+    params.recombinationRadiative = zeros(Float64, numberOfRegions)
+
+    ###############################################################
+    return params
+
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Deprecated!
+
+Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
+
+"""
+function Params(grid::ExtendableGrid, numberOfCarriers)
+    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChargeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
+    return Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
+end
+
+###########################################################
+###########################################################
 
 """
 $(TYPEDEF)
@@ -476,6 +582,44 @@ mutable struct ParamsNodal
     ParamsNodal() = new()
 
 end
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Simplified constructor for ParamsNodal which only takes the grid
+and the numberOfCarriers as argument.
+
+"""
+function ParamsNodal(grid, numberOfCarriers)
+
+    numberOfNodes = num_nodes(grid) # = length(grid[Coordinates][1,:])
+
+    ###############################################################
+
+    paramsnodal = ParamsNodal()
+
+    ###############################################################
+    ####                    number of nodes                    ####
+    ###############################################################
+    paramsnodal.dielectricConstant = zeros(Float64, numberOfNodes)
+    paramsnodal.doping = zeros(Float64, numberOfNodes)
+
+    ###############################################################
+    ####          number of nodes x number of carriers         ####
+    ###############################################################
+    paramsnodal.mobility = zeros(Float64, numberOfCarriers, numberOfNodes)
+    paramsnodal.densityOfStates = zeros(Float64, numberOfCarriers, numberOfNodes)
+    paramsnodal.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfNodes)
+
+    ###############################################################
+    return paramsnodal
+
+end
+
+###########################################################
+###########################################################
+
 
 """
 $(TYPEDEF)
@@ -564,6 +708,63 @@ mutable struct ParamsOptical
     ParamsOptical() = new()
 
 end
+
+
+"""
+$(TYPEDSIGNATURES)
+Simplified constructor for ParamsOptical which only takes the grid,
+numberOfCarriers and numberOfEigenvalues as argument.
+"""
+function ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
+
+    numberOfNodes = num_nodes(grid)
+    numberOfRegions = grid[NumCellRegions]
+    ###############################################################
+
+    paramsoptical = ParamsOptical()
+
+    ###############################################################
+    ####                     real numbers                      ####
+    ###############################################################
+    paramsoptical.laserWavelength = 0.0
+    paramsoptical.power = 0.0
+
+    ###############################################################
+    ####                   number of regions                   ####
+    ###############################################################
+    paramsoptical.absorption_0 = zeros(Float64, numberOfRegions)
+    paramsoptical.gain_0 = zeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_0 = zeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_d = zeros(Float64, numberOfRegions)
+    paramsoptical.refractiveIndex_γ = zeros(Float64, numberOfRegions)
+
+    ###############################################################
+    ####                 number of eigenvalues                 ####
+    ###############################################################
+    paramsoptical.eigenvalues = zeros(Complex, numberOfEigenvalues)
+
+    ###############################################################
+    ####        number of carriers x number of regions         ####
+    ###############################################################
+    paramsoptical.absorptionFreeCarriers = zeros(Float64, numberOfCarriers, numberOfRegions)
+
+    ###############################################################
+    ####        number of nodes x number of eigenvalues        ####
+    ###############################################################
+    paramsoptical.eigenvectors = zeros(Complex, numberOfNodes, numberOfEigenvalues)
+
+    ###############################################################
+    ####        number of carriers + 1 x number of nodes       ####
+    ###############################################################
+    paramsoptical.oldSolution = zeros(Float64, numberOfCarriers + 1, numberOfNodes)
+
+    ###############################################################
+    return paramsoptical
+end
+
+###########################################################
+###########################################################
+
 
 """
 $(TYPEDEF)
@@ -766,223 +967,6 @@ end
 
 
 """
-$(TYPEDEF)
-
-A struct holding all information necessary for a drift-diffusion type system.
-
-$(TYPEDFIELDS)
-
-"""
-mutable struct System
-
-    """
-    A struct holding all data information, see Data
-    """
-    data::Data
-
-    """
-    A struct holding system information for the finite volume system.
-    """
-    fvmsys::VoronoiFVM.AbstractSystem
-
-    ###############################################################
-    System() = new()
-
-end
-
-
-##########################################################
-##########################################################
-
-"""
-$(TYPEDSIGNATURES)
-
-Simplified constructor for Params which only takes the numberOfRegions, numberOfBoundaryRegions and numberOfCarriers as argument.
-
-"""
-function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
-
-    @local_unitfactors K s
-
-    params = Params()
-
-    ###############################################################
-    ####                   integer numbers                     ####
-    ###############################################################
-    params.numberOfRegions = numberOfRegions
-    params.numberOfBoundaryRegions = numberOfBoundaryRegions
-    params.numberOfCarriers = numberOfCarriers
-    params.invertedIllumination = 1                       # we assume that light enters from the left.
-
-    ###############################################################
-    ####                     real numbers                      ####
-    ###############################################################
-    params.temperature = 300 * K
-    params.γ = 0.27                # parameter for Blakemore statistics
-    params.r0 = 0.0                 # r0 prefactor electro-chemical reaction
-    params.prefactor_SRH = 1.0
-    params.generationPeak = 0.0                 # parameter which shifts Beer-Lambert generation peak
-
-    ###############################################################
-    ####              number of boundary regions               ####
-    ###############################################################
-    params.SchottkyBarrier = spzeros(Float64, numberOfBoundaryRegions)
-    params.contactVoltage = spzeros(Float64, numberOfBoundaryRegions)
-    params.bψEQ = spzeros(Float64, numberOfBoundaryRegions)
-
-    ###############################################################
-    ####                  number of carriers                   ####
-    ###############################################################
-    params.chargeNumbers = spzeros(Float64, numberOfCarriers)
-
-    ###############################################################
-    ####     number of carriers x number of boundary regions   ####
-    ###############################################################
-    params.bBandEdgeEnergy = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bDensityOfStates = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bMobility = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bDoping = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bVelocity = spzeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bReactionCoefficient = 1.0e15 / s * ones(numberOfCarriers, numberOfBoundaryRegions)
-
-    ###############################################################
-    ####   2 x number of bregions (for electrons and holes!)   ####
-    ###############################################################
-    params.recombinationSRHvelocity = spzeros(Float64, 2, numberOfBoundaryRegions)
-    params.bRecombinationSRHTrapDensity = spzeros(Float64, 2, numberOfBoundaryRegions)
-    params.bRecombinationSRHLifetime = spzeros(Float64, 2, numberOfBoundaryRegions)
-    params.bDensityEQ = spzeros(Float64, 2, numberOfBoundaryRegions)
-
-    ###############################################################
-    ####        number of carriers x number of regions         ####
-    ###############################################################
-    params.doping = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.densityOfStates = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.bandEdgeEnergy = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.mobility = spzeros(Float64, numberOfCarriers, numberOfRegions)
-
-    ###############################################################
-    #### 2 x number of regions (for electrons and holes only!) ####
-    ###############################################################
-    params.recombinationSRHLifetime = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.recombinationSRHTrapDensity = spzeros(Float64, numberOfCarriers, numberOfRegions)
-    params.recombinationAuger = spzeros(Float64, numberOfCarriers, numberOfRegions)
-
-    ###############################################################
-    ####                   number of regions                   ####
-    ###############################################################
-    params.dielectricConstant = spzeros(Float64, numberOfRegions)
-    params.dielectricConstantImageForce = spzeros(Float64, numberOfRegions)
-    params.generationUniform = spzeros(Float64, numberOfRegions)
-    params.generationIncidentPhotonFlux = spzeros(Float64, numberOfRegions)
-    params.generationAbsorption = spzeros(Float64, numberOfRegions)
-    params.recombinationRadiative = spzeros(Float64, numberOfRegions)
-
-    ###############################################################
-    return params
-
-end
-
-"""
-$(TYPEDSIGNATURES)
-
-Deprecated!
-
-Simplified constructor for Params which only takes the grid and the numberOfCarriers as argument.
-
-"""
-function Params(grid::ExtendableGrid, numberOfCarriers)
-    @warn "Creating Params with a grid is deprecated and will be removed in future versions of ChargeTransport. Please call `Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)`"
-    return Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
-end
-
-
-"""
-$(TYPEDSIGNATURES)
-
-Simplified constructor for ParamsNodal which only takes the grid
-and the numberOfCarriers as argument.
-
-"""
-function ParamsNodal(grid, numberOfCarriers)
-
-    numberOfNodes = num_nodes(grid) # = length(grid[Coordinates][1,:])
-
-    ###############################################################
-
-    paramsnodal = ParamsNodal()
-
-    ###############################################################
-    ####                    number of nodes                    ####
-    ###############################################################
-    paramsnodal.dielectricConstant = spzeros(Float64, numberOfNodes)
-    paramsnodal.doping = spzeros(Float64, numberOfNodes)
-
-    ###############################################################
-    ####          number of nodes x number of carriers         ####
-    ###############################################################
-    paramsnodal.mobility = spzeros(Float64, numberOfCarriers, numberOfNodes)
-    paramsnodal.densityOfStates = spzeros(Float64, numberOfCarriers, numberOfNodes)
-    paramsnodal.bandEdgeEnergy = spzeros(Float64, numberOfCarriers, numberOfNodes)
-
-    ###############################################################
-    return paramsnodal
-
-end
-
-"""
-$(TYPEDSIGNATURES)
-Simplified constructor for ParamsOptical which only takes the grid,
-numberOfCarriers and numberOfEigenvalues as argument.
-"""
-function ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
-
-    numberOfNodes = num_nodes(grid)
-    numberOfRegions = grid[NumCellRegions]
-    ###############################################################
-
-    paramsoptical = ParamsOptical()
-
-    ###############################################################
-    ####                     real numbers                      ####
-    ###############################################################
-    paramsoptical.laserWavelength = 0.0
-    paramsoptical.power = 0.0
-
-    ###############################################################
-    ####                   number of regions                   ####
-    ###############################################################
-    paramsoptical.absorption_0 = spzeros(Float64, numberOfRegions)
-    paramsoptical.gain_0 = spzeros(Float64, numberOfRegions)
-    paramsoptical.refractiveIndex_0 = spzeros(Float64, numberOfRegions)
-    paramsoptical.refractiveIndex_d = spzeros(Float64, numberOfRegions)
-    paramsoptical.refractiveIndex_γ = spzeros(Float64, numberOfRegions)
-
-    ###############################################################
-    ####                 number of eigenvalues                 ####
-    ###############################################################
-    paramsoptical.eigenvalues = spzeros(Complex, numberOfEigenvalues)
-
-    ###############################################################
-    ####        number of carriers x number of regions         ####
-    ###############################################################
-    paramsoptical.absorptionFreeCarriers = spzeros(Float64, numberOfCarriers, numberOfRegions)
-
-    ###############################################################
-    ####        number of nodes x number of eigenvalues        ####
-    ###############################################################
-    paramsoptical.eigenvectors = spzeros(Complex, numberOfNodes, numberOfEigenvalues)
-
-    ###############################################################
-    ####        number of carriers + 1 x number of nodes       ####
-    ###############################################################
-    paramsoptical.oldSolution = spzeros(Float64, numberOfCarriers + 1, numberOfNodes)
-
-    ###############################################################
-    return paramsoptical
-end
-
-"""
 $(TYPEDSIGNATURES)
 
 Simplified constructor for Data which only takes the grid
@@ -1061,10 +1045,10 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ####             Templates for DOS and BEE                 ####
     ###############################################################
 
-    data.tempBEE1 = spzeros(Float64, numberOfCarriers)
-    data.tempBEE2 = spzeros(Float64, numberOfCarriers)
-    data.tempDOS1 = spzeros(Float64, numberOfCarriers)
-    data.tempDOS2 = spzeros(Float64, numberOfCarriers)
+    data.tempBEE1 = zeros(Float64, numberOfCarriers)
+    data.tempBEE2 = zeros(Float64, numberOfCarriers)
+    data.tempDOS1 = zeros(Float64, numberOfCarriers)
+    data.tempDOS2 = zeros(Float64, numberOfCarriers)
 
     ###############################################################
     ####          Physical parameters as own structs           ####
@@ -1083,6 +1067,33 @@ end
 
 ###########################################################
 ###########################################################
+
+
+"""
+$(TYPEDEF)
+
+A struct holding all information necessary for a drift-diffusion type system.
+
+$(TYPEDFIELDS)
+
+"""
+mutable struct System
+
+    """
+    A struct holding all data information, see Data
+    """
+    data::Data
+
+    """
+    A struct holding system information for the finite volume system.
+    """
+    fvmsys::VoronoiFVM.AbstractSystem
+
+    ###############################################################
+    System() = new()
+
+end
+
 
 """
 $(SIGNATURES)
@@ -1410,7 +1421,8 @@ set_contact!(ctsys, ibreg, ; Δu) = __set_contact!(ctsys, ibreg, Δu, ctsys.data
 function __set_contact!(ctsys, ibreg, Δu, ::Type{SchottkyContact})
 
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1423,7 +1435,8 @@ end
 function __set_contact!(ctsys, ibreg, Δu, ::Type{SchottkyBarrierLowering})
 
     # set Schottky barrier and applied voltage
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1431,7 +1444,8 @@ end
 function __set_contact!(ctsys, ibreg, Δu, ::Type{OhmicContact})
 
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1439,7 +1453,8 @@ end
 function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
 
     ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
-    return ctsys.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+    return
 
 end
 
@@ -1453,8 +1468,6 @@ enable_boundary_species!(ctsys::System, ispecies, regions) = VoronoiFVM.enable_b
 unknowns(ctsys::System) = VoronoiFVM.unknowns(ctsys.fvmsys)
 
 solve(ctsys::System; kwargs...) = VoronoiFVM.solve(ctsys.fvmsys; kwargs...)
-## DA: This one will be deleted soon (in VoronoiFVM):
-solve!(solution, initialGuess, ctsys, ; control = control, tstep = tstep) = VoronoiFVM.solve!(solution, initialGuess, ctsys.fvmsys, control = control, tstep = tstep)
 
 VoronoiFVM.TestFunctionFactory(ctsys::System) = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
 integrate(ctsys::System, tf, solution, inival, Δt) = VoronoiFVM.integrate(ctsys.fvmsys, tf, solution, inival, Δt)

@@ -1,8 +1,22 @@
-using Test
+using Test, VoronoiFVM
 
-# Activate assembly loop allocation checking
-# as default.
-ENV["VORONOIFVM_CHECK_ALLOCS"] = "false"
+# Mitigate https://github.com/JuliaLang/julia/issues/58634
+function treshape(X::AbstractArray, n, m)
+    Y = reshape(X, n, m)
+    Y .= 1.0
+    return X
+end
+
+function talloc(; n = 10, m = 20)
+    X = rand(n, m)
+    treshape(X, n, m)
+    return @allocated treshape(X, n, m)
+end
+
+if talloc() > 0
+    VoronoiFVM.check_allocs!(false)
+    @warn "Disabling allocation checks due to julia issue #58634"
+end
 
 modname(fname) = splitext(basename(fname))[1]
 

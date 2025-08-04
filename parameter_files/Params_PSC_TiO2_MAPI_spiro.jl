@@ -145,8 +145,8 @@ function Params(p::Params_PSC_TiO2_MAPI_spiro)
         params.recombinationRadiative[ireg] = p.r0[ireg]
         params.recombinationSRHLifetime[p.iphin, ireg] = p.τn[ireg]
         params.recombinationSRHLifetime[p.iphip, ireg] = p.τp[ireg]
-        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density!(p.iphin, ireg, params, p.EI[ireg], p.constants)
-        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density!(p.iphip, ireg, params, p.EI[ireg], p.constants)
+        params.recombinationSRHTrapDensity[p.iphin, ireg] = trap_density(p.iphin, ireg, params, p.EI[ireg], p.constants)
+        params.recombinationSRHTrapDensity[p.iphip, ireg] = trap_density(p.iphip, ireg, params, p.EI[ireg], p.constants)
 
         ## generation parameters
         params.generationIncidentPhotonFlux[ireg] = p.incidentPhotonFlux[ireg]
