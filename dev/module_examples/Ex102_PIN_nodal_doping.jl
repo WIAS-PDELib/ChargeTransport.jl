@@ -273,10 +273,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
         solution = solve(ctsys; inival = inival, control = control)
         inival .= solution
 
-        ## Note that the old way of solving will be soon removed (see current API changes in VoronoiFVM)
-        # solve!(solution, inival, ctsys, control = control, tstep = Inf)
-        # inival .= solution
-
         ## get IV curve
         factory = TestFunctionFactory(ctsys)
 
