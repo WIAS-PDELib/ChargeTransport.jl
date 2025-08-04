@@ -687,13 +687,24 @@ function reaction!(f, u, node, data, ::Type{InEquilibrium})
     return
 end
 
-function StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)      # sum over transversal modes, now only one #which power do I use and how
-    #change name add_..._
+function StimulatedRecombination(u, node, data)
 
     params = data.params
     paramsoptical = data.paramsoptical
     ireg = node.region
     (; k_B, q, Planck_constant) = data.constants
+
+    # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
+    iphin = data.bulkRecombination.iphin
+    iphip = data.bulkRecombination.iphip
+
+    # based on user index and regularity of solution quantities or integers are used and depicted here
+    iphin = data.chargeCarrierList[iphin]
+    iphip = data.chargeCarrierList[iphip]
+    ipsi = data.index_psi
+
+    n = get_density!(u, node, data, iphin)
+    p = get_density!(u, node, data, iphip)
 
     hbar = Planck_constant / (2 * pi)
     c0 = 299_792_458
@@ -701,22 +712,20 @@ function StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)      #
     ω0 = k0 * c0
     kBT = k_B * params.temperature
 
-    Ec = params.bandEdgeEnergy[iphin, ireg]
-    Ev = params.bandEdgeEnergy[iphip, ireg]
+    Ec = get_BEE!(iphin, node, data)
+    Ev = get_BEE!(iphip, node, data)
 
-    kBT = k_B * params.temperature
     n0 = paramsoptical.refractiveIndex_0[ireg]
     nd = paramsoptical.refractiveIndex_d[ireg]
     γn = paramsoptical.refractiveIndex_γ[ireg]
 
     g0 = paramsoptical.gain_0[ireg]
 
-    eValue = paramsoptical.eigenvalues[1]         #or effectiveRefractiveIndex, the one divided by k0, dimensionlos
-    beta = sqrt(-eValue)
+    eValue = paramsoptical.eigenvalues[1]; beta = sqrt(-eValue)
     eVector = paramsoptical.eigenvectors[node.index, 1]
 
-    power = paramsoptical.power         # paramsoptical.power?
-    expTerm1 = exp((-q * u[iphin] - Ec + q * u[ipsi]) / kBT)             ## !!q psi
+    power = paramsoptical.power
+    expTerm1 = exp((-q * u[iphin] - Ec + q * u[ipsi]) / kBT)
     expTerm2 = exp((Ev + q * u[iphip] - q * u[ipsi]) / kBT)
     expTerm3 = exp(((-q * (u[iphin] - u[iphip])) - (hbar * ω0)) / kBT) - 1
     gainDenominator = (1 + expTerm1) * (1 + expTerm2)
@@ -724,6 +733,7 @@ function StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)      #
 
     refractive = n0 - (nd * ((n + p) / 2))^γn
     RstimValue = ((refractive * gain) / (hbar * ω0)) * power * (((abs.(eVector)) .^ 2) / (real(beta) / k0))
+
     return RstimValue
 
 end
@@ -776,25 +786,20 @@ function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOff})
 end
 
 function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOn})
+
     params = data.params
+    q = data.constants.q
+
     # indices (∈ IN) of electron and hole quasi Fermi potentials used by user (passed through recombination)
     iphin = data.bulkRecombination.iphin
     iphip = data.bulkRecombination.iphip
 
-    # based on user index and regularity of solution quantities or integers are used and depicted here
-    iphin = data.chargeCarrierList[iphin]
-    iphip = data.chargeCarrierList[iphip]
-    ipsi = data.index_psi
-
-    n = get_density!(u, node, data, iphin)
-    p = get_density!(u, node, data, iphip)
-
-    q = data.constants.q
-
     # calculate stimulatedRecombination
-    stimulatedRecombination = StimulatedRecombination(u, node, data, ipsi, iphin, iphip, n, p)
+    stimulatedRecombination = StimulatedRecombination(u, node, data)
+
     f[iphin] = f[iphin] + q * params.chargeNumbers[iphin] * stimulatedRecombination
     f[iphip] = f[iphip] + q * params.chargeNumbers[iphip] * stimulatedRecombination
+
     return nothing
 end
 
