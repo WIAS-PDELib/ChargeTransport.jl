@@ -1,4 +1,7 @@
 using Test, VoronoiFVM
+using Aqua
+using ChargeTransport
+
 
 # Mitigate https://github.com/JuliaLang/julia/issues/58634
 function treshape(X::AbstractArray, n, m)
@@ -42,7 +45,6 @@ function run_tests_from_directory(testdir, prefix)
     return
 end
 
-
 function run_all_tests()
     return @time begin
         # @testset "Basictest" begin
@@ -55,6 +57,10 @@ function run_all_tests()
             run_tests_from_directory(joinpath(@__DIR__, "..", "examples"), "PSC")
         end
     end
+end
+
+@testset "Aqua.jl" begin
+    Aqua.test_all(ChargeTransport)
 end
 
 run_all_tests()

@@ -12,13 +12,11 @@ GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LessUnitful = "f29f6376-6e90-4d80-80c9-fb8ec61203d5"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
 
 [compat]
+Aqua = "0.8.14"
 Compat = "4.18.0"
 DocStringExtensions = "0.8,0.9"
 ExtendableGrids = "^0.9,1"
@@ -26,15 +24,19 @@ ForwardDiff = "^0.10"
 GridVisualize = "^1.0.0"
 Interpolations = "0.14.7, 0.15"
 LessUnitful = "1.2.1"
-PyPlot = "^2.11.2"
+Printf = "1.10"
 Roots = "^2.0"
+SimplexGridFactory = "2.6.0"
+Test = "1.11.0"
+Triangulate = "3.0.0"
 VoronoiFVM = "1.13,2"
 julia = "^1.6"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 SimplexGridFactory = "57bfcd06-606e-45d6-baf4-4ba06da0efd5"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
 
 [targets]
-test = ["SimplexGridFactory", "Test", "Triangulate"]
+test = ["Aqua", "SimplexGridFactory", "Test", "Triangulate"]
