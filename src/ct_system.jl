@@ -710,7 +710,6 @@ mutable struct ParamsOptical
 end
 
 
-
 """
 $(TYPEDSIGNATURES)
 Simplified constructor for ParamsOptical which only takes the grid,
@@ -965,7 +964,6 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     Data{TFuncs, TVoltageFunc, TGenerationData}() where {TFuncs, TVoltageFunc, TGenerationData} = new()
 
 end
-
 
 
 """
