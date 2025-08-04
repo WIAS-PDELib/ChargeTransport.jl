@@ -1453,8 +1453,6 @@ enable_boundary_species!(ctsys::System, ispecies, regions) = VoronoiFVM.enable_b
 unknowns(ctsys::System) = VoronoiFVM.unknowns(ctsys.fvmsys)
 
 solve(ctsys::System; kwargs...) = VoronoiFVM.solve(ctsys.fvmsys; kwargs...)
-## DA: This one will be deleted soon (in VoronoiFVM):
-solve!(solution, initialGuess, ctsys, ; control = control, tstep = tstep) = VoronoiFVM.solve!(solution, initialGuess, ctsys.fvmsys, control = control, tstep = tstep)
 
 VoronoiFVM.TestFunctionFactory(ctsys::System) = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
 integrate(ctsys::System, tf, solution, inival, Δt) = VoronoiFVM.integrate(ctsys.fvmsys, tf, solution, inival, Δt)
