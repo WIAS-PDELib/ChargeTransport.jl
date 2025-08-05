@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - global unit factors are removed: we rely on local unit factors from `LessUnitFul.jl`, provided by `@local_unitfactors` and `ufac""`
   - new globally available dimensionless `constants` object, containing the default physical constants
   - new application specific `teSCA_constants`, `pdelib_constants`, `unit_constants` are also available
-  - `Data` needs a `constants` object as an argument
+  - `Data` needs a `constants` object as a key word argument, defaults to standard constants
   - notebook folder name from `pluto-examples` to `notebooks`
 
 ### Removed
