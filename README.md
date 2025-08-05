@@ -5,9 +5,20 @@ ChargeTransport.jl -- Simulating charge transport in semiconductors
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://wias-pdelib.github.io/ChargeTransport.jl/dev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6257906.svg)](https://doi.org/10.5281/zenodo.6257906)
 
-
 `ChargeTransport.jl` simulates charge transport in semiconductors. To this end, it discretizes
 the semiconductor drift-diffusion equations via the Voronoi finite volume method as implemented in [VoronoiFVM.jl](https://github.com/j-fu/VoronoiFVM.jl).
+
+### Breaking Changes in v1.0.0 🚨
+
+Version 1.0.0 introduces several important changes to improve the package's usability and maintainability:
+
+- **New Parameter System**: Parameter files are replaced by parameter structs with explicit access (e.g., `p = parameter_set(); p.foo`)
+- **Unit Handling**: Global unit factors are removed in favor of local unit factors from `LessUnitful.jl` (`@local_unitfactors` and `ufac""`)
+- **Constants Management**: New globally available dimensionless `constants` object for physical constants
+- **API Changes**: 
+  - `Data` type now takes a `constants` object as key word argument, defaults to standard constants.
+  - Thermal voltage `UT` is removed from `Params` and replaced with temperature in relevant methods
+  - `eV` not available any more, use explicit `eV = q * V` if needed
 
 ### Special features
 
