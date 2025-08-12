@@ -486,7 +486,7 @@ function breaction!(f, u, bnode, data, ::Type{MixedOhmicSchottkyContact})
 
 
     # electric potential BC
-    boundary_dirichlet!(f, u, bnode, species = ipsiIndex, region = bnode.region, value = (- (params.SchottkyBarrier[bnode.region] - Ec) / q) + Δu)
+    boundary_dirichlet!(f, u, bnode, species = ipsiIndex, region = bnode.region, value = (- (params.SchottkyBarrier[bnode.region] - Ec) / data.constants.q) + Δu)
 
     # electrons and holes boundary condition
     boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
