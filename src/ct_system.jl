@@ -1644,6 +1644,233 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
 
 end
 
+
+
+
+
+###########################################################
+###########################################################
+
+"""
+
+$(TYPEDSIGNATURES)
+
+Implementation of the energy value for the vacancies via the Brent method.
+This method is a root-finding method, making use of the biscetion method, secant method, as well as the inverse quadratic interpolation, see
+R. P. Brent. “An algorithm with guaranteed convergence for finding a zero of a function”. In: Computer J. 14. (1971), p. 422-425.
+
+We will use this method to calculate suitable values for vacancy energy levels.
+"""
+function calculate_Ea!(ctsys::System, ytol::Float64=1.0e-4, xtol::Float64=1.0e-5, maxiter::Int64=50; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl())
+
+    data = ctsys.fvmsys.physics.data
+    params = data.params
+
+    iphin = data.bulkRecombination.iphin # integer index of φ_n
+    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    T = params.temperature
+    k_B = data.constants.k_B
+    q = data.constants.q
+
+    x0, y0 = 0.0, 0.0
+    x1, y1 = 0.0, 0.0
+
+    for iicc in data.ionicCarrierList
+
+        for ireg in iicc.regions
+
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            # --- define function to be minimized ---
+            mOmega = data.regionVolumes[ireg]
+            Avgncc(sol) = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg)/mOmega
+            Ca = params.doping[icc, ireg]
+
+            # difference between integral and doping
+            F(sol) = (Avgncc(sol) - Ca)/Ca
+
+            # --- for initial value of Ea ---
+            Ec = params.bandEdgeEnergy[iphin, ireg-1]
+            Ev = params.bandEdgeEnergy[iphip, ireg-1]
+            Nc = params.densityOfStates[iphin, ireg-1]
+            Nv = params.densityOfStates[iphip, ireg-1]
+            C = params.doping[iphin, ireg-1] - params.doping[iphip, ireg-1]
+            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+
+            psiL = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+            ####################
+            Ec = params.bandEdgeEnergy[iphin, ireg+1]
+            Ev = params.bandEdgeEnergy[iphip, ireg+1]
+            Nc = params.densityOfStates[iphin, ireg+1]
+            Nv = params.densityOfStates[iphip, ireg+1]
+            C = params.doping[iphin, ireg+1] - params.doping[iphip, ireg+1]
+            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+
+            psiR = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+
+            Na = params.densityOfStates[icc, ireg]
+            za = params.chargeNumbers[icc]
+            x0 = trunc((k_B*T*log((Ca/Na)/(1-Ca/Na)) + za*q*0.475*(psiL+psiR))/q, digits = 4)*q
+            x1 = trunc((k_B*T*log((Ca/Na)/(1-Ca/Na)) + za*q*0.51*(psiL+psiR))/q, digits = 4)*q
+
+            params.bandEdgeEnergy[icc, ireg] = x0
+
+            ii = 0
+            Eafix = false
+            while !Eafix && ii <= maxiter
+                try
+                    ii = ii +1
+
+                    sol0 = solve(ctsys, inival = inival, control = control)
+
+                    Eafix = true
+                    x0 = params.bandEdgeEnergy[icc, ireg]
+                    y0 = F(sol0)
+                catch
+                    params.bandEdgeEnergy[icc, ireg] = trunc(1.005*(params.bandEdgeEnergy[icc, ireg]/q), digits = 4)*q
+                end
+            end
+
+            params.bandEdgeEnergy[icc, ireg] = x1
+            ii = 0
+            Eafix = false
+            while !Eafix && ii <= maxiter
+                try
+                    ii = ii +1
+
+                    sol1 = solve(ctsys, inival = inival, control = control)
+
+                    Eafix = true
+                    x1 = params.bandEdgeEnergy[icc, ireg]
+                    y1 = F(sol1)
+                catch
+                    params.bandEdgeEnergy[icc, ireg] = trunc(1.005*(params.bandEdgeEnergy[icc, ireg]/q), digits = 4)*q
+                end
+            end
+
+            if y0*y1 >= 0
+                error("Root not bracketed: y1 and y2 must have opposite signs.")
+            end
+
+            if abs(y0) < abs(y1)
+                # swap lower and upper bounds
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            end
+
+            # used to track history of earlier approximations
+            x3 = x0
+
+            # previous approximation (initially set to x0)
+            x2 = x0
+            y2 = y0
+
+            bisection = true # flag to save bisec info in last step
+
+            for _ in 1:maxiter
+
+                # --- Stopping criterion in x-space (bracket width) ---
+                if abs(x1-x0)/q < xtol
+                    return x1
+                end
+
+                # --- Interpolation step ---
+                # If three distinct y values, inverse quadratic interpolation.
+                # Otherwise, secant method
+                if abs(y0-y2) > ytol && abs(y1-y2) > ytol
+                    x = x0*y1*y2/((y0-y1)*(y0-y2)) +
+                        x1*y0*y2/((y1-y0)*(y1-y2)) +
+                        x2*y0*y1/((y2-y0)*(y2-y1))
+                    x = trunc(x/q, digits = 4)*q # only allow for four digits
+                else
+                    x = x1 - y1 * (x1-x0)/(y1-y0)
+                    x = trunc(x/q, digits = 4)*q # only allow for four digits
+                end
+
+                # --- Acceptance check for interpolation ---
+                # If the interpolation step not well-behaved, then fall back to a bisection step
+                delta = ytol
+                min1 = abs(x-x1)
+                min2 = abs(x1-x2)
+                min3 = abs(x2-x3)
+                if (x < (3x0+x1)/4 && x > x1) ||  # outside bracket
+                   (bisection && min1 >= min2/2) ||  # no improvement
+                   (!bisection && min1 >= min3/2) || # no improvement compared to previous
+                   (bisection && min2 < delta) ||    # step size too small
+                   (!bisection && min3 < delta)      # step size too small
+
+                    xnew = trunc((x0+x1)/(2q), digits=4)*q
+                    if xnew == x0 || xnew == x1
+                        xnew = (x0+x1)/2   # use the exact midpoint
+                    end
+                    x = xnew
+
+                    bisection = true
+                else
+                    bisection = false
+                end
+
+                # --- Evaluate at the Ea candidate point ---
+                params.bandEdgeEnergy[icc, ireg] = x
+
+                ii = 0
+                Eafix = false
+                y = 0.0
+                while !Eafix && ii <= maxiter
+                    try
+                        ii = ii +1
+
+                        sol = solve(ctsys, inival = inival, control = control)
+
+                        Eafix = true
+                        x = params.bandEdgeEnergy[icc, ireg]
+                        y = F(sol)
+                    catch
+                        newx = trunc(0.999*(params.bandEdgeEnergy[icc, ireg]/q), digits=4)*q
+                        if newx == params.bandEdgeEnergy[icc, ireg]
+                            newx -= 1e-4*q   # or another small step
+                        end
+                        params.bandEdgeEnergy[icc, ireg] = newx
+                    end
+                end
+
+                # --- Stopping criterion in y-space ---
+                if abs(y) < ytol
+                    return x
+                end
+
+                # --- Update history ---
+                x3 = x2
+                x2 = x1
+
+                # --- Update the bracketing interval ---
+                if sign(y0) != sign(y)
+                    # Root lies between x0 and x
+                    x1 = x
+                    y1 = y
+                else
+                    # Root lies between x and x1
+                    x0 = x
+                    y0 = y
+                end
+
+                # Ensure |f(x0)| ≥ |f(x1)| again (x1 is best approximation)
+                if abs(y0) < abs(y1)
+                    x0, x1 = x1, x0
+                    y0, y1 = y1, y0
+                end
+
+            end # Brent method
+
+            error("Max iteration exceeded")
+
+        end # each present region for carrier
+
+    end # ionic carrier list
+
+end
+
+
 ###########################################################
 ###########################################################
 

@@ -95,7 +95,7 @@ export BulkRecombination, set_bulk_recombination
 
 export enable_ionic_carrier!
 
-export equilibrium_solve!
+export equilibrium_solve!, calculate_Ea!
 export enable_species!, enable_boundary_species!
 export solve
 export unknowns, NewtonControl, SolverControl

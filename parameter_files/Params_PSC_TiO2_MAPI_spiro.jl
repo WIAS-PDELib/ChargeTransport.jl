@@ -66,7 +66,7 @@
     ## band edge energies
     En = [-4.0, -3.7, -3.4] .* eV
     Ep = [-5.8, -5.4, -5.1] .* eV
-    Ea = [0.0, -4.45, 0.0] .* eV
+    Ea = [0.0, -4.4351, 0.0] .* eV
     Ea_i = Ea[regionIntrinsic]
 
     ## effective densities of density of states
