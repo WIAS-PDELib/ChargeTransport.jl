@@ -135,7 +135,6 @@ function Params(p::Params_PSC_TiO2_MAPI_spiro)
 
         params.bandEdgeEnergy[p.iphin, ireg] = p.En[ireg]
         params.bandEdgeEnergy[p.iphip, ireg] = p.Ep[ireg]
-        params.bandEdgeEnergy[p.iphia, ireg] = p.Ea[ireg]
 
         params.mobility[p.iphin, ireg] = p.μn[ireg]
         params.mobility[p.iphip, ireg] = p.μp[ireg]

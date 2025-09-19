@@ -793,6 +793,11 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     qFModel::QFModelType
 
     """
+    An array with the measure of each region of the domain.
+    """
+    regionVolumes::Array{Float64, 1}
+
+    """
     An array of DataTypes with the type of boundary model for each boundary
     (interior and exterior).
     """
@@ -978,6 +983,7 @@ are located.
 function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
 
     numberOfBoundaryRegions = grid[NumBFaceRegions]
+    numberOfRegions = grid[NumCellRegions]
 
     ###############################################################
     # save the type of the inserted contact voltage function
@@ -999,6 +1005,21 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
 
     data.F = TFuncs[ Boltzmann for i in 1:numberOfCarriers]
     data.qFModel = ContQF
+
+    data.regionVolumes = zeros(numberOfRegions)
+    for ireg in 1:numberOfRegions
+        subg = subgrid(grid, [ireg])
+
+        # calculate measure of region
+        mOmega = 0.0
+        for icellVol in subg[ExtendableGrids.CellVolumes]
+            mOmega = mOmega + icellVol
+        end
+
+        data.regionVolumes[ireg] = mOmega
+
+    end
+
     data.boundaryType = BoundaryModelType[InterfaceNone for i in 1:numberOfBoundaryRegions]
     data.contactVoltageFunction = contactVoltageFunction
     data.generationData = generationData
@@ -1215,9 +1236,51 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         enable_species!(ctsys, icc, 1:data.params.numberOfRegions)
     end
 
+    q = data.constants.q
+    k_B = data.constants.k_B
+    T = data.params.temperature
+
     # if ionic carriers are present
-    for icc in data.ionicCarrierList
-        enable_species!(ctsys, icc.ionicCarrier, icc.regions)
+    for iicc in data.ionicCarrierList
+        enable_species!(ctsys, iicc.ionicCarrier, iicc.regions)
+
+        for ireg in iicc.regions
+
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            if data.params.bandEdgeEnergy[icc, ireg] == 0.0 && ireg > 1
+
+                ## give some initial value of ionic energy level
+                En1 = data.params.bandEdgeEnergy[iphin, ireg-1]
+                Ep1 = data.params.bandEdgeEnergy[iphip, ireg-1]
+                Nn1 = data.params.densityOfStates[iphin, ireg-1]
+                Np1 = data.params.densityOfStates[iphip, ireg-1]
+                C1 = data.params.doping[iphin, ireg-1] - data.params.doping[iphip, ireg-1]
+                Nintr1 = sqrt(Nn1 * Np1 * exp((En1 - Ep1) / (-k_B * T)))
+
+                psi1 = (En1 + Ep1) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn1 / Np1) + (k_B * T / q) * asinh(C1 / (2 * Nintr1))
+                ###
+                En2 = data.params.bandEdgeEnergy[iphin, ireg+1]
+                Ep2 = data.params.bandEdgeEnergy[iphip, ireg+1]
+                Nn2 = data.params.densityOfStates[iphin, ireg+1]
+                Np2 = data.params.densityOfStates[iphip, ireg+1]
+                C2 = data.params.doping[iphin, ireg+1] - data.params.doping[iphip, ireg+1]
+                Nintr2 = sqrt(Nn2 * Np2 * exp((En2 - Ep2) / (-k_B * T)))
+
+                psi2 = (En2 + Ep2) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn2 / Np2) + (k_B * T / q) * asinh(C2 / (2 * Nintr2))
+
+                Na = data.params.densityOfStates[icc, ireg]
+                za = data.params.chargeNumbers[icc]
+                Ca = data.params.doping[icc, ireg]
+
+                Ea = trunc((k_B*T*log((Ca/Na)/(1-Ca/Na)) + za*q*(psi1+psi2)/2)/q, digits = 3)*q
+
+                data.params.bandEdgeEnergy[icc, ireg] = Ea
+
+            end
+
+        end
+
     end
 
     # we need no loop for interface carriers, since in this case there are not present.
@@ -1510,7 +1573,6 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 """
 
 function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0)
-    # Δu is give as a vector of initial voltages (from electroneutral solution) on the boundaries
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1626,6 +1688,18 @@ function get_current_val(ctsys, U)
 
     return current
 
+end
+
+function integrated_density(ctsys; sol, icc, ireg)
+
+    saveType = deepcopy(ctsys.data.modelType)
+    ctsys.data.modelType = Transient
+
+    integral = ctsys.data.params.chargeNumbers[icc]*ChargeTransport.integrate(ctsys, storage!, sol)[icc, ireg]/ctsys.data.constants.q
+
+    ctsys.data.modelType = saveType
+
+    return integral
 end
 
 ###########################################################

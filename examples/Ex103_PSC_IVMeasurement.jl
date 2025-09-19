@@ -23,7 +23,7 @@ using PyPlot
 function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
-        otherScanProtocol = false
+        otherScanProtocol = false, EaPredefined = true,
     ) # you can choose between two scan protocols
 
     @local_unitfactors μm cm s ns V K ps Hz
@@ -197,6 +197,10 @@ function main(;
 
     data.params = Params(p)
 
+    if EaPredefined
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -305,6 +309,10 @@ function main(;
         inival = solution
 
     end # time loop
+
+    integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+    println("Calculated average vacancy density is: ", integral/data.regionVolumes[p.regionIntrinsic])
 
     if test == false
         println("*** done\n")
