@@ -1652,11 +1652,11 @@ end
 
 $(TYPEDSIGNATURES)
 
-Implementation of the energy value for the vacancies via the Brent method.
+Calculates the energy value for the vacancies via the Brent method.
 This method is a root-finding method, making use of the biscetion method, secant method, as well as the inverse quadratic interpolation, see
 R. P. Brent. “An algorithm with guaranteed convergence for finding a zero of a function”. In: Computer J. 14. (1971), p. 422-425.
 
-We will use this method to calculate suitable values for vacancy energy levels.
+We will use this method to calculate suitable values for vacancy energy levels and internally modify the corresponding parameter.
 """
 function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, xtol::Float64 = 1.0e-5, maxiter::Int64 = 50; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl())
 
@@ -1856,6 +1856,10 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, xtol::Float64 = 1.
                     x0, x1 = x1, x0
                     y0, y1 = y1, y0
                 end
+
+                println(" ")
+                @show x/q
+                @show y
 
             end # Brent method
 
