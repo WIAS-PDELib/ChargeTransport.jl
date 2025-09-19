@@ -357,10 +357,10 @@ function main(;
     if test == false
         integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
 
-        println("Calculated average vacancy density is: ", integral/data.regionVolumes[p.regionIntrinsic])
+        println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
         println(" ")
         if test == false
-            println("Value for vacancy energy is: ", data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic]/data.constants.q, " eV. Save this value for later use.")
+            println("Value for vacancy energy is: ", data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q, " eV. Save this value for later use.")
             println(" ")
         end
     end
