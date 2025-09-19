@@ -1823,13 +1823,20 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, xtol::Float64 = 1.
                         x = params.bandEdgeEnergy[icc, ireg]
                         y = F(sol)
                     catch
-                        newx = trunc(0.999 * (params.bandEdgeEnergy[icc, ireg] / q), digits = 4) * q
+                        println("       error got catched, so Ea is updated manually")
+                        newx = round(0.999 * (params.bandEdgeEnergy[icc, ireg] / q), digits = 4) * q
                         if newx == params.bandEdgeEnergy[icc, ireg]
                             newx -= 1.0e-4 * q   # or another small step
                         end
+                        println("       use new energy: ", newx/q)
+                        println(" ..")
                         params.bandEdgeEnergy[icc, ireg] = newx
                     end
                 end
+
+                println(" ")
+                @show x / q
+                @show y
 
                 # --- Stopping criterion in y-space ---
                 if abs(y) < ytol
@@ -1856,10 +1863,6 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, xtol::Float64 = 1.
                     x0, x1 = x1, x0
                     y0, y1 = y1, y0
                 end
-
-                println(" ")
-                @show x / q
-                @show y
 
             end # Brent method
 
