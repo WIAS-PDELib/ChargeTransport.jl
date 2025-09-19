@@ -23,7 +23,7 @@ using PyPlot
 function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
-        otherScanProtocol = false
+        otherScanProtocol = false, EaPredefined = true,
     ) # you can choose between two scan protocols
 
     @local_unitfactors μm cm s ns V K ps Hz
@@ -197,6 +197,10 @@ function main(;
 
     data.params = Params(p)
 
+    if EaPredefined
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -239,6 +243,12 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
+
+    if !EaPredefined
+        calculate_Ea!(ctsys, inival = inival, control = control)
+
+        inival = solve(ctsys, inival = inival, control = control)
+    end
 
     if plotting
         Plotter.figure()
@@ -344,6 +354,16 @@ function main(;
         PyPlot.ylabel("current density [mAcm\$^{-2} \$]")
     end
 
+    if test == false
+        integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+        println(" ")
+        if test == false
+            println("Value for vacancy energy is: ", data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q, " eV. Save this value for later use.")
+            println(" ")
+        end
+    end
     testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
     return testval
 
@@ -351,8 +371,8 @@ function main(;
 end #  main
 
 function test()
-    testval = -0.6302819608784171; testvalOther = -1.123710261723505
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    testval = -0.6321523352492795; testvalOther = -1.1216629981577289; testNotPredefined = -0.632152335248958
+    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther && main(test = true, otherScanProtocol = false, EaPredefined = false) ≈ testNotPredefined
 end
 
 if test == false
