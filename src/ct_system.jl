@@ -1858,7 +1858,7 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, xtol::Float64 = 1.
                 end
 
                 println(" ")
-                @show x/q
+                @show x / q
                 @show y
 
             end # Brent method
