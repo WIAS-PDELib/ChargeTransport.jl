@@ -1009,15 +1009,7 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.regionVolumes = zeros(numberOfRegions)
     for ireg in 1:numberOfRegions
         subg = subgrid(grid, [ireg])
-
-        # calculate measure of region
-        mOmega = 0.0
-        for icellVol in subg[ExtendableGrids.CellVolumes]
-            mOmega = mOmega + icellVol
-        end
-
-        data.regionVolumes[ireg] = mOmega
-
+        data.regionVolumes[ireg] = sum(subg[ExtendableGrids.CellVolumes])
     end
 
     data.boundaryType = BoundaryModelType[InterfaceNone for i in 1:numberOfBoundaryRegions]
