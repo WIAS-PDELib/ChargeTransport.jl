@@ -27,7 +27,7 @@ module PSC_2D_unstructuredGrid
     function main(
             Plotter = PyPlot, ; plotting = false, verbose = false, test = false,
             parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
-            EaPredefined = false,                       # assume the vacancy energy level is either on or off
+            vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
         )
 
         PyPlot.close("all")
@@ -166,7 +166,7 @@ module PSC_2D_unstructuredGrid
 
         data.params = Params(p)
 
-        if EaPredefined
+        if !vacancyEnergyCalculation
             data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
         end
 
@@ -198,13 +198,8 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        solution = equilibrium_solve!(ctsys, control = control)
+        solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
         inival = solution
-
-        if !EaPredefined
-            calculate_Ea!(ctsys, control = control)
-            inival = equilibrium_solve!(ctsys, control = control)
-        end
 
         if plotting # currently, plotting the solution was only tested with PyPlot.
             ipsi = data.index_psi
@@ -298,7 +293,7 @@ module PSC_2D_unstructuredGrid
             println(" ")
             println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
             println(" ")
-            if !EaPredefined
+            if vacancyEnergyCalculation
                 vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
                 println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
                 println("We recommend to calculate it on a fine grid.")
@@ -312,8 +307,8 @@ module PSC_2D_unstructuredGrid
     end #  main
 
     function test()
-        testval = -0.5677056490562654; testvalEaPredefined = -0.5699122214278122
-        return main(test = true) ≈ testval && main(test = true, EaPredefined = true) ≈ testvalEaPredefined
+        testval = -0.5677056490562654; testvalvacancyEnergyCalculation = -0.5699122214278122
+        return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
     end
 
     if test == false

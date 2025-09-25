@@ -1565,7 +1565,21 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0)
+function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation::Bool = false, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last two are extended-only keywords for vacancyEnergyCalculation = true
+
+    ## by default vacancyEnergyCalculation is false.
+    return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
+
+end
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Base implementation of equilibrium_solve: vacancyEnergyCalculation = false
+
+"""
+function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonlinear_steps, ytol, maxiter)
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1577,12 +1591,10 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
     ipsi = data.index_psi
     (; k_B, q) = data.constants
 
-
     # We set zero voltage for each charge carrier at all outer boundaries for equilibrium calculations.
     for ibreg in grid[BFaceRegions]
         set_contact!(ctsys, ibreg, Δu = 0.0)
     end
-
 
     sol = inival
 
@@ -1638,30 +1650,18 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
 end
 
 
-###########################################################
-###########################################################
-
 """
-
 $(TYPEDSIGNATURES)
 
+Extended implementation of equilibrium_solve: vacancyEnergyCalculation = true.
 Calculates the energy value for the vacancies via the secant method.
 We will use this method to calculate suitable values for vacancy energy levels and internally modify the corresponding parameter.
+
 """
+function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlinear_steps, ytol, maxiter)
 
-function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15; control = VoronoiFVM.NewtonControl())
-
-    data = ctsys.fvmsys.physics.data
-    params = data.params
-
-    iphin = data.bulkRecombination.iphin # integer index of φ_n
-    iphip = data.bulkRecombination.iphip # integer index of φ_p
-    T = params.temperature
-    k_B = data.constants.k_B
-    q = data.constants.q
-
-    x0, y0 = 0.0, 0.0
-    x1, y1 = 0.0, 0.0
+    # do once the equilibrium_solve to have a proper initial value.
+    inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
 
     # --- define save function evaluation---
     function save_eval_F(F, x, icc, ireg)
@@ -1674,7 +1674,7 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 1
         while !Eafix && ii <= 5
             try
                 ii = ii + 1
-                sol = equilibrium_solve!(ctsys, control = control)
+                sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
                 Eafix = true
                 x = params.bandEdgeEnergy[icc, ireg]
                 y = F(sol)
@@ -1689,6 +1689,14 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 1
         end
         return x, y
     end
+
+    data = ctsys.fvmsys.physics.data
+    params = data.params
+
+    iphin = data.bulkRecombination.iphin # integer index of φ_n
+    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    T = params.temperature
+    (; k_B, q) = data.constants
 
     for iicc in data.ionicCarrierList
 
@@ -1734,8 +1742,8 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 1
             x1 = x0 + 0.01 * q
             x1, y1 = save_eval_F(F, x1, icc, ireg)
 
-            @show x0 / q, y0
-            @show x1 / q, y1
+            # @show x0 / q, y0
+            # @show x1 / q, y1
 
             for k in 1:maxiter
                 # Secant update
@@ -1743,13 +1751,15 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 1
                 x_new = round(x_new / q, digits = 3) * q
 
                 x_new, y_new = save_eval_F(F, x_new, icc, ireg)
-                println("iter $k: x_new=$(x_new / q), y_new=$y_new")
 
+                # println("iter $k: x_new=$(x_new / q), y_new=$y_new")
 
                 # stopping criterion
                 if abs(y_new) < ytol
                     params.bandEdgeEnergy[icc, ireg] = x_new
-                    return x_new
+
+                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
+                    return sol
                 end
 
                 # shift for next secant step
@@ -1764,6 +1774,7 @@ function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 1
     end # ionic carrier list
 
     return
+
 end
 
 

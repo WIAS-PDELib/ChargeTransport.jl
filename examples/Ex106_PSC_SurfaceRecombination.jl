@@ -19,7 +19,7 @@ function main(;
         n = 6, Plotter = PyPlot, plotting = false,
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
-        EaPredefined = false,                       # assume the vacancy energy level is either on or off
+        vacancyEnergyCalculation = false,           # assume the vacancy energy level is either given or not
     )
 
     if plotting
@@ -162,7 +162,7 @@ function main(;
 
     data.params = Params(p)
 
-    if EaPredefined
+    if !vacancyEnergyCalculation
         data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
     end
 
@@ -193,13 +193,8 @@ function main(;
     end
     ################################################################################
 
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
-
-    if !EaPredefined
-        calculate_Ea!(ctsys, control = control)
-        inival = equilibrium_solve!(ctsys, control = control)
-    end
 
     if test == false
         println("*** done\n")
@@ -259,7 +254,7 @@ function main(;
 
         println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
         println(" ")
-        if !EaPredefined
+        if vacancyEnergyCalculation
             vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
             println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
             println("We recommend to calculate it on a fine grid.")
@@ -273,8 +268,8 @@ function main(;
 end # main
 
 function test()
-    testval = -0.5965842980773581; testvalEaPredefined = -0.5967127688772338
-    return main(test = true) ≈ testval && main(test = true, EaPredefined = true) ≈ testvalEaPredefined
+    testval = -0.5965842980773581; testvalvacancyEnergyCalculation = -0.5967127688772338
+    return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
 end
 
 

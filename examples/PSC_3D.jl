@@ -193,17 +193,12 @@ function main(;
     end
     ################################################################################
 
-    sol1D = equilibrium_solve!(ctsys1D, control = control, nonlinear_steps = 20)
-    calculate_Ea!(ctsys1D, control = control)
-    sol1D = equilibrium_solve!(ctsys1D, control = control)
+    sol1D = equilibrium_solve!(ctsys1D, control = control, vacancyEnergyCalculation = false)
 
-    # We already did this loop to find the correct energy for the vacancies. Due to that, we just copied it here.
-    # In case you want that the solver also calculates this value, simply undo the outcommenting of the next lines.
-
-    # sol3D = equilibrium_solve!(ctsys3D, control = control, nonlinear_steps = 20)
-    # calculate_Ea!(ctsys3D, control = control)
+    # We already did the calculations to find the correct energy for the vacancies. Due to that, we just copied the value here.
     ctsys3D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = -4.461 * data3D.constants.q
-    sol3D = equilibrium_solve!(ctsys3D, control = control)
+    # In case you want that the solver also calculates this value, simply set vacancyEnergyCalculation = true.
+    sol3D = equilibrium_solve!(ctsys3D, control = control, vacancyEnergyCalculation = false)
 
     if plotting == true
         #################################################

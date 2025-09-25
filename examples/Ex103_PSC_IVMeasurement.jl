@@ -21,10 +21,10 @@ using PyPlot
 # # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
 function main(;
-        n = 9, Plotter = PyPlot, plotting = false, verbose = false, test = false,
+        n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         otherScanProtocol = false,                  # you can choose between two scan protocols
-        EaPredefined = false,                       # assume the vacancy energy level is either on or off
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
     )
 
     @local_unitfactors μm cm s ns V K ps Hz
@@ -198,7 +198,7 @@ function main(;
 
     data.params = Params(p)
 
-    if EaPredefined
+    if !vacancyEnergyCalculation
         data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
     end
 
@@ -242,13 +242,8 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
-
-    if !EaPredefined
-        calculate_Ea!(ctsys, control = control)
-        inival = equilibrium_solve!(ctsys, control = control)
-    end
 
     if plotting
         Plotter.figure()
@@ -359,7 +354,7 @@ function main(;
 
         println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
         println(" ")
-        if !EaPredefined
+        if vacancyEnergyCalculation
             vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
             println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
             println("We recommend to calculate it on a fine grid.")
@@ -374,7 +369,7 @@ end #  main
 
 function test()
     testval = -0.6319142417604359; testvalOther = -1.121924017448251
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, EaPredefined = true) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
 end
 
 if test == false

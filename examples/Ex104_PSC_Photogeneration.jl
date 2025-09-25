@@ -27,7 +27,7 @@ function main(;
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         ########################
         userdefinedGeneration = false,              # you can choose between predefined and user-defined generation profiles
-        EaPredefined = false,                       # assume the vacancy energy level is either on or off
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
     )
 
     @local_unitfactors μm cm s ns V K ps Hz W m
@@ -219,7 +219,7 @@ function main(;
 
     data.params = Params(p)
 
-    if EaPredefined
+    if !vacancyEnergyCalculation
         data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
     end
 
@@ -252,13 +252,8 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
-
-    if !EaPredefined
-        calculate_Ea!(ctsys, control = control)
-        inival = equilibrium_solve!(ctsys, control = control)
-    end
 
     if test == false
         println("*** done\n")
@@ -474,7 +469,7 @@ function main(;
 
         println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
         println(" ")
-        if !EaPredefined
+        if vacancyEnergyCalculation
             vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
             println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
             println("We recommend to calculate it on a fine grid.")
@@ -488,8 +483,8 @@ function main(;
 end #  main
 
 function test()
-    testval = -1.0451771259505067; testvalEaPredefined = -1.046195159158462
-    return main(test = true, EaPredefined = false) ≈ testval && main(test = true, EaPredefined = true) ≈ testvalEaPredefined && main(test = true, userdefinedGeneration = true) ≈ testval
+    testval = -1.0451771259505067; testvalvacancyEnergyCalculation = -1.046195159158462
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation && main(test = true, userdefinedGeneration = true) ≈ testval
 end
 
 end # module
