@@ -19,6 +19,7 @@ using PyPlot
 function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
+        EaPredefined = false,                       # assume the vacancy energy level is either on or off
     )
 
     ################################################################################
@@ -165,6 +166,11 @@ function main(;
     ################################################################################
 
     data.params = Params(p)
+
+    if EaPredefined
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -196,6 +202,11 @@ function main(;
 
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
+
+    if !EaPredefined
+        calculate_Ea!(ctsys, control = control)
+        inival = equilibrium_solve!(ctsys, control = control)
+    end
 
     if plotting # currently, plotting the solution was only tested with PyPlot.
         ipsi = data.index_psi
@@ -280,6 +291,20 @@ function main(;
     end
 
     if test == false
+        integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println(" ")
+        println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+        println(" ")
+        if !EaPredefined
+            vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+            println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
+            println("We recommend to calculate it on a fine grid.")
+            println(" ")
+        end
+    end
+
+    if test == false
         println("*** done\n")
     end
 
@@ -289,8 +314,8 @@ function main(;
 end #  main
 
 function test()
-    testval = -0.5818799192233242
-    return main(test = true) ≈ testval
+    testval = -0.5815947701306688; testvalEaPredefined = -0.5823076281125769
+    return main(test = true) ≈ testval && main(test = true, EaPredefined = true) ≈ testvalEaPredefined
 end
 
 if test == false

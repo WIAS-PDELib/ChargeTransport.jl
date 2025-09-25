@@ -21,10 +21,11 @@ using PyPlot
 # # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
 function main(;
-        n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
+        n = 9, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
-        otherScanProtocol = false
-    ) # you can choose between two scan protocols
+        otherScanProtocol = false,                  # you can choose between two scan protocols
+        EaPredefined = false,                       # assume the vacancy energy level is either on or off
+    )
 
     @local_unitfactors μm cm s ns V K ps Hz
 
@@ -197,6 +198,10 @@ function main(;
 
     data.params = Params(p)
 
+    if EaPredefined
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -239,6 +244,11 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
+
+    if !EaPredefined
+        calculate_Ea!(ctsys, control = control)
+        inival = equilibrium_solve!(ctsys, control = control)
+    end
 
     if plotting
         Plotter.figure()
@@ -344,15 +354,27 @@ function main(;
         PyPlot.ylabel("current density [mAcm\$^{-2} \$]")
     end
 
+    if test == false
+        integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+        println(" ")
+        if !EaPredefined
+            vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+            println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
+            println("We recommend to calculate it on a fine grid.")
+            println(" ")
+        end
+    end
+
     testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
     return testval
-
 
 end #  main
 
 function test()
-    testval = -0.6302819608784171; testvalOther = -1.123710261723505
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    testval = -0.6319142417604359; testvalOther = -1.121924017448251
+    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, EaPredefined = true) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
 end
 
 if test == false

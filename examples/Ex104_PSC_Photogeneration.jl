@@ -26,8 +26,9 @@ function main(;
         ########################
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         ########################
-        userdefinedGeneration = false
-    ) # you can choose between predefined and user-defined generation profiles
+        userdefinedGeneration = false,              # you can choose between predefined and user-defined generation profiles
+        EaPredefined = false,                       # assume the vacancy energy level is either on or off
+    )
 
     @local_unitfactors μm cm s ns V K ps Hz W m
 
@@ -217,6 +218,11 @@ function main(;
     ################################################################################
 
     data.params = Params(p)
+
+    if EaPredefined
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -248,6 +254,11 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
+
+    if !EaPredefined
+        calculate_Ea!(ctsys, control = control)
+        inival = equilibrium_solve!(ctsys, control = control)
+    end
 
     if test == false
         println("*** done\n")
@@ -442,17 +453,33 @@ function main(;
 
     IncidentLightPowerDensity = 1000.0 * W / m^2
 
-    efficiency = bias[indexPD] * IV[indexPD] / IncidentLightPowerDensity
-    fillfactor = (bias[indexPD] * IV[indexPD]) / (IV[1] * open_circuit)
+    fillfactor = 100.0 .* (bias[indexPD] * IV[indexPD]) / (IV[1] * open_circuit)
+
+    efficiency = 100.0 .* bias[indexPD] * IV[indexPD] / IncidentLightPowerDensity
 
     if test == false
-        println("The fill factor is $fillfactor %.")
-        println("The efficiency  is $efficiency %.")
-        println("The open circuit voltage  is $open_circuit.")
+        println(" ")
+        println("The fill factor is $(round(fillfactor, digits = 3)) %.")
+        println("The efficiency  is $(round(efficiency, digits = 3)) %.")
+        println("The open circuit voltage  is $(round(open_circuit, digits = 3)) V.")
+        println(" ")
     end
 
     if test == false
         println("*** done\n")
+    end
+
+    if test == false
+        integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+        println(" ")
+        if !EaPredefined
+            vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+            println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
+            println("We recommend to calculate it on a fine grid.")
+            println(" ")
+        end
     end
 
     testval = sum(filter(!isnan, solutionEQ)) / length(solutionEQ) # when using sparse storage, we get NaN values in solution
@@ -461,12 +488,8 @@ function main(;
 end #  main
 
 function test()
-    testval = -1.052813874410313
-    return main(test = true, userdefinedGeneration = false) ≈ testval && main(test = true, userdefinedGeneration = true) ≈ testval
-end
-
-if test == false
-    println("This message should show when this module is successfully recompiled.")
+    testval = -1.0451771259505067; testvalEaPredefined = -1.046195159158462
+    return main(test = true, EaPredefined = false) ≈ testval && main(test = true, EaPredefined = true) ≈ testvalEaPredefined && main(test = true, userdefinedGeneration = true) ≈ testval
 end
 
 end # module

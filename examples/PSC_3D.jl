@@ -113,21 +113,38 @@ function main(;
 
     ## Initialize Data instance and fill in predefined data
     ## Note that we define the data struct with respect to the three-dimensional grid, since we also defined there the outer no flux boundary conditions.
-    data = Data(grid3D, p.numberOfCarriers)
-    data.modelType = Transient
-    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
-    data.bulkRecombination = set_bulk_recombination(;
+    data1D = Data(grid1D, p.numberOfCarriers)
+    data1D.modelType = Transient
+    data1D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data1D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = true,
         bulk_recomb_SRH = true
     )
-    data.boundaryType[p.bregionDonor] = OhmicContact
-    data.boundaryType[p.bregionAcceptor] = OhmicContact
+    data1D.boundaryType[p.bregionDonor] = OhmicContact
+    data1D.boundaryType[p.bregionAcceptor] = OhmicContact
 
-    enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
+    enable_ionic_carrier!(data1D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
-    data.fluxApproximation .= ExcessChemicalPotential
+    data1D.fluxApproximation .= ExcessChemicalPotential
+
+    ########################
+    data3D = Data(grid3D, p.numberOfCarriers)
+    data3D.modelType = Transient
+    data3D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data3D.bulkRecombination = set_bulk_recombination(;
+        iphin = p.iphin, iphip = p.iphip,
+        bulk_recomb_Auger = false,
+        bulk_recomb_radiative = true,
+        bulk_recomb_SRH = true
+    )
+    data3D.boundaryType[p.bregionDonor] = OhmicContact
+    data3D.boundaryType[p.bregionAcceptor] = OhmicContact
+
+    enable_ionic_carrier!(data3D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
+
+    data3D.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
@@ -139,11 +156,12 @@ function main(;
     end
     ################################################################################
 
-    data.params = Params(p)
-    ctsys1D = System(grid1D, data, unknown_storage = :sparse)
-    ctsys3D = System(grid3D, data, unknown_storage = :sparse)
+    data1D.params = Params(p)
+    data3D.params = Params(p)
+    ctsys1D = System(grid1D, data1D, unknown_storage = :sparse)
+    ctsys3D = System(grid3D, data3D, unknown_storage = :sparse)
 
-    ipsi = data.index_psi
+    ipsi = data1D.index_psi
 
     if test == false
         show_params(ctsys1D)
@@ -176,7 +194,16 @@ function main(;
     ################################################################################
 
     sol1D = equilibrium_solve!(ctsys1D, control = control, nonlinear_steps = 20)
-    sol3D = equilibrium_solve!(ctsys3D, control = control, nonlinear_steps = 20)
+    calculate_Ea!(ctsys1D, control = control)
+    sol1D = equilibrium_solve!(ctsys1D, control = control)
+
+    # We already did this loop to find the correct energy for the vacancies. Due to that, we just copied it here.
+    # In case you want that the solver also calculates this value, simply undo the outcommenting of the next lines.
+
+    # sol3D = equilibrium_solve!(ctsys3D, control = control, nonlinear_steps = 20)
+    # calculate_Ea!(ctsys3D, control = control)
+    ctsys3D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = -4.461 * data3D.constants.q
+    sol3D = equilibrium_solve!(ctsys3D, control = control)
 
     if plotting == true
         #################################################
@@ -207,6 +234,22 @@ function main(;
         println("*** done\n")
     end
 
+    if test == false
+        integral1D = integrated_density(ctsys1D, sol = sol1D, icc = p.iphia, ireg = p.regionIntrinsic)
+        integral3D = integrated_density(ctsys3D, sol = sol3D, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println("Calculated average vacancy density (1D) is: ", integral1D / ctsys1D.data.regionVolumes[p.regionIntrinsic])
+        println("Calculated average vacancy density (3D) is: ", integral3D / ctsys3D.data.regionVolumes[p.regionIntrinsic])
+        println(" ")
+    end
+
+    if test == false
+        println("Value for vacancy energy (1D) is: ", ctsys1D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data1D.constants.q, " eV. ")
+        println("Value for vacancy energy (3D) is: ", ctsys3D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data3D.constants.q, " eV. ")
+        println("Save these values for later use. We recommend to calculate them on a fine grid.")
+        println(" ")
+    end
+
     testval = sum(filter(!isnan, sol1D)) / length(sol1D) + sum(filter(!isnan, sol3D)) / length(sol3D) # when using sparse storage, we get NaN values in solution
 
     return testval
@@ -215,7 +258,7 @@ end # main
 
 
 function test()
-    testval = -2.2213072819274533
+    testval = -2.224244519821803
     return main(test = true) ≈ testval
 end
 

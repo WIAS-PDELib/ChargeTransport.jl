@@ -793,6 +793,11 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     qFModel::QFModelType
 
     """
+    An array with the measure of each region of the domain.
+    """
+    regionVolumes::Array{Float64, 1}
+
+    """
     An array of DataTypes with the type of boundary model for each boundary
     (interior and exterior).
     """
@@ -978,6 +983,7 @@ are located.
 function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
 
     numberOfBoundaryRegions = grid[NumBFaceRegions]
+    numberOfRegions = grid[NumCellRegions]
 
     ###############################################################
     # save the type of the inserted contact voltage function
@@ -999,6 +1005,13 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
 
     data.F = TFuncs[ Boltzmann for i in 1:numberOfCarriers]
     data.qFModel = ContQF
+
+    data.regionVolumes = zeros(numberOfRegions)
+    for ireg in 1:numberOfRegions
+        subg = subgrid(grid, [ireg])
+        data.regionVolumes[ireg] = sum(subg[ExtendableGrids.CellVolumes])
+    end
+
     data.boundaryType = BoundaryModelType[InterfaceNone for i in 1:numberOfBoundaryRegions]
     data.contactVoltageFunction = contactVoltageFunction
     data.generationData = generationData
@@ -1215,9 +1228,52 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         enable_species!(ctsys, icc, 1:data.params.numberOfRegions)
     end
 
+    q = data.constants.q
+    k_B = data.constants.k_B
+    T = data.params.temperature
+
     # if ionic carriers are present
-    for icc in data.ionicCarrierList
-        enable_species!(ctsys, icc.ionicCarrier, icc.regions)
+    for iicc in data.ionicCarrierList
+        enable_species!(ctsys, iicc.ionicCarrier, iicc.regions)
+
+        for ireg in iicc.regions
+
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            ## in case user did not define any energy, give some suitable initial guess
+            if data.params.bandEdgeEnergy[icc, ireg] == 0.0 && ireg > 1
+
+                ## give some initial value of ionic energy level
+                En1 = data.params.bandEdgeEnergy[iphin, ireg - 1]
+                Ep1 = data.params.bandEdgeEnergy[iphip, ireg - 1]
+                Nn1 = data.params.densityOfStates[iphin, ireg - 1]
+                Np1 = data.params.densityOfStates[iphip, ireg - 1]
+                C1 = data.params.doping[iphin, ireg - 1] - data.params.doping[iphip, ireg - 1]
+                Nintr1 = sqrt(Nn1 * Np1 * exp((En1 - Ep1) / (-k_B * T)))
+
+                psi1 = (En1 + Ep1) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn1 / Np1) + (k_B * T / q) * asinh(C1 / (2 * Nintr1))
+                ###
+                En2 = data.params.bandEdgeEnergy[iphin, ireg + 1]
+                Ep2 = data.params.bandEdgeEnergy[iphip, ireg + 1]
+                Nn2 = data.params.densityOfStates[iphin, ireg + 1]
+                Np2 = data.params.densityOfStates[iphip, ireg + 1]
+                C2 = data.params.doping[iphin, ireg + 1] - data.params.doping[iphip, ireg + 1]
+                Nintr2 = sqrt(Nn2 * Np2 * exp((En2 - Ep2) / (-k_B * T)))
+
+                psi2 = (En2 + Ep2) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn2 / Np2) + (k_B * T / q) * asinh(C2 / (2 * Nintr2))
+
+                Na = data.params.densityOfStates[icc, ireg]
+                za = data.params.chargeNumbers[icc]
+                Ca = data.params.doping[icc, ireg]
+
+                Ea = trunc((k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * (psi1 + psi2) / 2) / q, digits = 3) * q
+
+                data.params.bandEdgeEnergy[icc, ireg] = Ea
+
+            end
+
+        end
+
     end
 
     # we need no loop for interface carriers, since in this case there are not present.
@@ -1510,7 +1566,6 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 """
 
 function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0)
-    # Δu is give as a vector of initial voltages (from electroneutral solution) on the boundaries
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1582,6 +1637,136 @@ function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fv
 
 end
 
+
+###########################################################
+###########################################################
+
+"""
+
+$(TYPEDSIGNATURES)
+
+Calculates the energy value for the vacancies via the secant method.
+We will use this method to calculate suitable values for vacancy energy levels and internally modify the corresponding parameter.
+"""
+
+function calculate_Ea!(ctsys::System, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15; control = VoronoiFVM.NewtonControl())
+
+    data = ctsys.fvmsys.physics.data
+    params = data.params
+
+    iphin = data.bulkRecombination.iphin # integer index of φ_n
+    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    T = params.temperature
+    k_B = data.constants.k_B
+    q = data.constants.q
+
+    x0, y0 = 0.0, 0.0
+    x1, y1 = 0.0, 0.0
+
+    # --- define save function evaluation---
+    function save_eval_F(F, x, icc, ireg)
+
+        params.bandEdgeEnergy[icc, ireg] = x
+
+        ii = 0
+        y = 1.0
+        Eafix = false
+        while !Eafix && ii <= 5
+            try
+                ii = ii + 1
+                sol = equilibrium_solve!(ctsys, control = control)
+                Eafix = true
+                x = params.bandEdgeEnergy[icc, ireg]
+                y = F(sol)
+            catch
+                # --- solve with specific value not working? slightly adjust ---
+                xnew = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
+                params.bandEdgeEnergy[icc, ireg] = xnew
+                println("        save solve")
+                println("            ", xnew / q)
+
+            end
+        end
+        return x, y
+    end
+
+    for iicc in data.ionicCarrierList
+
+        for ireg in iicc.regions
+
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            # --- define function to be minimized ---
+            mOmega = data.regionVolumes[ireg]
+            Avgncc(sol) = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg) / mOmega
+            Ca = params.doping[icc, ireg]
+
+            # difference between integral and doping
+            F(sol) = (Avgncc(sol) - Ca) / Ca
+
+            # --- for initial value of Ea ---
+            Ec = params.bandEdgeEnergy[iphin, ireg - 1]
+            Ev = params.bandEdgeEnergy[iphip, ireg - 1]
+            Nc = params.densityOfStates[iphin, ireg - 1]
+            Nv = params.densityOfStates[iphip, ireg - 1]
+            C = params.doping[iphin, ireg - 1] - params.doping[iphip, ireg - 1]
+            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+            psiL = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+            ####################
+            Ec = params.bandEdgeEnergy[iphin, ireg + 1]
+            Ev = params.bandEdgeEnergy[iphip, ireg + 1]
+            Nc = params.densityOfStates[iphin, ireg + 1]
+            Nv = params.densityOfStates[iphip, ireg + 1]
+            C = params.doping[iphin, ireg + 1] - params.doping[iphip, ireg + 1]
+            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+            psiR = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+
+            Na = params.densityOfStates[icc, ireg]
+            za = params.chargeNumbers[icc]
+
+            x0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR)
+            x0 = round(x0 / q, digits = 3) * q
+
+            # --- Find one correct pair x0, y0 ---
+            x0, y0 = save_eval_F(F, x0, icc, ireg)
+
+            # --- Second guess x1 slightly shifted ---
+            x1 = x0 + 0.01 * q
+            x1, y1 = save_eval_F(F, x1, icc, ireg)
+
+            @show x0 / q, y0
+            @show x1 / q, y1
+
+            for k in 1:maxiter
+                # Secant update
+                x_new = x1 - y1 * (x1 - x0) / (y1 - y0)
+                x_new = round(x_new / q, digits = 3) * q
+
+                x_new, y_new = save_eval_F(F, x_new, icc, ireg)
+                println("iter $k: x_new=$(x_new / q), y_new=$y_new")
+
+
+                # stopping criterion
+                if abs(y_new) < ytol
+                    params.bandEdgeEnergy[icc, ireg] = x_new
+                    return x_new
+                end
+
+                # shift for next secant step
+                x0, y0 = x1, y1
+                x1, y1 = x_new, y_new
+            end
+
+            error("Max iteration exceeded")
+
+        end # each present region for carrier
+
+    end # ionic carrier list
+
+    return
+end
+
+
 ###########################################################
 ###########################################################
 
@@ -1626,6 +1811,21 @@ function get_current_val(ctsys, U)
 
     return current
 
+end
+
+"""
+Method to calculate the integrated carrier densities.
+"""
+function integrated_density(ctsys; sol, icc, ireg)
+
+    saveType = deepcopy(ctsys.data.modelType)
+    ctsys.data.modelType = Transient
+
+    integral = ctsys.data.params.chargeNumbers[icc] * ChargeTransport.integrate(ctsys, storage!, sol)[icc, ireg] / ctsys.data.constants.q
+
+    ctsys.data.modelType = saveType
+
+    return integral
 end
 
 ###########################################################
