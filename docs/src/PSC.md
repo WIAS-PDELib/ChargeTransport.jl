@@ -33,9 +33,65 @@ Differences to the previous example include
 - a generation rate $G$
 - higher dimensional problem.
 
-A quick survey on how to use `ChargeTransport.jl` to adjust the input parameters such that these features can be simulated will be given in the following.
+# Simulating electronic-ionic charge transport
 
-## Example 1: Graded interfaces
+For example, for perovskite solar cells an average vacancy density is given in literature.
+If the charge carrier densities are used as the set of unknowns, the initial condition for the anion vacancy density can be given by
+
+$$
+n_{\text{a}}^0 = C_{\text{a}},
+$$
+
+where $C_{\text{a}}$ corresponds to the uniform density of cation vacancies and is set equal to the average anion vacancy density to ensure global charge neutrality.
+With homogeneous no-flow Neumann boundary conditions around the perovskite layer for the anion vacancies, the total mass of anions is conserved at all times, i.e.
+
+$$
+\frac{1}{|\Omega_{\text{PVK}} |} \int_{\Omega_{\text{PVK}}} n_{\text{a}} (\mathbf{x}, t)\, d\mathbf{x}
+= \frac{1}{|\Omega_{\text{PVK}} |}  \int_{\Omega_{\text{PVK}}} n_{\text{a}}^0 (\mathbf{x})\, d\mathbf{x}
+= C_{\text{a}}, \quad \text{for all} \quad t \geq 0.
+$$
+
+Since we do not use charge carrier densities directly but instead employ quasi Fermi potentials as the unknowns, due to mathematical, physical, and numerical advantages, we must find a workaround to properly fix the initial condition for the vacancy density.
+
+## Quasi Fermi potential notation
+
+The statistical relation between the vacancy density and the potentials (our chosen unknowns) reads
+
+$$
+n_{\text{a}}  = N_{\text{a}}  F_{-1} \Bigl(\eta_{\text{a}} (\psi, \varphi_{\text{a}} ) \Bigr), \quad \eta_{\text{a}}  = z_{\text{a}}  \frac{q (\varphi_{\text{a}}  - \psi) + E_{\text{a}} }{k_B T},
+$$
+
+where $N_{\text{a}}$ denotes the maximum vacancy density allowed, $F_{-1} = (\exp(-x) +1)^{-1}$ is the Fermi-Dirac integral of order $-1$, and we refer to $E_{\text{a}}$ is the intrinsic vacancy energy level (somehow a model parameter).
+In equilibrium, we set the vacancy quasi-Fermi potential to zero, i.e., $\varphi_{\text{a}} = 0$, when the applied voltage is $V = 0$.
+Because the initial condition for the vacancy density is prescribed as $C_\text{a}$ and the electric potential $\psi$ is an unknown, the only remaining free parameter is the vacancy energy $E_{\text{a}}$.
+> The value of $E_{\text{a}}$ must be chosen such that the average vacancy density remains conserved for all time steps.
+
+## Current way of handling $E_\text{a}$
+
+We implement a method that calculates the appropriate `Ea` values internally via the secant method.
+To make use of this feature, you can add in the equilibrium solving the flag `vacancyEnergyCalculation=true`.
+
+```julia
+solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = true)
+```
+To check, if, indeed, the average vacancy density is maintained, you can calculate that value and print the chosen vacancy energy level.
+```julia
+integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+
+vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+println("Value for vacancy energy is: ", vacancyEnergy, " eV")
+```
+## Remarks
+
+- For **1D simulations**, this approach is sufficient.
+- For **multi-dimensional simulations**, however, we recommend precomputing the `Ea` values and storing them for later use.
+
+
+Next, we give a quick survey on how to use `ChargeTransport.jl` to adjust the input parameters such that all mentioned features can be simulated will be given in the following.
+
+# Example 1: Graded interfaces
 By default, we assume abrupt inner interfaces. If one wishes to simulate graded interfaces, where for example the effective density of states and the band-edge energy may vary, we refer to [this](https://github.com/WIAS-PDELib/ChargeTransport.jl/blob/master/examples/Ex105_PSC_gradedFlux.jl) example.
 
 We sketch the relevant parts here.

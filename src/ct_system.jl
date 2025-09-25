@@ -1752,7 +1752,9 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
 
                 x_new, y_new = save_eval_F(F, x_new, icc, ireg)
 
-                # println("iter $k: x_new=$(x_new / q), y_new=$y_new")
+                if control.verbose
+                    println("Energy calculation: iter $k: x_new=$(x_new / q), y_new=$y_new")
+                end
 
                 # stopping criterion
                 if abs(y_new) < ytol
