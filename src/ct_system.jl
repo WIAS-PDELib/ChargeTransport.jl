@@ -1682,7 +1682,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
                 E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
                 params.bandEdgeEnergy[icc, ireg] = E_new
                 # println("        save solve")
-                # println("            ", Enew / q)
+                # println("            ", E_new / q)
 
             end
         end
