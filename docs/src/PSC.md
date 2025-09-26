@@ -1,7 +1,7 @@
 Perovskite solar cell
 ================================
 We simulate charge transport in perovskite solar cells (PSCs), where we have apart from holes and electrons also ionic charge carriers. Here, we assume to have three domains, denoted by
-$\mathbf{\Omega} = \mathbf{\Omega}_{\text{HTL}} \cup \mathbf{\Omega}_{\text{intr}} \cup \mathbf{\Omega}_{\text{ETL}}  $.
+$\mathbf{\Omega} = \mathbf{\Omega}_{\text{HTL}} \cup \mathbf{\Omega}_{\text{PVK}} \cup \mathbf{\Omega}_{\text{ETL}}  $.
 The unknowns are the quasi Fermi potentials of electrons, holes and anion vacancies
 $\varphi_n, \varphi_p, \varphi_a$
 as well as the electric potential
@@ -9,19 +9,19 @@ $\psi$.
 The underlying PDEs are given by
 ```math
 \begin{aligned}
-	- \nabla \cdot (\varepsilon_s \nabla \psi) &= q \Big( (p(\psi, \varphi_p) - C_p ) - (n(\psi, \varphi_n) - C_n) \Big),\\
-	q \partial_t n(\psi, \varphi_n) - \nabla \cdot \mathbf{j}_n &= q\Bigl(G(\mathbf{x}) - R(n,p) \Bigr), \\
-	q \partial_t p(\psi, \varphi_p) + \nabla \cdot \mathbf{j}_p &= \Bigl(G(\mathbf{x}) - R(n,p) \Bigr),
+	- \nabla \cdot (\varepsilon_s \nabla \psi) &= q \Big( (n_\text{p}(\psi, \varphi_\text{p}) - C_\text{p} ) - (n_\text{n}(\psi, \varphi_\text{n}) - C_\text{n}) \Big),\\
+	q \partial_t n_\text{n}(\psi, \varphi_\text{n}) - \nabla \cdot \mathbf{j}_\text{n} &= q\Bigl(G(\mathbf{x}) - R(n_\text{n},n_\text{p}) \Bigr), \\
+	q \partial_t n_\text{p}(\psi, \varphi_\text{p}) + \nabla \cdot \mathbf{j}_\text{p} &= \Bigl(G(\mathbf{x}) - R(n_\text{n},n_\text{p}) \Bigr),
 \end{aligned}
 ```
 for
-$\mathbf{x} \in \mathbf{\Omega}_{\text{HTL}} \cup  \mathbf{\Omega}_{\text{ETL}} $, $t \in [0, t_F]$. In the middle, intrinsic region ($ \mathbf{x} \in \mathbf{\Omega}_{\text{intr}} $), we have
+$\mathbf{x} \in \mathbf{\Omega}_{\text{HTL}} \cup  \mathbf{\Omega}_{\text{ETL}} $, $t \in [0, t_F]$. In the middle, intrinsic region ($ \mathbf{x} \in \mathbf{\Omega}_{\text{PVK}} $), we have
 ```math
 \begin{aligned}
-	- \nabla \cdot (\varepsilon_s \nabla \psi) &= q \Big( p(\psi, \varphi_p)  - n(\psi, \varphi_n) + a(\psi, \varphi_a) - C_a \Big),\\
-q \partial_t n(\psi, \varphi_n)	- \nabla \cdot \mathbf{j}_n &= \Bigl(G(\mathbf{x}) - R(n,p) \Bigr), \\
-	q \partial_t p(\psi, \varphi_p) + \nabla \cdot \mathbf{j}_p &= \Bigl(G(\mathbf{x}) - R(n,p) \Bigr),\\
-	q \partial_t a(\psi, \varphi_a) + \nabla \cdot \mathbf{j}_a &= 0,
+	- \nabla \cdot (\varepsilon_s \nabla \psi) &= q \Big( n_\text{p}(\psi, \varphi_\text{p})  - n_\text{n}(\psi, \varphi_\text{n}) + n_\text{a}(\psi, \varphi_\text{a}) - C_\text{a} \Big),\\
+q \partial_t n_\text{n}(\psi, \varphi_\text{n})	- \nabla \cdot \mathbf{j}_\text{n} &= \Bigl(G(\mathbf{x}) - R(n_\text{n},n_\text{p}) \Bigr), \\
+	q \partial_t n_\text{p}(\psi, \varphi_\text{p}) + \nabla \cdot \mathbf{j}_\text{p} &= \Bigl(G(\mathbf{x}) - R(n_\text{n},n_\text{p}) \Bigr),\\
+	q \partial_t n_\text{a}(\psi, \varphi_\text{a}) + \nabla \cdot \mathbf{j}_\text{a} &= 0,
 \end{aligned}
 ```
 see [Abdel2021](https://www.sciencedirect.com/science/article/abs/pii/S0013468621009865).
@@ -76,17 +76,17 @@ solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation
 ```
 To check, if, indeed, the average vacancy density is maintained, you can calculate that value and print the chosen vacancy energy level.
 ```julia
-integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+integral = integrated_density(ctsys, sol = solution, icc = iphia, ireg = regionIntrinsic)
 
-println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+println("Calculated average vacancy density is: ", integral / data.regionVolumes[regionIntrinsic])
 
-vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+vacancyEnergy = data.params.bandEdgeEnergy[iphia, regionIntrinsic] / data.constants.q
 println("Value for vacancy energy is: ", vacancyEnergy, " eV")
 ```
 ## Remarks
 
 - For **1D simulations**, this approach is sufficient.
-- For **multi-dimensional simulations**, however, we recommend precomputing the `Ea` values and storing them for later use.
+- For **multi-dimensional simulations**, however, we recommend precomputing the `Ea` values and storing them in case of multiple computations with the same parameter set.
 
 
 Next, we give a quick survey on how to use `ChargeTransport.jl` to adjust the input parameters such that all mentioned features can be simulated will be given in the following.
