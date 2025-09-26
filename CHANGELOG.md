@@ -7,12 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.2.1
+
+### Added
+  - Modified `equilibrium_solve!()`. Directly computes now the correct energy level such that the average vacancy density matches the user-defined target, if the argument is `vacancyEnergyCalculation = true`. Check the [package documentation](https://wias-pdelib.github.io/ChargeTransport.jl/stable/PSC/) for more information
+  - Added method integrated_density, which computes the integrated carrier density for a given species `icc` and region `ireg`
+  - Extended Data structure with `data.regionVolumes`, which stores the volume (measure) of each subregion
 
 ## v1.1.0
 
-### Fixed 
+### Fixed
   - fixed broken v1.0.0 release
-
 
 ## v1.0.0
 

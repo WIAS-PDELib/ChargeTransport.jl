@@ -23,8 +23,9 @@ using PyPlot
 function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
-        otherScanProtocol = false
-    ) # you can choose between two scan protocols
+        otherScanProtocol = false,                  # you can choose between two scan protocols
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
+    )
 
     @local_unitfactors μm cm s ns V K ps Hz
 
@@ -197,6 +198,10 @@ function main(;
 
     data.params = Params(p)
 
+    if !vacancyEnergyCalculation
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -237,7 +242,7 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
 
     if plotting
@@ -344,15 +349,27 @@ function main(;
         PyPlot.ylabel("current density [mAcm\$^{-2} \$]")
     end
 
+    if test == false
+        integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+        println(" ")
+        if vacancyEnergyCalculation
+            vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+            println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
+            println("We recommend to calculate it on a fine grid.")
+            println(" ")
+        end
+    end
+
     testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
     return testval
-
 
 end #  main
 
 function test()
-    testval = -0.6302819608784171; testvalOther = -1.123710261723505
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    testval = -0.6319142417604359; testvalOther = -1.121924017448251
+    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
 end
 
 if test == false

@@ -27,6 +27,7 @@ module PSC_2D_unstructuredGrid
     function main(
             Plotter = PyPlot, ; plotting = false, verbose = false, test = false,
             parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
+            vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
         )
 
         PyPlot.close("all")
@@ -164,6 +165,11 @@ module PSC_2D_unstructuredGrid
         ################################################################################
 
         data.params = Params(p)
+
+        if !vacancyEnergyCalculation
+            data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+        end
+
         ctsys = System(grid, data, unknown_storage = :sparse)
 
         ## print data
@@ -192,7 +198,7 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        solution = equilibrium_solve!(ctsys, control = control)
+        solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
         inival = solution
 
         if plotting # currently, plotting the solution was only tested with PyPlot.
@@ -281,14 +287,28 @@ module PSC_2D_unstructuredGrid
             Plotter.xlabel("Applied Voltage [V]")
         end
 
+        if test == false
+            integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+            println(" ")
+            println("Calculated average vacancy density is: ", integral / data.regionVolumes[p.regionIntrinsic])
+            println(" ")
+            if vacancyEnergyCalculation
+                vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+                println("Value for vacancy energy is: ", vacancyEnergy, " eV. Save this value for later use.")
+                println("We recommend to calculate it on a fine grid.")
+                println(" ")
+            end
+        end
+
         testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
         return testval
 
     end #  main
 
     function test()
-        testval = -0.5694033507574118
-        return main(test = true) ≈ testval
+        testval = -0.5677056490562654; testvalvacancyEnergyCalculation = -0.5699122214278122
+        return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
     end
 
     if test == false
