@@ -1663,10 +1663,10 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
     # do once the equilibrium_solve to have a proper initial value.
     inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
 
-    # --- define save function evaluation---
-    function save_eval_F(F, x, icc, ireg)
+    # --- define save function evaluation for the function, we want to find root of ---
+    function safely_eval_F!(F, E, icc, ireg)
 
-        params.bandEdgeEnergy[icc, ireg] = x
+        params.bandEdgeEnergy[icc, ireg] = E
 
         ii = 0
         y = 1.0
@@ -1676,18 +1676,17 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
                 ii = ii + 1
                 sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
                 Eafix = true
-                x = params.bandEdgeEnergy[icc, ireg]
                 y = F(sol)
             catch
                 # --- solve with specific value not working? slightly adjust ---
-                xnew = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
-                params.bandEdgeEnergy[icc, ireg] = xnew
-                println("        save solve")
-                println("            ", xnew / q)
+                E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
+                params.bandEdgeEnergy[icc, ireg] = E_new
+                # println("        save solve")
+                # println("            ", Enew / q)
 
             end
         end
-        return x, y
+        return E, y
     end
 
     data = ctsys.fvmsys.physics.data
@@ -1709,10 +1708,10 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             Avgncc(sol) = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg) / mOmega
             Ca = params.doping[icc, ireg]
 
-            # difference between integral and doping
+            # difference between integral and doping, where we want to find the zero
             F(sol) = (Avgncc(sol) - Ca) / Ca
 
-            # --- for initial value of Ea ---
+            # --- for initial values for Ea ---
             Ec = params.bandEdgeEnergy[iphin, ireg - 1]
             Ev = params.bandEdgeEnergy[iphip, ireg - 1]
             Nc = params.densityOfStates[iphin, ireg - 1]
@@ -1732,41 +1731,42 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             Na = params.densityOfStates[icc, ireg]
             za = params.chargeNumbers[icc]
 
-            x0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR)
-            x0 = round(x0 / q, digits = 3) * q
+            # E0, E1 in eV
+            E0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR) # in eV
+            E0 = round(E0 / q, digits = 3) * q
 
-            # --- Find one correct pair x0, y0 ---
-            x0, y0 = save_eval_F(F, x0, icc, ireg)
+            # --- Find one correct pair E0, y0 ---
+            E0, y0 = safely_eval_F!(F, E0, icc, ireg)
 
-            # --- Second guess x1 slightly shifted ---
-            x1 = x0 + 0.01 * q
-            x1, y1 = save_eval_F(F, x1, icc, ireg)
+            # --- Second guess E1 slightly shifted ---
+            E1 = E0 + 0.01 * q
+            E1, y1 = safely_eval_F!(F, E1, icc, ireg)
 
-            # @show x0 / q, y0
-            # @show x1 / q, y1
+            # @show E0 / q, y0
+            # @show E1 / q, y1
 
             for k in 1:maxiter
                 # Secant update
-                x_new = x1 - y1 * (x1 - x0) / (y1 - y0)
-                x_new = round(x_new / q, digits = 3) * q
+                E_new = E1 - y1 * (E1 - E0) / (y1 - y0)
+                E_new = round(E_new / q, digits = 3) * q
 
-                x_new, y_new = save_eval_F(F, x_new, icc, ireg)
+                E_new, y_new = safely_eval_F!(F, E_new, icc, ireg)
 
-                if control.verbose
-                    println("Energy calculation: iter $k: x_new=$(x_new / q), y_new=$y_new")
+                if control.verbose == "n"
+                    println("Energy calculation: iter $k: E_new=$(E_new / q), y_new=$y_new")
                 end
 
                 # stopping criterion
                 if abs(y_new) < ytol
-                    params.bandEdgeEnergy[icc, ireg] = x_new
+                    params.bandEdgeEnergy[icc, ireg] = E_new
 
                     sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
                     return sol
                 end
 
                 # shift for next secant step
-                x0, y0 = x1, y1
-                x1, y1 = x_new, y_new
+                E0, y0 = E1, y1
+                E1, y1 = E_new, y_new
             end
 
             error("Max iteration exceeded")
