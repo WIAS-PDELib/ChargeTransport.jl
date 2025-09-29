@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
-## v1.2.1
+## v1.2.0
 
 ### Added
   - Modified `equilibrium_solve!()`. Directly computes now the correct energy level such that the average vacancy density matches the user-defined target, if the argument is `vacancyEnergyCalculation = true`. Check the [package documentation](https://wias-pdelib.github.io/ChargeTransport.jl/stable/PSC/) for more information
