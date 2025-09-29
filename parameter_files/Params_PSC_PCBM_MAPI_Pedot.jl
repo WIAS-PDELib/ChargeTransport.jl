@@ -67,19 +67,17 @@
     ## band edge energies
     En = [-3.8, -3.8, -3.0] .* eV
     Ep = [-6.2, -5.4, -5.1] .* eV
-    Ea = [0.0, -4.66, 0.0] .* eV
+    Ea = [0.0, -4.657, 0.0] .* eV
 
     ## effective densities of density of states
     Nn = [1.0e25, 1.0e25, 1.0e26] ./ (m^3)
     Np = [1.0e25, 1.0e25, 1.0e26] ./ (m^3)
     Na = [0.0, 1.0e26, 0.0] ./ (m^3)
 
-
     ## mobilities
     μn = [1.0e-7, 2.0e-3, 1.0e-5] .* (m^2) / (V * s)
     μp = [1.0e-7, 2.0e-3, 1.0e-5] .* (m^2) / (V * s)
     μa = [0.0, 1.0e-14, 0.0] .* (m^2) / (V * s)
-
 
     ## relative dielectric permittivity
     ε = [3.0, 23.0, 4.0] .* 1.0
@@ -137,7 +135,6 @@ function Params(p::Params_PSC_PCBM_MAPI_Pedot)
 
     params.bandEdgeEnergy[p.iphin, :] = p.En
     params.bandEdgeEnergy[p.iphip, :] = p.Ep
-    params.bandEdgeEnergy[p.iphia, :] = p.Ea
 
     params.mobility[p.iphin, :] = p.μn
     params.mobility[p.iphip, :] = p.μp

@@ -15,7 +15,7 @@ Version 1.0.0 introduces several important changes to improve the package's usab
 - **New Parameter System**: Parameter files are replaced by parameter structs with explicit access (e.g., `p = parameter_set(); p.foo`)
 - **Unit Handling**: Global unit factors are removed in favor of local unit factors from `LessUnitful.jl` (`@local_unitfactors` and `ufac""`)
 - **Constants Management**: New globally available dimensionless `constants` object for physical constants
-- **API Changes**: 
+- **API Changes**:
   - `Data` type now takes a `constants` object as key word argument, defaults to standard constants.
   - Thermal voltage `UT` is removed from `Params` and replaced with temperature in relevant methods
   - `eV` not available any more, use explicit `eV = q * V` if needed
@@ -51,11 +51,10 @@ Version 1.0.0 introduces several important changes to improve the package's usab
 
 [6.] D. Abdel, A. Glitzky and M. Liero. [Analysis of a drift-diffusion model for perovskite solar cells.](https://doi.org/10.3934/dcdsb.2024081) Discrete and Continuous Dynamical Systems - Series B (2024).
 
-[7.] D. Abdel, M. Herda, M. Ziegler, C. Chainais-Hillairet, B. Spetzler, P. Farrell. [Numerical analysis and simulation of lateral memristive devices: Schottky, ohmic, and multi-dimensional electrode models.]( 	
+[7.] D. Abdel, M. Herda, M. Ziegler, C. Chainais-Hillairet, B. Spetzler, P. Farrell. [Numerical analysis and simulation of lateral memristive devices: Schottky, ohmic, and multi-dimensional electrode models.](
 https://doi.org/10.48550/arXiv.2412.15065
 ) submitted (2024).
 
-[8.] B. Spetzler, E. Spetzler, S. Zamankhani, D. Abdel, P. Farrell, K.-U. Sattler, M. Ziegler. [Physics-Guided Sequence Modeling for Fast Simulation and Design Exploration of 2D Memristive Devices.](https://doi.org/10.48550/arXiv.2505.13882
-) (2025).
+[8.] B. Spetzler, E. Spetzler, S. Zamankhani, D. Abdel, P. Farrell, K.-U. Sattler, M. Ziegler. [Physics-Guided Sequence Modeling for Fast Simulation and Design Exploration of 2D Memristive Devices.](https://doi.org/10.48550/arXiv.2505.13882) submitted (2025).
 
 [9.] D. Abdel, J. Relle, T. Kirchartz, P. Jaap, J. Fuhrmann, S. Burger, C. Becker, K. Jäger, P. Farrell. [Unravelling the mystery of enhanced open-circuit voltages in nanotextured perovskite solar cells.](https://doi.org/10.48550/arXiv.2506.10691) submitted (2025).
