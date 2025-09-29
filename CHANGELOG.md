@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added method integrated_density, which computes the integrated carrier density for a given species `icc` and region `ireg`
   - Extended Data structure with `data.regionVolumes`, which stores the volume (measure) of each subregion
 
+### Changed
+  - loop for increasing photogeneration rate is now also included internally, see Ex103. There is now no need to do this by the user.
+
 ## v1.1.0
 
 ### Fixed
