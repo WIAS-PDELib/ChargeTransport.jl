@@ -6,8 +6,9 @@ using ExtendableGrids
 using PyPlot</code></pre><h1 id="you-can-also-use-other-Plotters,-if-you-add-them-to-the-example-file"><a class="docs-heading-anchor" href="#you-can-also-use-other-Plotters,-if-you-add-them-to-the-example-file">you can also use other Plotters, if you add them to the example file</a><a id="you-can-also-use-other-Plotters,-if-you-add-them-to-the-example-file-1"></a><a class="docs-heading-anchor-permalink" href="#you-can-also-use-other-Plotters,-if-you-add-them-to-the-example-file" title="Permalink"></a></h1><p>you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(;
         n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
-        otherScanProtocol = false
-    ) # you can choose between two scan protocols
+        otherScanProtocol = false,                  # you can choose between two scan protocols
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
+    )
 
     @local_unitfactors μm cm s ns V K ps Hz
 
@@ -177,6 +178,10 @@ using PyPlot</code></pre><h1 id="you-can-also-use-other-Plotters,-if-you-add-the
 
     data.params = Params(p)
 
+    if !vacancyEnergyCalculation
+        data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = p.Ea[p.regionIntrinsic]
+    end
+
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -217,7 +222,7 @@ using PyPlot</code></pre><h1 id="you-can-also-use-other-Plotters,-if-you-add-the
     ################################################################################
 
     # calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
 
     if plotting
@@ -324,19 +329,31 @@ using PyPlot</code></pre><h1 id="you-can-also-use-other-Plotters,-if-you-add-the
         PyPlot.ylabel(&quot;current density [mAcm\$^{-2} \$]&quot;)
     end
 
+    if test == false
+        integral = integrated_density(ctsys, sol = solution, icc = p.iphia, ireg = p.regionIntrinsic)
+
+        println(&quot;Calculated average vacancy density is: &quot;, integral / data.regionVolumes[p.regionIntrinsic])
+        println(&quot; &quot;)
+        if vacancyEnergyCalculation
+            vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] / data.constants.q
+            println(&quot;Value for vacancy energy is: &quot;, vacancyEnergy, &quot; eV. Save this value for later use.&quot;)
+            println(&quot;We recommend to calculate it on a fine grid.&quot;)
+            println(&quot; &quot;)
+        end
+    end
+
     testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
     return testval
-
 
 end #  main
 
 function test()
-    testval = -0.6302819608784171; testvalOther = -1.123710261723505
-    return main(test = true, otherScanProtocol = false) ≈ testval &amp;&amp; main(test = true, otherScanProtocol = true) ≈ testvalOther
+    testval = -0.6319142417604359; testvalOther = -1.121924017448251
+    return main(test = true, otherScanProtocol = false) ≈ testval &amp;&amp; main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval &amp;&amp; main(test = true, otherScanProtocol = true) ≈ testvalOther
 end
 
 if test == false
     println(&quot;This message should show when this module is successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex102_PIN_nodal_doping/">« GaAs diode with spatially varying doping (1D).</a><a class="docs-footer-nextpage" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 8 September 2025 14:29">Monday 8 September 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex102_PIN_nodal_doping/">« GaAs diode with spatially varying doping (1D).</a><a class="docs-footer-nextpage" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 29 September 2025 17:12">Monday 29 September 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
