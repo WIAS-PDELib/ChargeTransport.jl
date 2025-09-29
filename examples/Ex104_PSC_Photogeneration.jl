@@ -254,40 +254,6 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
-
-    if test == false
-        println("*** done\n")
-    end
-
-    ################################################################################
-    if test == false
-        println("Loop for generation")
-    end
-    ################################################################################
-
-    # these values are needed for putting the generation slightly on
-    I = collect(20:-1:0.0)
-    LAMBDA = 10 .^ (-I)
-
-    ## since the constant which represents the constant quasi Fermi potential of anion vacancies is undetermined, we need
-    ## to fix it in the bias loop, since we have no applied bias. Otherwise we get convergence errors
-    ctsys.fvmsys.boundary_factors[p.iphia, p.bregionJ2] = 1.0e30
-    ctsys.fvmsys.boundary_values[p.iphia, p.bregionJ2] = 0.0
-
-    for istep in 1:(length(I) - 1)
-
-        ## turn slowly generation on
-        ctsys.data.λ2 = LAMBDA[istep + 1]
-
-        if test == false
-            println("increase generation with λ2 = $(data.λ2)")
-        end
-
-        solution = solve(ctsys, inival = inival, control = control)
-        inival = solution
-
-    end # generation loop
-
     solutionEQ = inival
 
     if plotting

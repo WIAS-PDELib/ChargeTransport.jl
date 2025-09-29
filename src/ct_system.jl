@@ -907,6 +907,11 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     λ3::Float64
 
     """
+    A boolean which helps to influence the applied scan protocol by the user.
+    """
+    generationComplete::Bool
+
+    """
     Possibility to change the implementation of the ohmic contact boundary model
     for the electric potential (Dirichlet or Robin)
     """
@@ -1052,6 +1057,7 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.λ1 = 1.0                   # λ1: embedding parameter for NLP
     data.λ2 = 1.0                   # λ2: embedding parameter for G
     data.λ3 = 1.0                   # λ3: embedding parameter for electro chemical reaction
+    data.generationComplete = false # set this by default to false
     data.ohmicContactModel = OhmicContactDirichlet # OhmicContactRobin also possible
 
     ###############################################################
@@ -1642,6 +1648,60 @@ function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonli
     # set now calculationType to outOfEquilibrium for further calculations
     data.calculationType = OutOfEquilibrium
 
+    ## Loop for generation
+    if data.generationModel != GenerationNone
+
+        ## this flag is needed, when the user e.g. defines customized contactVoltageFunctions. Set it to false at the beginning
+        data.generationComplete = false
+
+        ## since the constant which represents the constant quasi Fermi potential of anion vacancies is undetermined, we need
+        ## to fix it in this loop, since we have no applied bias. Otherwise we get convergence errors
+        for iicc in data.ionicCarrierList
+
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            for ibreg in 1:grid[NumBFaceRegions]
+                ctsys.fvmsys.boundary_factors[icc, ibreg] = 1.0e30
+                ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+            end
+
+        end
+
+        # these values are needed for putting the generation slightly on
+        I = collect(20:-1:0.0)
+        LAMBDA = 10 .^ (-I)
+
+        for istep in 1:(length(I) - 1)
+
+            ## turn slowly generation on
+            ctsys.data.λ2 = LAMBDA[istep + 1]
+
+            if control.verbose == "n"
+                println("increase generation with λ2 = $(ctsys.data.λ2)")
+            end
+
+            sol = VoronoiFVM.solve(ctsys.fvmsys, inival = inival, control = control)
+            inival = sol
+
+        end # generation loop
+
+    end
+
+    ## put here back the homogeneous Neumann boundary conditions.
+    for iicc in data.ionicCarrierList
+
+        icc = iicc.ionicCarrier # species number chosen by user
+
+        for ibreg in 1:grid[NumBFaceRegions]
+            ctsys.fvmsys.boundary_factors[icc, ibreg] = 0.0
+            ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+        end
+
+    end
+
+    ## this flag is needed, when the user e.g. defines customized contactVoltageFunctions
+    data.generationComplete = true
+
     # save changes on fvmsys of VoronoiFVM likewise in ctsys.data
     ctsys.data = ctsys.fvmsys.physics.data
 
@@ -1676,6 +1736,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
                 ii = ii + 1
                 sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
                 Eafix = true
+                E = params.bandEdgeEnergy[icc, ireg] # save E, in case it was adjusted due to catch
                 y = F(sol)
             catch
                 # --- solve with specific value not working? slightly adjust ---
@@ -1746,6 +1807,15 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             # @show E1 / q, y1
 
             for k in 1:maxiter
+
+                # stopping criterion when energies coincide
+                if E1 == E0 && abs(y1) < 5.0e-3 # these are 0.5 % error
+                    params.bandEdgeEnergy[icc, ireg] = E1
+
+                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, ytol = ytol, maxiter = maxiter)
+                    return sol
+                end
+
                 # Secant update
                 E_new = E1 - y1 * (E1 - E0) / (y1 - y0)
                 E_new = round(E_new / q, digits = 3) * q
