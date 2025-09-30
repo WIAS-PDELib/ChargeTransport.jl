@@ -217,7 +217,7 @@ function main(;
         Plotter.tight_layout()
         ################
         Plotter.figure()
-        Plotter.surf(X[:], Y[:], solution[iphin, :])
+        Plotter.surf(X[:], Y[:], solution[p.iphin, :])
         Plotter.title("quasi Fermi potential \$ \\varphi_n \$ (Equilibrium)")
         Plotter.xlabel("length [m]")
         Plotter.ylabel("height [m]")
@@ -272,7 +272,7 @@ function main(;
         Plotter.zlabel("potential [V]")
         ################
         Plotter.figure()
-        Plotter.surf(X[:], Y[:], solution[iphin, :])
+        Plotter.surf(X[:], Y[:], solution[p.iphin, :])
         Plotter.title("quasi Fermi potential \$ \\varphi_n \$ at end time")
         Plotter.xlabel("length [m]")
         Plotter.ylabel("height [m]")

@@ -21,7 +21,7 @@ using PyPlot
 
 # We strongly emphasize to use Plotter = GLMakie for the visualization here.
 function main(;
-        Plotter = nothing, plotting = false, test = false, verbose = false,
+        Plotter = PyPlot, plotting = false, test = false, verbose = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
@@ -91,8 +91,9 @@ function main(;
     bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, height, 0.0], bregionNoFlux)
     bfacemask!(grid3D, [0.0, 0.0, width], [p.h_total, height, width], bregionNoFlux)
 
+    vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
+
     if plotting == true && Plotter !== nothing # plotting is currently only tested with GLMakie and PyPlot
-        vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
         gridplot!(vis[1, 1], grid1D)
         if nameof(Plotter) == :PyPlot
             gridplot!(vis[1, 2], grid3D, linewidth = 0.5, xplanes = [5.5e-7], zplanes = [1.5e-7])

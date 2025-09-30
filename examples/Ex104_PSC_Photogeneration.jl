@@ -260,8 +260,8 @@ function main(;
         label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         ## add labels for anion vacancy
-        label_energy[1, iphia] = "\$E_a-q\\psi\$"; label_energy[2, iphia] = "\$ - q \\varphi_a\$"; label_BEE[iphia] = "\$E_a\$"
-        label_density[iphia] = "\$ n_a \$";      label_solution[iphia] = "\$ \\varphi_a\$"
+        label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"
+        label_density[p.iphia] = "\$ n_a \$";      label_solution[p.iphia] = "\$ \\varphi_a\$"
 
         Plotter.figure()
         plot_densities(Plotter, ctsys, solution, "Initial condition", label_density)
@@ -364,10 +364,11 @@ function main(;
 
     if plotting
         Plotter.figure()
-        Plotter.plot([tvalues tvaluesReverse], [biasValues biasValuesReverse], marker = "x")
+        Plotter.plot([tvalues; tvaluesReverse], [biasValues; biasValuesReverse], marker = "x")
         Plotter.xlabel("time [s]")
         Plotter.ylabel("voltage [V]")
         Plotter.grid()
+        tight_layout()
 
         Plotter.figure()
         Plotter.plot(biasValues[2:end], -IV, linewidth = 5, label = "forward")
@@ -376,6 +377,7 @@ function main(;
         Plotter.legend()
         Plotter.xlabel("applied bias [V]")
         Plotter.ylabel("total current [A]")
+        tight_layout()
 
         Plotter.figure()
         if userdefinedGeneration

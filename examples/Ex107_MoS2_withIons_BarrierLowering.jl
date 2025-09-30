@@ -311,12 +311,14 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
         Plotter.xlabel("time [s]")
         Plotter.ylabel("voltage [V]")
         Plotter.grid()
+        tight_layout()
 
         Plotter.figure()
         Plotter.semilogy(biasValues, abs.(Area .* IV), linewidth = 5, color = "black")
         Plotter.grid()
         Plotter.xlabel("applied bias [V]")
         Plotter.ylabel("total current [A]")
+        tight_layout()
     end
 
 
