@@ -234,7 +234,7 @@ function main(;
 
         if plotting
             label_solution, label_density, label_energy = set_plotting_labels(data)
-            label_solution[iphia] = "\$ \\varphi_a\$"
+            label_solution[p.iphia] = "\$ \\varphi_a\$"
 
             Plotter.clf()
             plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(Δu)", label_solution)

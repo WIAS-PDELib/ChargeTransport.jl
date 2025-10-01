@@ -215,7 +215,7 @@ module PSC_2D_unstructuredGrid
             Plotter.tight_layout()
             ################
             Plotter.figure()
-            Plotter.surf(X[:], Y[:], solution[iphin, :])
+            Plotter.surf(X[:], Y[:], solution[p.iphin, :])
             Plotter.title("quasi Fermi potential \$ \\varphi_n \$ in Equilibrium")
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")
@@ -267,7 +267,7 @@ module PSC_2D_unstructuredGrid
 
         if plotting
             Plotter.figure()
-            Plotter.surf(X[:], Y[:], solution[p.ipsi, :])
+            Plotter.surf(X[:], Y[:], solution[ipsi, :])
             Plotter.title("Electrostatic potential \$ \\psi \$ at end time")
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")
