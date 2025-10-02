@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.2.2
+
+### Added
+  - In `equilibrium_solve!()`, we have now two additional inputs: `verbose` and `abstoly` to control the secant method for finding vacancy energy levels
 
 ## v1.2.1
 
