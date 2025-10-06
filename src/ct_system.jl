@@ -1571,10 +1571,10 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation::Bool = false, verbose::Bool = false, abstoly::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last two are extended-only keywords for vacancyEnergyCalculation = true
+function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation::Bool = false, verbose::Bool = false, yabstol::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last three are extended-only keywords for vacancyEnergyCalculation = true
 
     ## by default vacancyEnergyCalculation is false.
-    return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, abstoly = abstoly, ytol = ytol, maxiter = maxiter)
+    return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
 
 end
 
@@ -1585,7 +1585,7 @@ $(TYPEDSIGNATURES)
 Base implementation of equilibrium_solve: vacancyEnergyCalculation = false
 
 """
-function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonlinear_steps, verbose = verbose, abstoly, ytol, maxiter)
+function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonlinear_steps, verbose = verbose, yabstol, ytol, maxiter)
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1718,10 +1718,10 @@ Calculates the energy value for the vacancies via the secant method.
 We will use this method to calculate suitable values for vacancy energy levels and internally modify the corresponding parameter.
 
 """
-function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlinear_steps, verbose, abstoly, ytol, maxiter)
+function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlinear_steps, verbose, yabstol, ytol, maxiter)
 
     # do once the equilibrium_solve to have a proper initial value.
-    inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose, abstoly = abstoly, ytol = ytol, maxiter = maxiter)
+    inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
 
     # --- define save function evaluation for the function, we want to find root of ---
     function safely_eval_F!(F, E, icc, ireg)
@@ -1734,7 +1734,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
         while !Eafix && ii <= 5
             try
                 ii = ii + 1
-                sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, abstoly = abstoly, ytol = ytol, maxiter = maxiter)
+                sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
                 Eafix = true
                 E = params.bandEdgeEnergy[icc, ireg] # save E, in case it was adjusted due to catch
                 y = F(sol)
@@ -1811,10 +1811,10 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             for k in 1:maxiter
 
                 # stopping criterion when energies coincide
-                if E1 == E0 && abs(y1) < abstoly # these are 0.5 % error
+                if E1 == E0 && abs(y1) < yabstol # these are 1.0 % error
                     params.bandEdgeEnergy[icc, ireg] = E1
 
-                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, abstoly = abstoly, ytol = ytol, maxiter = maxiter)
+                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
                     return sol
                 end
 
@@ -1832,7 +1832,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
                 if abs(y_new) < ytol
                     params.bandEdgeEnergy[icc, ireg] = E_new
 
-                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, abstoly = abstoly, ytol = ytol, maxiter = maxiter)
+                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
                     return sol
                 end
 
