@@ -751,7 +751,7 @@ function StimulatedRecombination(u, node, data)
 end
 
 
-function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
+function addRecombination!(f, u, node, data)
 
     params = data.params
     ireg = node.region
@@ -791,7 +791,6 @@ function addRecombination!(f, u, node, data, ::SRHWithoutTrapsType)
     f[iphip] = q * params.chargeNumbers[iphip] * kernel * excessDensTerm
     return nothing
 end
-
 
 function addStimulatedRecombination!(f, u, node, data, ::Type{LaserModelOff})
     return nothing
@@ -877,7 +876,9 @@ Function which builds right-hand side of electric charge carriers.
 function RHSContinuityEquations!(f, u, node, data)
 
     # dependent on user information concerncing recombination
-    addRecombination!(f, u, node, data, data.bulkRecombination.bulk_recomb_SRH)
+    if data.bulkRecombination.bulk_recomb
+        addRecombination!(f, u, node, data)
+    end
     # dependent on user information concerning laser model
     addStimulatedRecombination!(f, u, node, data, data.laserModel)
     # dependent on user information concerncing generation
