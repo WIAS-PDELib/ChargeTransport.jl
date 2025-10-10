@@ -65,11 +65,7 @@ function set_bulk_recombination(;
     bulkRecombination.iphin = iphin
     bulkRecombination.iphip = iphip
 
-    if bulk_recomb_Auger == false && bulk_recomb_radiative == false && bulk_recomb_SRH == false
-        bulkRecombination.bulk_recomb = false
-    else
-        bulkRecombination.bulk_recomb = true
-    end
+    bulkRecombination.bulk_recomb = any([bulk_recomb_Auger, bulk_recomb_radiative, bulk_recomb_SRH])
 
     bulkRecombination.bulk_recomb_Auger = bulk_recomb_Auger
     bulkRecombination.bulk_recomb_radiative = bulk_recomb_radiative
