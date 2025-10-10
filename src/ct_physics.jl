@@ -878,7 +878,7 @@ function RHSContinuityEquations!(f, u, node, data)
     # dependent on user information concerncing recombination
     if data.bulkRecombination.bulk_recomb
         addRecombination!(f, u, node, data)
-     end
+    end
     # dependent on user information concerning laser model
     addStimulatedRecombination!(f, u, node, data, data.laserModel)
     # dependent on user information concerncing generation
