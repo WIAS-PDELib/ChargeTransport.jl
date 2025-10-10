@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+
+## v1.2.3
+
+### Changed
+  - Density of states and mobilities are by default now set one, while band edge energies are set to zero.
+  - If the user does not define `data.bulkRecombination`, by default recombination is set off. Caution: For semiconductor applications with electrons and holes, this method does method may still need to be initialized, e.g., when working with the Schottky barrier lowering boundary model.
+
+
 ## v1.2.2
 
 ### Added

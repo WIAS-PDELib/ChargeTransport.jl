@@ -23,6 +23,11 @@ mutable struct BulkRecombination
     iphip::Int64
 
     """
+    Boolean for general present recombination in bulk.
+    """
+    bulk_recomb::Bool
+
+    """
     Boolean for present Auger recombination in bulk.
     """
     bulk_recomb_Auger::Bool
@@ -59,6 +64,12 @@ function set_bulk_recombination(;
 
     bulkRecombination.iphin = iphin
     bulkRecombination.iphip = iphip
+
+    if bulk_recomb_Auger == false && bulk_recomb_radiative == false && bulk_recomb_SRH == false
+        bulkRecombination.bulk_recomb = false
+    else
+        bulkRecombination.bulk_recomb = true
+    end
 
     bulkRecombination.bulk_recomb_Auger = bulk_recomb_Auger
     bulkRecombination.bulk_recomb_radiative = bulk_recomb_radiative
@@ -453,10 +464,10 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####                     real numbers                      ####
     ###############################################################
     params.temperature = 300 * K
-    params.γ = 0.27                # parameter for Blakemore statistics
+    params.γ = 0.27                 # parameter for Blakemore statistics
     params.r0 = 0.0                 # r0 prefactor electro-chemical reaction
     params.prefactor_SRH = 1.0
-    params.generationPeak = 0.0                 # parameter which shifts Beer-Lambert generation peak
+    params.generationPeak = 0.0     # parameter which shifts Beer-Lambert generation peak
 
     ###############################################################
     ####              number of boundary regions               ####
@@ -474,8 +485,8 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####     number of carriers x number of boundary regions   ####
     ###############################################################
     params.bBandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bDensityOfStates = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
-    params.bMobility = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bDensityOfStates = ones(Float64, numberOfCarriers, numberOfBoundaryRegions)
+    params.bMobility = ones(Float64, numberOfCarriers, numberOfBoundaryRegions)
     params.bDoping = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
     params.bVelocity = zeros(Float64, numberOfCarriers, numberOfBoundaryRegions)
     params.bReactionCoefficient = 1.0e15 / s * ones(numberOfCarriers, numberOfBoundaryRegions)
@@ -492,9 +503,9 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####        number of carriers x number of regions         ####
     ###############################################################
     params.doping = zeros(Float64, numberOfCarriers, numberOfRegions)
-    params.densityOfStates = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.densityOfStates = ones(Float64, numberOfCarriers, numberOfRegions)
     params.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfRegions)
-    params.mobility = zeros(Float64, numberOfCarriers, numberOfRegions)
+    params.mobility = ones(Float64, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     #### 2 x number of regions (for electrons and holes only!) ####
@@ -506,7 +517,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ###############################################################
     ####                   number of regions                   ####
     ###############################################################
-    params.dielectricConstant = zeros(Float64, numberOfRegions)
+    params.dielectricConstant = ones(Float64, numberOfRegions)
     params.dielectricConstantImageForce = zeros(Float64, numberOfRegions)
     params.generationUniform = zeros(Float64, numberOfRegions)
     params.generationIncidentPhotonFlux = zeros(Float64, numberOfRegions)
@@ -1022,12 +1033,9 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.generationData = generationData
 
     # bulkRecombination is a struct holding the input information
-    data.bulkRecombination = set_bulk_recombination(
-        iphin = 1, iphip = 2,
-        bulk_recomb_Auger = true,
-        bulk_recomb_radiative = true,
-        bulk_recomb_SRH = true
-    )
+    data.bulkRecombination = BulkRecombination()
+    data.bulkRecombination.bulk_recomb = false   # by default recombination is set off, if not set otherwise by user
+    data.bulkRecombination.bulk_recomb_SRH = SRHOff
 
     if numberOfEigenvalues == 0
         data.laserModel = LaserModelOff        # by default, no laser model is used
@@ -1066,8 +1074,8 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
 
     data.tempBEE1 = zeros(Float64, numberOfCarriers)
     data.tempBEE2 = zeros(Float64, numberOfCarriers)
-    data.tempDOS1 = zeros(Float64, numberOfCarriers)
-    data.tempDOS2 = zeros(Float64, numberOfCarriers)
+    data.tempDOS1 = ones(Float64, numberOfCarriers)
+    data.tempDOS2 = ones(Float64, numberOfCarriers)
 
     ###############################################################
     ####          Physical parameters as own structs           ####
@@ -1223,15 +1231,21 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     ######################################
     # continuous case = integer indexing
     data.chargeCarrierList = collect(1:data.params.numberOfCarriers)
-    iphin = data.bulkRecombination.iphin # integer index of φ_n
-    iphip = data.bulkRecombination.iphip # integer index of φ_p
-    data.electricCarrierList = [iphin, iphip]
+    # data.electricCarrierList = [iphin, iphip]
     num_species_sys = data.params.numberOfCarriers + 1
     data.index_psi = num_species_sys
 
-    # electrons and holes
-    for icc in data.electricCarrierList
-        enable_species!(ctsys, icc, 1:data.params.numberOfRegions)
+    ionicCarrierListHelp = Int64[]
+    # store indices of ionic carriers
+    for iicc in data.ionicCarrierList
+        push!(ionicCarrierListHelp, iicc.ionicCarrier)
+    end
+
+    # put all non-ionic carriers present everywhere
+    for icc in data.chargeCarrierList
+        if icc ∉ ionicCarrierListHelp
+            enable_species!(ctsys, icc, 1:data.params.numberOfRegions)
+        end
     end
 
     q = data.constants.q
@@ -1245,6 +1259,8 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         for ireg in iicc.regions
 
             icc = iicc.ionicCarrier # species number chosen by user
+            iphin = data.bulkRecombination.iphin # integer index of φ_n
+            iphip = data.bulkRecombination.iphip # integer index of φ_p
 
             ## in case user did not define any energy, give some suitable initial guess
             if data.params.bandEdgeEnergy[icc, ireg] == 0.0 && ireg > 1
