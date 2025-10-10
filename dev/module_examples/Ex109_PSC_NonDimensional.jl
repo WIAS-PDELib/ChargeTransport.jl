@@ -130,6 +130,7 @@ function main(;
     ################################################################################
 
     # We initialize the Data instance and fill in predefined data.
+    # Define the unity constants also in the discrete counterpart of the model
     data = Data(grid, numberOfCarriers, generationData = genData, constants = constants)
 
     ## Following variable declares, if we want to solve stationary or transient problem
@@ -153,8 +154,6 @@ function main(;
     ## flux discretization scheme
     data.fluxApproximation .= ExcessChemicalPotential
 
-    ## Define the unity constants also in the discrete counterpart of the model
-    data.constants = constants
 
     if test == false
         println("*** done\n")
@@ -177,13 +176,15 @@ function main(;
 
         params.dielectricConstant[ireg] = λ^2
 
-        ## effective DOS, band-edge energy and mobilities
-        params.densityOfStates[iphin, ireg] = Nn
-        params.densityOfStates[iphip, ireg] = Np
-        params.bandEdgeEnergy[iphin, ireg] = En
-        params.bandEdgeEnergy[iphip, ireg] = Ep
-        params.mobility[iphin, ireg] = μn
-        params.mobility[iphip, ireg] = μp
+        # the effective density of states and mobilities are set by default to one and the band-edge by default to zero.
+        # This is why they do not necessarily need to be parsed here.
+        # ## effective DOS, band-edge energy and mobilities
+        # params.densityOfStates[iphin, ireg] = Nn
+        # params.densityOfStates[iphip, ireg] = Np
+        # params.bandEdgeEnergy[iphin, ireg] = En
+        # params.bandEdgeEnergy[iphip, ireg] = Ep
+        # params.mobility[iphin, ireg] = μn
+        # params.mobility[iphip, ireg] = μp
 
         ## recombination parameters
         params.recombinationRadiative[ireg] = Radiative
@@ -207,7 +208,7 @@ function main(;
     # dependent on the parameters.
     ctsys = System(grid, data, unknown_storage = unknown_storage)
 
-    ## boundary model
+    ## boundary model is adjusted manually with help of VoronoiFVM
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion1, 0.0)
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion1, 0.0)
     VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion1, asinh(Cn / 2))
