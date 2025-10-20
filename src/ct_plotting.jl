@@ -87,8 +87,9 @@ function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGr
     Plotter.ylabel("density [\$\\frac{1}{cm^3}\$]")
     Plotter.legend(fancybox = true, loc = "best", fontsize = 11)
     Plotter.title(title)
-    return Plotter.tight_layout()
+    Plotter.tight_layout()
 
+    return nothing
 end
 
 """
@@ -193,8 +194,9 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
     Plotter.ylabel("energies [\$eV\$]")
     Plotter.legend(fancybox = true, loc = "best")
     Plotter.title(title)
-    return Plotter.tight_layout()
+    Plotter.tight_layout()
 
+    return nothing
 end
 
 """
@@ -272,8 +274,8 @@ function plot_energies(Plotter, ctsys, label_BEE)
     Plotter.title("Band-edge energies \$ E_\\alpha \$")
     Plotter.legend(fancybox = true, loc = "best")
     Plotter.tight_layout()
-    return Plotter.show()
 
+    return nothing
 end
 
 
@@ -351,8 +353,9 @@ function plot_doping(Plotter, ctsys, label_density)
     Plotter.ylabel("Doping [\$\\frac{1}{cm^3}\$]")
     Plotter.title("Doping values for charge carriers")
     Plotter.legend(fancybox = true, loc = "best")
-    return Plotter.tight_layout()
+    Plotter.tight_layout()
 
+    return nothing
 end
 
 """
@@ -369,7 +372,9 @@ function plot_doping(Plotter, g::ExtendableGrid, paramsnodal::ParamsNodal)
     Plotter.xlabel("space [\$m\$]")
     Plotter.ylabel("Doping [\$\\frac{1}{cm^3}\$]")
     Plotter.title("Doping values for charge carriers")
-    return Plotter.tight_layout()
+    Plotter.tight_layout()
+
+    return nothing
 
 
 end
@@ -396,7 +401,8 @@ function plot_electroNeutralSolutionBoltzmann(Plotter, grid, psi0, ; plotGridpoi
     Plotter.ylabel("potential [V]")
     Plotter.legend(fancybox = true, loc = "best")
     Plotter.tight_layout()
-    return Plotter.show()
+
+    return nothing
 end
 
 """
@@ -465,7 +471,8 @@ function plot_solution(Plotter, ctsys, solution, title, label_solution, ; plotGr
     Plotter.legend(fancybox = true, loc = "best", fontsize = 11)
     Plotter.title(title)
     Plotter.tight_layout()
-    return Plotter.gcf()
+
+    return nothing
 
 end
 
@@ -498,7 +505,8 @@ function plot_solution(Plotter, grid, solution, agrid, t, Δu, label_solution)
     Plotter.legend(fancybox = true, loc = "best")
     Plotter.title("time \$ t =\$ $t, bias \$\\Delta u\$ = $Δu")
     Plotter.tight_layout()
-    return Plotter.gcf()
+
+    return nothing
 end
 
 """
@@ -521,5 +529,7 @@ function plot_IV(Plotter, biasValues, IV, title, ; plotGridpoints = false)
     Plotter.xlabel("bias [V]")
     Plotter.ylabel("total current [A]")
     Plotter.tight_layout()
-    return Plotter.pause(1.0e-5)
+    Plotter.pause(1.0e-5)
+
+    return nothing
 end
