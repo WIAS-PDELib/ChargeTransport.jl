@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Nondimensionalized perovskite solar cell. · ChargeTransport.jl</title><meta name="title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta property="og:title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta property="twitter:title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta name="description" content="Documentation for ChargeTransport.jl."/><meta property="og:description" content="Documentation for ChargeTransport.jl."/><meta property="twitter:description" content="Documentation for ChargeTransport.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../general/">ChargeTransport.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../general/">Home</a></li><li><a class="tocitem" href="../../changes/">Changelog</a></li><li><a class="tocitem" href="../../backgroundinfo/">Mathematical drift-diffusion models</a></li><li><span class="tocitem">How to get started</span><ul><li><a class="tocitem" href="../../GaAs/">van Roosbroeck system</a></li><li><a class="tocitem" href="../../PSC/">Perovskite solar cell</a></li></ul></li><li><a class="tocitem" href="../../allindex/">Types, Constructors and Methods</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../Ex101_PIN/">GaAs diode (1D).</a></li><li><a class="tocitem" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D).</a></li><li><a class="tocitem" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D).</a></li><li><a class="tocitem" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D).</a></li><li><a class="tocitem" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li><li><a class="tocitem" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D).</a></li><li><a class="tocitem" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering.</a></li><li><a class="tocitem" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts.</a></li><li class="is-active"><a class="tocitem" href>Nondimensionalized perovskite solar cell.</a><ul class="internal"><li><a class="tocitem" href="#effective-DOS,-band-edge-energy-and-mobilities"><span>effective DOS, band-edge energy and mobilities</span></a></li></ul></li><li><a class="tocitem" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid).</a></li><li><a class="tocitem" href="../Ex202_Laser_simple/">Simple laser structure with 5 layers.</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Nondimensionalized perovskite solar cell.</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Nondimensionalized perovskite solar cell.</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WIAS-PDELib/ChargeTransport.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Nondimensionalized-perovskite-solar-cell."><a class="docs-heading-anchor" href="#Nondimensionalized-perovskite-solar-cell.">Nondimensionalized perovskite solar cell.</a><a id="Nondimensionalized-perovskite-solar-cell.-1"></a><a class="docs-heading-anchor-permalink" href="#Nondimensionalized-perovskite-solar-cell." title="Permalink"></a></h1><p>(<a href="../Ex109_PSC_NonDimensional.jl">source code</a>)</p><p>Simulation of charge transport in a non-dimensionalized three-layer perovskite solar cell. All physical parameters and constants are set to 1 besides the energies which are set to zero. This example serves an academic purpose.</p><pre><code class="language-julia hljs">module Ex109_PSC_NonDimensional
+
+using ChargeTransport
+using VoronoiFVM
+using ExtendableGrids  # grid initializer
+using PyPlot           # solution visualizer</code></pre><p>you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(;
+        n = 3,               # for number of nodes in each layer
+        Cn = 10, Cp = 10,    # doping
+        λ = 1.0,             # Debye length
+        DirichletVal = 1.0,  # Dirichlet value
+        G0 = 1.0,            # photogeneration prefactor
+        Plotter = PyPlot, plotting = false,
+        verbose = false, test = false, unknown_storage = :sparse
+    )
+
+    if plotting
+        Plotter.close(&quot;all&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Set up grid and regions&quot;)
+    end
+    ################################################################################</code></pre><p>constants Here, we set the constants to unity<em>constants. In particular, we set: q = k</em>B = ε_0 = 1 When defining `ChargeTransport.constants&quot; the constants based on CODATA2022 are used.</p><pre><code class="language-julia hljs">    constants = ChargeTransport.unity_constants</code></pre><p>region numbers</p><pre><code class="language-julia hljs">    region1 = 1
+    region2 = 2
+    region3 = 3
+    regions = [region1, region2, region3]
+    numberOfRegions = length(regions)</code></pre><p>boundary region numbers</p><pre><code class="language-julia hljs">    bregion1 = 1
+    bregion2 = 2
+
+    # grid
+    h1 = 1.0; h2 = 4.0; h3 = 2.0
+    h_total = h1 + h2 + h3
+
+    coord1 = collect(range(0.0; stop = h1, length = n))
+    coord2 = collect(range(h1; stop = h1 + h2, length = 4 * n))
+    coord3 = collect(range(h1 + h2; stop = h_total, length = 2 * n))
+    coord = glue(coord1, coord2)
+    coord = glue(coord, coord3)
+
+    grid = simplexgrid(coord)
+
+    # cellmask! for defining the subregions and assigning region number
+    cellmask!(grid, [0.0], [h1], region1)
+    cellmask!(grid, [h1], [h1 + h2], region2)
+    cellmask!(grid, [h1 + h2], [h_total], region3)
+
+    # bfacemask! for setting different boundary regions.
+    bfacemask!(grid, [0.0], [0.0], bregion1)
+    bfacemask!(grid, [h_total], [h_total], bregion2)
+
+    if plotting
+        gridplot(grid, Plotter = Plotter)
+    end
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define physical parameters and model&quot;)
+    end
+    ################################################################################
+
+    # set indices of the quasi Fermi potentials
+    iphin = 1              # electron quasi Fermi potential
+    iphip = 2              # hole quasi Fermi potential
+    ipsi = 3               # electric potential
+    numberOfCarriers = 2</code></pre><p>We define the physical data.</p><pre><code class="language-julia hljs">    zn = -1; zp = 1
+    En = 0.0; Ep = 0.0     # set the energies to 0
+    Nn = 1.0; Np = 1.0     # set the effective DOS to 1
+    μn = 1.0; μp = 1.0     # set the mobilities to 1
+    λ = λ                  # Debye length, entering model as `DielectricConstant`, i.e., prefactor in the displacement flux.
+    T = 1.0                # set temperature to 1
+
+    # recombination parameters
+    SRH_TrapDensity = 0.0
+    SRH_LifeTime = 1.0
+    Radiative = 1.0
+
+    # doping
+    Cn = Cn
+    Cp = Cp
+    Ca = 0.0</code></pre><p>boundary value</p><pre><code class="language-julia hljs">    DirichletVal = DirichletVal</code></pre><p>photogeneration</p><pre><code class="language-julia hljs">    G(x) = G0 .* exp.(- (x .- h1))
+    genData = zeros(length(coord))
+    genData[length(coord1):(length(coord1) + length(coord2) - 1)] = G.(coord2)
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define System and fill in information about model&quot;)
+    end
+    ################################################################################</code></pre><p>We initialize the Data instance and fill in predefined data. Define the unity constants also in the discrete counterpart of the model</p><pre><code class="language-julia hljs">    data = Data(grid, numberOfCarriers, generationData = genData, constants = constants)
+
+    # Following variable declares, if we want to solve stationary or transient problem
+    data.modelType = Stationary
+
+    # Following choices are possible for F: Boltzmann, FermiDiracOneHalfBednarczyk,
+    # FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
+    data.F .= Boltzmann
+
+    # The desired recombination processes can be chosen here.
+    data.bulkRecombination = set_bulk_recombination(;
+        iphin = iphin, iphip = iphip,
+        bulk_recomb_Auger = false,
+        bulk_recomb_radiative = true,
+        bulk_recomb_SRH = true
+    )</code></pre><p>generation model</p><pre><code class="language-julia hljs">    data.generationModel = GenerationUserDefined
+
+    # flux discretization scheme
+    data.fluxApproximation .= ExcessChemicalPotential
+
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define Params and fill in physical parameters&quot;)
+    end
+    ################################################################################</code></pre><p>Define the Params struct</p><pre><code class="language-julia hljs">    params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
+
+    params.temperature = T
+    params.chargeNumbers[iphin] = zn
+    params.chargeNumbers[iphip] = zp
+
+    for ireg in 1:numberOfRegions # region data
+
+        params.dielectricConstant[ireg] = λ^2</code></pre><p>the effective density of states and mobilities are set by default to one and the band-edge by default to zero. This is why they do not necessarily need to be parsed here.</p><h2 id="effective-DOS,-band-edge-energy-and-mobilities"><a class="docs-heading-anchor" href="#effective-DOS,-band-edge-energy-and-mobilities">effective DOS, band-edge energy and mobilities</a><a id="effective-DOS,-band-edge-energy-and-mobilities-1"></a><a class="docs-heading-anchor-permalink" href="#effective-DOS,-band-edge-energy-and-mobilities" title="Permalink"></a></h2><p>params.densityOfStates[iphin, ireg] = Nn params.densityOfStates[iphip, ireg] = Np params.bandEdgeEnergy[iphin, ireg] = En params.bandEdgeEnergy[iphip, ireg] = Ep params.mobility[iphin, ireg] = μn params.mobility[iphip, ireg] = μp</p><pre><code class="language-julia hljs">        # recombination parameters
+        params.recombinationRadiative[ireg] = Radiative
+        params.recombinationSRHLifetime[iphin, ireg] = SRH_LifeTime
+        params.recombinationSRHLifetime[iphip, ireg] = SRH_LifeTime
+        params.recombinationSRHTrapDensity[iphin, ireg] = SRH_TrapDensity
+        params.recombinationSRHTrapDensity[iphip, ireg] = SRH_TrapDensity
+
+    end
+
+    # doping
+    params.doping[iphin, region1] = Cn
+    params.doping[iphin, region2] = Ca
+    params.doping[iphip, region3] = Cp</code></pre><p>Region dependent params is now a substruct of data which is again a substruct of the system and will be parsed in next step.</p><pre><code class="language-julia hljs">    data.params = params</code></pre><p>In the last step, we initialize our system with previous data which is likewise dependent on the parameters.</p><pre><code class="language-julia hljs">    ctsys = System(grid, data, unknown_storage = unknown_storage)
+
+    # boundary model is adjusted manually with help of VoronoiFVM
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion1, 0.0)
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion1, 0.0)
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion1, asinh(Cn / 2))
+
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion2, DirichletVal)
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion2, DirichletVal)
+    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion2, asinh(-Cp / 2) + DirichletVal)
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define control parameters for Solver&quot;)
+    end
+    ################################################################################
+
+    control = VoronoiFVM.SolverControl()
+    control.verbose = verbose
+    control.maxiters = 50
+    control.abstol = 1.0e-14
+    control.reltol = 1.0e-14
+    control.tol_round = 1.0e-8
+    control.damp_initial = 0.5
+    control.max_round = 3
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Solving the nonlinear system of equations&quot;)
+    end
+    ################################################################################
+
+    inival = ChargeTransport.unknowns(ctsys)
+    inival[iphin, :] = 0.0 .+ DirichletVal ./ h_total .* coord
+    inival[iphip, :] = 0.0 .+ DirichletVal ./ h_total .* coord
+    inival[ipsi, :] = asinh(Cn / 2) .+ ((asinh(-Cp / 2) + DirichletVal) - asinh(Cn / 2)) ./ h_total .* coord
+
+    sol = ChargeTransport.solve(ctsys, inival = inival, control = control)
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false &amp;&amp; plotting
+        println(&quot;Plotting&quot;)
+    end
+    ################################################################################
+
+    nn = exp.(zn * (sol[iphin, :] - sol[ipsi, :]))
+    np = exp.(zp * (sol[iphip, :] - sol[ipsi, :]))
+
+    if plotting
+
+        figure()
+        PyPlot.plot(coord, sol[iphin, :], color = &quot;green&quot;, linewidth = 5, label = &quot;\$ \\varphi_{\\mathrm{n}}}\$&quot;)
+        PyPlot.plot(coord, sol[iphip, :], color = &quot;red&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ \\varphi_{\\mathrm{p}}}\$&quot;)
+        PyPlot.plot(coord, sol[ipsi, :], color = &quot;blue&quot;, linewidth = 5, label = &quot;\$ \\psi\$&quot;)
+        axvspan(0.0, 1.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        axvspan(5.0, 7.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        ylabel(&quot;Potential&quot;, fontsize = 17)
+        tight_layout()
+        PyPlot.legend(loc = &quot;center right&quot;, fontsize = 14)
+        ########################################################
+
+        figure()
+        PyPlot.semilogy(coord, nn, color = &quot;green&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{n}}}\$&quot;)
+        PyPlot.semilogy(coord, np, color = &quot;red&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{p}}}\$&quot;)
+        PyPlot.legend(loc = &quot;center right&quot;, fontsize = 14)
+        axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        ylabel(&quot;Density&quot;, fontsize = 17)
+        tight_layout()
+
+    end
+
+    if test == false &amp;&amp; plotting
+        println(&quot;*** done\n&quot;)
+    end
+
+    return sum(filter(!isnan, sol)) / length(sol)
+
+end #  main
+
+function test()
+    testval = 0.4760637366166469
+    return main(test = true, unknown_storage = :dense) ≈ testval &amp;&amp; main(test = true, unknown_storage = :sparse) ≈ testval
+end
+
+
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS/">« CIGS: stationary with Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 20 October 2025 13:26">Monday 20 October 2025</span>. Using Julia version 1.12.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
