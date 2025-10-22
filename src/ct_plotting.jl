@@ -529,7 +529,6 @@ function plot_IV(Plotter, biasValues, IV, title, ; plotGridpoints = false)
     Plotter.xlabel("bias [V]")
     Plotter.ylabel("total current [A]")
     Plotter.tight_layout()
-    Plotter.pause(1.0e-5)
 
     return nothing
 end
