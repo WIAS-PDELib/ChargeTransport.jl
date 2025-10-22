@@ -1,6 +1,6 @@
 name = "ChargeTransport"
 uuid = "25c3eafe-d88c-11e9-3031-f396758f002a"
-version = "1.2.4"
+version = "1.2.5"
 authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>", "Patrick Jaap <patrick.jaap@wias-berlin.de>"]
 
 [deps]
