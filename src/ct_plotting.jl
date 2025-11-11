@@ -5,6 +5,7 @@ The description for electrons and holes are predefined. If one wishes to extend 
 e.g. mobile ionic carriers or traps, this can be done within the main file.
 
 """
+
 function set_plotting_labels(data)
 
     label_energy = Array{String, 2}(undef, 2, data.params.numberOfCarriers) # band-edge energies and potential
@@ -106,9 +107,11 @@ One input parameter is the boolean plotGridpoints which makes it possible to plo
 which indicate where the nodes are located.
 
 """
-function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGridpoints = false)
 
-    Plotter.clf()
+# MO: Funktionen haben Problem mit dem Input, hier weitermachen!
+function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plotGridpoints = false)
+
+    #Plotter.clf()
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -121,13 +124,13 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
     end
 
     if plotGridpoints == true
-        marker = "o"
+        marker = :circle
     else
-        marker = ""
+        marker = :none
     end
 
     colors = ["green", "red", "gold", "purple", "orange"]
-    linestyles = ["-", ":", "--", "-.", "-"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
     for icc in data.electricCarrierList
 
@@ -140,9 +143,25 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
         solpsi = view(solution[data.index_psi, :], subg)
         solcc = view(solution[icc, :], subg)
 
-        Plotter.plot(subg[Coordinates]', Ecc ./ q .- solpsi, label = label_energy[1, icc], marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
+        scalarplot!(
+            visualizer,
+            subg[Coordinates]',
+            Ecc ./ q .- solpsi,
+            label = label_energy[1, icc],
+            marker = marker,
+            linewidth = 2,
+            color = colors[icc],
+            linestyle = linestyles[1])
 
-        Plotter.plot(subg[Coordinates]', -solcc, label = label_energy[2, icc], marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
+        scalarplot!(
+            visualizer,
+            subg[Coordinates]',
+            -solcc,
+            label = label_energy[2, icc],
+            marker = marker,
+            linewidth = 2,
+            color = colors[icc],
+            linestyle = linestyles[2])
 
         ## additional regions
         for ireg in 2:data.params.numberOfRegions
@@ -153,9 +172,23 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
 
             ## Note that this implies a 1D plot, for multidimensional plots, you may work with
             ## GridVisualize.jl or write your own code.
-            Plotter.plot(subg[Coordinates]', Ecc ./ q .- solpsi, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
+            scalarplot!(
+                visualizer,
+                subg[Coordinates]',
+                Ecc ./ q .- solpsi,
+                marker = marker,
+                linewidth = 2,
+                color = colors[icc],
+                linestyle = linestyles[1])
 
-            Plotter.plot(subg[Coordinates]', - solcc, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
+            scalarplot!(
+                visualizer,
+                subg[Coordinates]',
+                - solcc,
+                marker = marker,
+                linewidth = 2,
+                color = colors[icc],
+                linestyle = linestyles[2])
         end
 
     end
@@ -180,21 +213,37 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
                 end
                 ## Note that this implies a 1D plot, for multidimensional plots, you may work with
                 ## GridVisualize.jl or write your own code.
-                Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q), label = label1, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
+                scalarplot!(
+                    visualizer,
+                    subg[Coordinates]',
+                    data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q),
+                    label = label1,
+                    marker = marker,
+                    linewidth = 2,
+                    color = colors[icc],
+                    linestyle = linestyles[1])
 
-                Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* solcc, label = label2, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
+                scalarplot!(
+                    visualizer,
+                    subg[Coordinates]',
+                    data.params.chargeNumbers[icc] .* solcc,
+                    label = label2,
+                    marker = marker,
+                    linewidth = 2,
+                    color = colors[icc],
+                    linestyle = linestyles[2])
 
                 count = count + 1
             end
         end
     end
 
-    Plotter.grid()
-    Plotter.xlabel("space [\$m\$]")
-    Plotter.ylabel("energies [\$eV\$]")
-    Plotter.legend(fancybox = true, loc = "best")
-    Plotter.title(title)
-    Plotter.tight_layout()
+    # Plotter.grid()
+    # Plotter.xlabel("space [\$m\$]")
+    # Plotter.ylabel("energies [\$eV\$]")
+    # Plotter.legend(fancybox = true, loc = "best")
+    # Plotter.title(title)
+    # Plotter.tight_layout()
 
     return nothing
 end
@@ -205,7 +254,7 @@ With this method it is possible to depict the band-edge energies ``E_\\alpha ``.
 This can be useful for debugging when dealing with heterojunctions.
 
 """
-function plot_energies(Plotter, ctsys, label_BEE)
+function plot_energies!(visualizer, ctsys, label_BEE)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -218,62 +267,140 @@ function plot_energies(Plotter, ctsys, label_BEE)
     cellregions = grid[CellRegions]
     cellnodes = grid[CellNodes]
 
-    if length(coord[1]) != 1
+    if size(coord, 1) != 1
         error("plot_energies is so far only implemented in 1D")
     end
 
     colors = ["green", "red", "gold", "purple", "orange"]
-    linestyles = ["-", ":", "--", "-.", "-"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
-    # plot different band-edge energies values in interior
+    #plot different band-edge energies values in interior
     for icc in 1:params.numberOfCarriers
+        xvals = Float64[]
+        yvals = Float64[]
+
+        # cell regions
         for i in eachindex(cellregions)
             # determine band-edge energy value in cell and number of cell nodes
             cellValue = (params.bandEdgeEnergy[icc, cellregions[i]] + paramsnodal.bandEdgeEnergy[icc, i]) / q
             numberLocalCellNodes = length(cellnodes[:, i])
-            # patch together cells
-            Plotter.plot(
-                coord[cellnodes[:, i]],
-                repeat(cellValue:cellValue, numberLocalCellNodes),
-                marker = "x",
-                color = colors[icc],
-                linewidth = 3,
-                linestyle = linestyles[icc]
-            )
+            append!(xvals, coord[cellnodes[:, i]][:])
+            append!(yvals, fill(cellValue, numberLocalCellNodes))
         end
 
-        Plotter.plot(NaN, NaN, color = colors[icc], linewidth = 3, linestyle = linestyles[icc], label = label_BEE[icc]) # legend
-    end
+        # boundary regions
+        bfaceregions = grid[BFaceRegions]
+        bfacenodes = grid[BFaceNodes]
 
-    # plot different band-edge energy values on boundary
-    bfaceregions = grid[BFaceRegions]
-    bfacenodes = grid[BFaceNodes]
-
-    for icc in 1:params.numberOfCarriers
-
-        for i in eachindex(bfaceregions)
+        for i in eachindex(bfaceregions[1:2]) # so werden nur die äußeren Randpunkte berücksichtigt, die intrinsic haben nämlich Wert 0 auf der Y-Achse
             # determine band-edge energy value in cell and number of cell nodes
             cellValue = (params.bBandEdgeEnergy[icc, bfaceregions[i]] + paramsnodal.bandEdgeEnergy[icc, bfacenodes[i]]) / q
             numberLocalCellNodes = length(bfacenodes[:, i])
-
-            # patch together cells
-            Plotter.plot(
-                coord[bfacenodes[:, i]],
-                repeat(cellValue:cellValue, numberLocalCellNodes),
-                marker = "x",
-                markersize = 10,
-                color = colors[icc]
-            )
+            append!(xvals, coord[bfacenodes[:, i]])
+            append!(yvals, fill(cellValue, numberLocalCellNodes))
         end
 
+        scalarplot!(
+            visualizer,
+            xvals,
+            yvals;
+            color = colors[icc],
+            linestyle = linestyles[icc],
+            linewidth = 3,
+            markershape = :cross,
+            clear = false,
+            title = "Band-edge energies",
+            xlabel = "space [m]",
+            ylabel = "energy [eV]",
+            label = label_BEE[icc],
+            legend = :rc, # legend right center
+        )
+        
+        # Backup: so war es vorher
+        # for i in eachindex(cellregions)
+        #     # determine band-edge energy value in cell and number of cell nodes
+        #     cellValue = (params.bandEdgeEnergy[icc, cellregions[i]] + paramsnodal.bandEdgeEnergy[icc, i]) / q
+        #     numberLocalCellNodes = length(cellnodes[:, i])
+
+        #     # patch together cells
+        #     scalarplot!(
+        #         visualizer,
+        #         coord[cellnodes[:, i]][:],
+        #         fill(cellValue, numberLocalCellNodes);
+        #         title = "Band-edge energies",
+        #         #label = label_BEE[icc], so werden sie angezeigt, also Reihenfolge wichtig??
+        #         #legend = :rb,
+        #         clear = false,
+        #         markershape = :cross,
+        #         color = colors[icc],
+        #         linewidth = 3,
+        #         linestyle = linestyles[icc],
+        #     )
+        # end
+
+        # scalarplot!(
+        #     visualizer,
+        #     nothing,
+        #     nothing;
+        #     label = "hallo",
+        #     legend = :rb,
+        #     clear = false
+        # ) # legend
     end
 
-    Plotter.grid()
-    Plotter.xlabel("space [\$m\$]")
-    Plotter.ylabel("energies [\$eV\$]")
-    Plotter.title("Band-edge energies \$ E_\\alpha \$")
-    Plotter.legend(fancybox = true, loc = "best")
-    Plotter.tight_layout()
+    # plot different band-edge energy values on boundary
+    # bfaceregions = grid[BFaceRegions]
+    # bfacenodes = grid[BFaceNodes]
+
+    # for icc in 1:params.numberOfCarriers
+    #     xvals = Float64[]
+    #     yvals = Float64[]
+    #     for i in eachindex(bfaceregions)
+    #         # determine band-edge energy value in cell and number of cell nodes
+    #         cellValue = (params.bBandEdgeEnergy[icc, bfaceregions[i]] + paramsnodal.bandEdgeEnergy[icc, bfacenodes[i]]) / q
+    #         numberLocalCellNodes = length(bfacenodes[:, i])
+    #         append!(xvals, coord[bfacenodes[:, i]])
+    #         append!(yvals, fill(cellValue, numberLocalCellNodes))
+    #     end
+
+    #     @show xvals
+    #     @show yvals
+
+    #     scalarplot!(
+    #         visualizer,
+    #         xvals,
+    #         yvals;
+    #         color = colors[icc],
+    #         linestyle = linestyles[icc],
+    #         linewidth = 3,
+    #         markershape = :cross,
+    #         clear = false,
+    #         #title = "Band-edge energies",
+    #         #label = label_BEE[icc],
+    #         #legend = :rc, # legend right center
+    #     )
+
+        # for i in eachindex(bfaceregions)
+        #     # determine band-edge energy value in cell and number of cell nodes
+        #     cellValue = (params.bBandEdgeEnergy[icc, bfaceregions[i]] + paramsnodal.bandEdgeEnergy[icc, bfacenodes[i]]) / q
+        #     numberLocalCellNodes = length(bfacenodes[:, i])
+
+        #     @show icc
+        #     @show coord[bfacenodes[:, i]]
+        #     @show fill(cellValue, numberLocalCellNodes)
+
+        #     # patch together cells
+        #     scalarplot!(
+        #         visualizer,
+        #         coord[bfacenodes[:, i]],
+        #         fill(cellValue, numberLocalCellNodes);
+        #         clear = false,
+        #         markershape = :cross,
+        #         color = colors[icc]
+        #     )
+        # end
+
+   # end
 
     return nothing
 end
@@ -285,7 +412,7 @@ Possibility to plot the considered doping. This is especially useful
 for making sure that the interior and the boundary doping agree.
 
 """
-function plot_doping(Plotter, ctsys, label_density)
+function plot_doping!(visualizer, ctsys, label_density)
 
     g = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -300,7 +427,7 @@ function plot_doping(Plotter, ctsys, label_density)
     end
 
     colors = ["green", "red", "gold", "purple", "orange"]
-    linestyles = ["-", ":", "--", "-.", "-"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
     # plot different doping values in interior
     for icc in 1:params.numberOfCarriers
@@ -311,20 +438,34 @@ function plot_doping(Plotter, ctsys, label_density)
             numberLocalCellNodes = length(cellnodes[:, i])
 
             # patch together cells (multiplying by 1.0e-6 gives us the densities in cm^(-3))
-            Plotter.plot(
+            scalarplot!(
+                visualizer,
                 coord[cellnodes[:, i]],
-                1.0e-6 .* repeat(cellValue:cellValue, numberLocalCellNodes),
+                1.0e-6 .* fill(cellValue, numberLocalCellNodes),
+                title = "Doping values for charge carriers",
+                xlabel = "space [m]",
+                ylabel = "Doping [1/cm^3]",
+                clear = false,
                 color = colors[icc],
                 linewidth = 3,
                 linestyle = linestyles[icc]
             )
         end
+        # Problem: So funktioniert die Legende nicht.
         # legend
-        Plotter.plot(NaN, NaN, color = colors[icc], linewidth = 3, label = label_density[icc])
+        # scalarplot!(
+        #     visualizer,
+        #     NaN,
+        #     NaN,
+        #     color = colors[icc],
+        #     linewidth = 3,
+        #     label = label_density[icc]
+        # )
 
     end
 
     # plot different doping values on boundary
+    # Problem hier: Wieso werden hier Werte bei 4*10^18 angezeigt, das sollte doch 1*10^18 sein??
     bfaceregions = g[BFaceRegions]
     bfacenodes = g[BFaceNodes]
 
@@ -336,10 +477,12 @@ function plot_doping(Plotter, ctsys, label_density)
             numberLocalCellNodes = length(bfacenodes[:, i])
 
             # patch together cells
-            Plotter.plot(
+            scalarplot!(
+                visualizer,
                 coord[bfacenodes[:, i]],
-                1.0e-6 .* repeat(cellValue:cellValue, numberLocalCellNodes),
-                marker = "x",
+                1.0e-6 .* fill(cellValue, numberLocalCellNodes),
+                clear = false,
+                marker = :cross,
                 markersize = 10,
                 color = colors[icc]
             )
@@ -347,13 +490,13 @@ function plot_doping(Plotter, ctsys, label_density)
 
     end
 
-    Plotter.grid()
-    Plotter.yscale("symlog")
-    Plotter.xlabel("space [\$m\$]")
-    Plotter.ylabel("Doping [\$\\frac{1}{cm^3}\$]")
-    Plotter.title("Doping values for charge carriers")
-    Plotter.legend(fancybox = true, loc = "best")
-    Plotter.tight_layout()
+    # Plotter.grid()
+    # Plotter.yscale("symlog")
+    # Plotter.xlabel("space [\$m\$]")
+    # Plotter.ylabel("Doping [\$\\frac{1}{cm^3}\$]")
+    # Plotter.title("Doping values for charge carriers")
+    # Plotter.legend(fancybox = true, loc = "best")
+    # Plotter.tight_layout()
 
     return nothing
 end
@@ -385,22 +528,28 @@ Plotting routine for depicting the electroneutral potential.
 One input parameter is the boolean plotGridpoints which makes it possible to plot markers,
 which indicate where the nodes are located.
 """
-function plot_electroNeutralSolutionBoltzmann(Plotter, grid, psi0, ; plotGridpoints = false)
+function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridpoints = false)
 
     if plotGridpoints == true
-        marker = "o"
+        marker = :circle
     else
-        marker = ""
+        marker = :none
     end
 
     coord = grid[Coordinates]
 
-    Plotter.grid()
-    Plotter.plot(coord[:], psi0, label = "electroneutral potential \$ ψ_0 \$", color = "b", marker = marker)
-    Plotter.xlabel("space [m]")
-    Plotter.ylabel("potential [V]")
-    Plotter.legend(fancybox = true, loc = "best")
-    Plotter.tight_layout()
+    scalarplot!(
+        visualizer,
+        coord[:],
+        psi0,
+        title = "Electroneutral potential",
+        xlabel = "space [m]",
+        ylabel = "potential [V]",
+        #label = "electroneutral potential ψ_0", # brauchen wir das überhaupt, wenn es eine Überschrift gibt?
+        color = :blue,
+        markershape = marker,
+        markersize = 8
+    )
 
     return nothing
 end

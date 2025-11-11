@@ -21,11 +21,11 @@ Compat = "4.18.0"
 DocStringExtensions = "0.9"
 ExtendableGrids = "1"
 ForwardDiff = "1"
+GLMakie = "0.13.6"
 GridVisualize = "1"
 Interpolations = "0.16"
 LessUnitful = "1.2.1"
 Printf = "1.10"
-PyPlot = "2.11"
 Roots = "2.0"
 SimplexGridFactory = "2.6.0"
 Test = "1.10"
@@ -35,10 +35,10 @@ julia = "1.10"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
-PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 SimplexGridFactory = "57bfcd06-606e-45d6-baf4-4ba06da0efd5"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
 
 [targets]
-test = ["Aqua", "SimplexGridFactory", "PyPlot", "Test", "Triangulate"]
+test = ["Aqua", "GLMakie", "SimplexGridFactory", "Test", "Triangulate"]

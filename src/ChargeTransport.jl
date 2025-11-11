@@ -114,7 +114,7 @@ export get_current_val, charge_density, integrated_density
 include("ct_plotting.jl")
 
 export set_plotting_labels
-export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBoltzmann
+export plot_densities, plot_energies!, plot_doping!, plot_electroNeutralSolutionBoltzmann!
 export plot_solution, plot_IV
 
 #################################################################
