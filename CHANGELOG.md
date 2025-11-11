@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -----------------------------------------------------------------------------------------------
 
+## v1.5.0
+
+### Removed
+
+- all hard dependencies for `PyPlot` are removed
+
+### changed
+
+- all library plotting functions in `ct_plotting` are now changed to use a `GridVisualizer`
+- the old signature is still available but deprecated
+- the user can choose any plotter supported by `GridVisualize` (currently `PythonPlot`, `Makie` flavors and `PlutoVista`)
+- `PyPlot` and `Plots` are also supported, but not recommended
+- all 1D examples are rewritten to use the new plotting routines
+- all 2D examples are still hard-wired to `Py[thon]Plot`, but the users have to provide this package in their own (global) environment
+
+
 ## v1.4.0
 
 ### Added

@@ -14,6 +14,8 @@ using ForwardDiff: ForwardDiff
 using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
 # for interpolation of data
 using Interpolations: Interpolations, Gridded, Linear
+# for latex labels
+using LaTeXStrings: @L_str, LaTeXString
 # local units and constants
 using LessUnitful: @local_unitfactors, @ufac_str, @ph_str
 # printing
@@ -117,6 +119,8 @@ include("ct_plotting.jl")
 export set_plotting_labels
 export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBoltzmann
 export plot_solution, plot_IV
+export plot_densities!, plot_energies!, plot_doping!, plot_electroNeutralSolutionBoltzmann!
+export plot_solution!, plot_IV!
 
 #################################################################
 

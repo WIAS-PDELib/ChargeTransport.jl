@@ -15,7 +15,6 @@ module Ex201_PSC_Textured
 
     using ChargeTransport
     using ExtendableGrids
-    using PyPlot
     using VoronoiFVM
 
     ## For using this example one additionally needs to add Triangulate.
@@ -366,7 +365,8 @@ module Ex201_PSC_Textured
     # you can also use other Plotters, if you add them to the example file
     # you can set verbose also to true to display some solver information
     function main(;
-            Plotter = PyPlot, plotting = false, verbose = false, test = false,
+            Plotter = nothing, # only Plotter = PythonPlot or Plotter = PyPlot are supported in this example
+            verbose = false, test = false,
             amplitude = 0.5e-7,
             parameter_set = Params_PSC_C60_TripleCation_PTAA, # choose the parameter set
             vacancyEnergyCalculation = false,                 # assume the vacancy energy level is either given or not
@@ -374,9 +374,15 @@ module Ex201_PSC_Textured
             vHTL = 500 * ufac"cm" / ufac"s",                  # surface reco velocity at HTL
         )
 
-        Plotter.rc("font", family = "sans-serif", size = 14)
-        Plotter.rc("mathtext", fontset = "dejavusans")
-        Plotter.close("all")
+        if Plotter !== nothing && (nameof(Plotter) ∉ [:PyPlot, :PythonPlot])
+            error("Plotting in Ex201_PSC_Textured is only possible for Plotter = PythonPlot")
+        end
+
+        if Plotter !== nothing
+            Plotter.rc("font", family = "sans-serif", size = 14)
+            Plotter.rc("mathtext", fontset = "dejavusans")
+            Plotter.close("all")
+        end
 
         ################################################################################
         if test == false
@@ -432,8 +438,8 @@ module Ex201_PSC_Textured
 
         grid = generate_grid(parameter_set = parameter_set, amplitude = amplitude)
 
-        if plotting
-            gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :rc)
+        if Plotter !== nothing
+            gridplot(grid; Plotter, resolution = (600, 400), linewidth = 0.5, legend = :rc)
         end
 
         if !test
@@ -650,7 +656,7 @@ module Ex201_PSC_Textured
 
         solForw = ChargeTransport.solve(ctsys, inival = solRev.u[end], times = (tPrecond + tend, tPrecond + 2 * tend), control = control)
 
-        if plotting
+        if Plotter !== nothing
             subg = subgrid(grid, [p.regionPero])
 
             # https://github.com/j-fu/GridVisualize.jl/blob/1f2b299a436b7750702ccca282fa14152d80ebf9/src/pyplot.jl#L86
@@ -673,38 +679,44 @@ module Ex201_PSC_Textured
             vminIon = 1.0e22; vmaxIon = 5.0e23
 
 
-            figure(figsize = figsize)
-            tripcolor(tridata(subg)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
-            xlabel(" \$x\$ [nm]", fontsize = 17)
-            ylabel(" \$y\$ [nm]", fontsize = 17)
-            axis([-20, 770, 20, 800])
-            title("Electron density (beginning forward scan)")
-            colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-            tight_layout()
+            Plotter.figure(figsize = figsize)
+            Plotter.tripcolor(tridata(subg)..., vcat(nn...), norm = Plotter.matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+            Plotter.xlabel(" \$x\$ [nm]", fontsize = 17)
+            Plotter.ylabel(" \$y\$ [nm]", fontsize = 17)
+            Plotter.axis([-20, 770, 20, 800])
+            Plotter.title("Electron density (beginning forward scan)")
+            Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+            Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
 
             #################
-            figure(figsize = figsize)
-            tripcolor(tridata(subg)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
-            xlabel(" \$x\$ [nm]", fontsize = 17)
-            ylabel(" \$y\$ [nm]", fontsize = 17)
-            axis([-20, 770, 20, 800])
-            title("Hole density (beginning forward scan)")
-            colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-            tight_layout()
+            Plotter.figure(figsize = figsize)
+            Plotter.tripcolor(tridata(subg)..., vcat(np...), norm = Plotter.matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+            Plotter.xlabel(" \$x\$ [nm]", fontsize = 17)
+            Plotter.ylabel(" \$y\$ [nm]", fontsize = 17)
+            Plotter.axis([-20, 770, 20, 800])
+            Plotter.title("Hole density (beginning forward scan)")
+            Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+            Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
 
             #################
-            figure(figsize = figsize)
-            tripcolor(tridata(subg)..., vcat(na...), norm = matplotlib.colors.LogNorm(vmin = vminIon, vmax = vmaxIon), shading = "gouraud", rasterized = true)
-            xlabel(" \$x\$ [nm]", fontsize = 17)
-            ylabel(" \$y\$ [nm]", fontsize = 17)
-            axis([-20, 770, 20, 800])
-            title("Ion density (beginning forward scan)")
-            colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-            tight_layout()
+            Plotter.figure(figsize = figsize)
+            Plotter.tripcolor(tridata(subg)..., vcat(na...), norm = Plotter.matplotlib.colors.LogNorm(vmin = vminIon, vmax = vmaxIon), shading = "gouraud", rasterized = true)
+            Plotter.xlabel(" \$x\$ [nm]", fontsize = 17)
+            Plotter.ylabel(" \$y\$ [nm]", fontsize = 17)
+            Plotter.axis([-20, 770, 20, 800])
+            Plotter.title("Ion density (beginning forward scan)")
+            Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+            Plotter.tight_layout()
 
-        end
+            current_figure = Plotter.gcf()
+            display(current_figure)
 
-        if plotting
             nn = get_density(solForw.u[end], p.regionPero, ctsys, p.iphin)
             np = get_density(solForw.u[end], p.regionPero, ctsys, p.iphip)
             na = get_density(solForw.u[end], p.regionPero, ctsys, p.iphia)
@@ -714,34 +726,43 @@ module Ex201_PSC_Textured
             @show minimum(np), maximum(np)
             @show minimum(na), maximum(na)
 
-            figure(figsize = figsize)
-            tripcolor(tridata(subg)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
-            xlabel(" \$x\$ [nm]", fontsize = 17)
-            ylabel(" \$y\$ [nm]", fontsize = 17)
-            axis([-20, 770, 20, 800])
-            title("Electron density (end forward scan)")
-            colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-            tight_layout()
+            Plotter.figure(figsize = figsize)
+            Plotter.tripcolor(tridata(subg)..., vcat(nn...), norm = Plotter.matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+            Plotter.xlabel(" \$x\$ [nm]", fontsize = 17)
+            Plotter.ylabel(" \$y\$ [nm]", fontsize = 17)
+            Plotter.axis([-20, 770, 20, 800])
+            Plotter.title("Electron density (end forward scan)")
+            Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+            Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
 
             #################
-            figure(figsize = figsize)
-            tripcolor(tridata(subg)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
-            xlabel(" \$x\$ [nm]", fontsize = 17)
-            ylabel(" \$y\$ [nm]", fontsize = 17)
-            axis([-20, 770, 20, 800])
-            title("Hole density (end forward scan)")
-            colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-            tight_layout()
+            Plotter.figure(figsize = figsize)
+            Plotter.tripcolor(tridata(subg)..., vcat(np...), norm = Plotter.matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+            Plotter.xlabel(" \$x\$ [nm]", fontsize = 17)
+            Plotter.ylabel(" \$y\$ [nm]", fontsize = 17)
+            Plotter.axis([-20, 770, 20, 800])
+            Plotter.title("Hole density (end forward scan)")
+            Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+            Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
 
             #################
-            figure(figsize = figsize)
-            tripcolor(tridata(subg)..., vcat(na...), norm = matplotlib.colors.LogNorm(vmin = vminIon, vmax = vmaxIon), shading = "gouraud", rasterized = true)
-            xlabel(" \$x\$ [nm]", fontsize = 17)
-            ylabel(" \$y\$ [nm]", fontsize = 17)
-            axis([-20, 770, 20, 800])
-            title("Ion density (end forward scan)")
-            colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-            tight_layout()
+            Plotter.figure(figsize = figsize)
+            Plotter.tripcolor(tridata(subg)..., vcat(na...), norm = Plotter.matplotlib.colors.LogNorm(vmin = vminIon, vmax = vmaxIon), shading = "gouraud", rasterized = true)
+            Plotter.xlabel(" \$x\$ [nm]", fontsize = 17)
+            Plotter.ylabel(" \$y\$ [nm]", fontsize = 17)
+            Plotter.axis([-20, 770, 20, 800])
+            Plotter.title("Ion density (end forward scan)")
+            Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+            Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
         end
 
         if !test
@@ -815,20 +836,23 @@ module Ex201_PSC_Textured
 
         end
 
-        if plotting
+        if Plotter !== nothing
 
-            figure()
+            Plotter.figure()
             tEnd = tPrecond + 2 * tend
 
             tt = collect(range(0.0, tEnd, length = 201))
             T = data.contactVoltageFunction[2]
-            plot(tt, T.(tt), marker = "o")
-            xlabel("time [s]")
-            ylabel("voltage [V]")
+            Plotter.plot(tt, T.(tt), marker = "o")
+            Plotter.xlabel("time [s]")
+            Plotter.ylabel("voltage [V]")
             Plotter.tight_layout()
 
-            figure()
-            plot(biasValues, -IV .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "blue", label = "forward")
+            current_figure = Plotter.gcf()
+            display(current_figure)
+
+            Plotter.figure()
+            Plotter.plot(biasValues, -IV .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "blue", label = "forward")
 
             Plotter.grid()
             Plotter.legend()
@@ -836,14 +860,17 @@ module Ex201_PSC_Textured
             Plotter.ylabel("current density [mAcm\$^{-2} \$]", fontsize = 17)
             Plotter.tick_params(which = "both", labelsize = 18)
             Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
 
             #####################################
-            figure()
-            semilogy(biasValues, ISRHn .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "blue", label = "SRH")
-            semilogy(biasValues, IRadn .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "red", label = "rad")
-            semilogy(biasValues, IGen .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "gold", label = "Gen")
-            semilogy(biasValues, ISRnL .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "black", label = "SR, left")
-            semilogy(biasValues, ISRnR .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "darkgreen", label = "SR, right")
+            Plotter.figure()
+            Plotter.semilogy(biasValues, ISRHn .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "blue", label = "SRH")
+            Plotter.semilogy(biasValues, IRadn .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "red", label = "rad")
+            Plotter.semilogy(biasValues, IGen .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "gold", label = "Gen")
+            Plotter.semilogy(biasValues, ISRnL .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "black", label = "SR, left")
+            Plotter.semilogy(biasValues, ISRnR .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = "darkgreen", label = "SR, right")
 
             Plotter.grid()
             Plotter.legend()
@@ -851,6 +878,9 @@ module Ex201_PSC_Textured
             Plotter.ylabel("current density [mAcm\$^{-2} \$]", fontsize = 17)
             Plotter.tick_params(which = "both", labelsize = 18)
             Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
         end
 
         if test == false
