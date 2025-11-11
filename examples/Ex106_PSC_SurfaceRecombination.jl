@@ -12,19 +12,16 @@ module Ex106_PSC_SurfaceRecombination
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie, PythonPlot, PlutoVista
 function main(;
-        n = 6, Plotter = PyPlot, plotting = false,
+        n = 6, Plotter = nothing,
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
         vacancyEnergyCalculation = false,           # assume the vacancy energy level is either given or not
     )
-
-    if plotting
-        Plotter.close("all")
-    end
 
     ################################################################################
     if test == false
@@ -112,9 +109,9 @@ function main(;
     bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18) # first  inner interface
     bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18) # second inner interface
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title("Grid")
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (3, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false

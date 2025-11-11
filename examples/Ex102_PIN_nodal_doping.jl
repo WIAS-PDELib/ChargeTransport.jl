@@ -11,11 +11,12 @@ module Ex102_PIN_nodal_doping
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GLMakie
+using GridVisualize
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
+function main(; Plotter = GLMakie, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K ps
@@ -23,9 +24,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     eV = constants.q * V
 
-    if plotting
-        Plotter.close("all")
-    end
     ################################################################################
     if test == false
         println("Set up grid and regions")
@@ -34,8 +32,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     ## region numbers
     regionAcceptor = 1          # p doped region
-    regionIntrinsic = 2          # intrinsic region
-    regionDonor = 3          # n doped region
+    regionIntrinsic = 2         # intrinsic region
+    regionDonor = 3             # n doped region
     regions = [regionAcceptor, regionIntrinsic, regionDonor]
     numberOfRegions = length(regions)
 
@@ -71,8 +69,8 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
     if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title("Grid")
+        vis = GridVisualizer(; Plotter, layout = (3, 3), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\rm space[m]", show = true)
     end
 
     if test == false
@@ -197,8 +195,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
         ################################################################################
         println("Plot doping")
         ################################################################################
-        Plotter.figure()
-        plot_doping(Plotter, grid, paramsnodal)
+        plot_doping!(vis[1, 2], grid, paramsnodal)
         println("*** done\n")
     end
 
@@ -230,14 +227,11 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     if plotting
         ## set legend for plotting routines. Either you can use the predefined labels or write your own.
-        label_solution, label_density, label_energy = set_plotting_labels(data)
+        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
 
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "Equilibrium", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Equilibrium", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Equilibrium", label_solution)
+        plot_energies!(vis[1, 3], ctsys, solution, "Equilibrium", label_energy)
+        plot_densities!(vis[2, 1], ctsys, solution, "Equilibrium", label_density)
+        plot_solution!(vis[2, 2], ctsys, solution, "Equilibrium", label_solution)
     end
 
     if test == false
@@ -281,14 +275,13 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     end
 
     if plotting # plot solution and IV curve
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_energy)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_solution, plotGridpoints = true)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
-        Plotter.figure()
-        plot_IV(Plotter, biasValues, IV, "Applied voltage Δu = $(biasValues[end])", plotGridpoints = true)
+
+        plot_energies!(vis[2, 3], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_energy)
+        plot_densities!(vis[3, 2], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
+        plot_solution!(vis[3, 1], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_solution, plotGridpoints = true)
+        plot_IV!(vis[3, 3], biasValues, IV, "Applied voltage Δu = $(biasValues[end])", plotGridpoints = true)
+
+        reveal(vis)
     end
 
     testval = solution[15]
