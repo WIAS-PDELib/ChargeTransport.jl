@@ -254,14 +254,14 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
         psi0 = electroNeutralSolution(ctsys)
 
         plot_energies!(vis[1, 2], ctsys, label_BEE)
-        reveal(vis)
         plot_doping!(vis[2, 1], ctsys, label_density)
-        reveal(vis)
         plot_electroNeutralSolutionBoltzmann!(vis[2,2], grid, psi0; plotGridpoints = true)
         reveal(vis)
         
         println("*** done\n")
     end
+
+    return nothing
     ################################################################################
     if test == false
         println("Define control parameters for Solver")
@@ -334,8 +334,8 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
         ################################################################################
 
         # Idee: Hier eine Zwischenüberschrift einfügen - Ergebnissplots ( Und oben dann Modellplots)
-        #plot_energies!(vis[3,1], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_energy, plotGridpoints = false)
-        #reveal(vis)
+        plot_energies!(vis[3,1], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_energy, plotGridpoints = false)
+        reveal(vis)
         # plot_solution!(vis[3,2], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_solution, plotGridpoints = true)
         # reveal(vis)
         # plot_densities!(vis[4,1], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)

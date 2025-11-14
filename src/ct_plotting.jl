@@ -5,26 +5,28 @@ The description for electrons and holes are predefined. If one wishes to extend 
 e.g. mobile ionic carriers or traps, this can be done within the main file.
 
 """
+# Problems when Plotter = PyPlot
+# Wo? Mariekes Windows Computer
+# Was? sys:1: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
 
 function set_plotting_labels(data)
 
-    label_energy = Array{String, 2}(undef, 2, data.params.numberOfCarriers) # band-edge energies and potential
-    label_BEE = Array{String, 1}(undef, data.params.numberOfCarriers)    # band-edge energie parameters
-    label_density = Array{String, 1}(undef, data.params.numberOfCarriers)
-    label_solution = Array{String, 1}(undef, data.params.numberOfCarriers)
+    label_energy = Matrix{LaTeXString}(undef, 2, data.params.numberOfCarriers) # band-edge energies and potential
+    label_BEE = Vector{LaTeXString}(undef, data.params.numberOfCarriers)    # band-edge energie parameters
+    label_density = Vector{LaTeXString}(undef, data.params.numberOfCarriers)
+    label_solution = Vector{LaTeXString}(undef, data.params.numberOfCarriers)
 
     # indices (∈ IN) of electron and hole quasi Fermi potentials specified by user
     iphin = data.bulkRecombination.iphin # integer index of φ_n
     iphip = data.bulkRecombination.iphip # integer index of φ_p
 
     ## for electrons
-    label_energy[1, iphin] = "\$E_c-q\\psi\$"; label_energy[2, iphin] = "\$ - q \\varphi_n\$"; label_BEE[iphin] = "\$E_c\$"
-    label_density[iphin] = "\$ n_n \$ ";              label_solution[iphin] = "\$ \\varphi_n\$"
+    label_energy[1, iphin] = L"E_c-q\psi"; label_energy[2, iphin] = L"- q \varphi_n"; label_BEE[iphin] = L"E_c"
+    label_density[iphin] = L"n_n";              label_solution[iphin] = L"\varphi_n"
 
     ## for holes
-    label_energy[1, iphip] = "\$E_v-q\\psi\$"; label_energy[2, iphip] = "\$ - q \\varphi_p\$"; label_BEE[iphip] = "\$E_v\$"
-    label_density[iphip] = "\$ n_p \$";              label_solution[iphip] = "\$ \\varphi_p\$"
-
+    label_energy[1, iphip] = L"E_v-q\psi"; label_energy[2, iphip] = L"- q \varphi_p"; label_BEE[iphip] = L"E_v"
+    label_density[iphip] = L"n_p";              label_solution[iphip] = L"\varphi_p"
 
     return label_solution, label_density, label_energy, label_BEE
 end
@@ -51,9 +53,9 @@ function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGr
     end
 
     if plotGridpoints == true
-        marker = "o"
+        marker = :circle
     else
-        marker = ""
+        marker = :none
     end
 
     params = data.params
@@ -108,7 +110,7 @@ which indicate where the nodes are located.
 
 """
 
-# MO: Funktionen haben Problem mit dem Input, hier weitermachen!
+# MO: scalarplot!() hat Probleme mit dem Input, hier weitermachen!
 function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plotGridpoints = false)
 
     #Plotter.clf()
@@ -142,6 +144,9 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plot
         Ecc = get_BEE(icc, 1, ctsys)
         solpsi = view(solution[data.index_psi, :], subg)
         solcc = view(solution[icc, :], subg)
+
+        @show subg[Coordinates]'
+        @show Ecc ./ q .- solpsi
 
         scalarplot!(
             visualizer,
@@ -276,131 +281,57 @@ function plot_energies!(visualizer, ctsys, label_BEE)
 
     #plot different band-edge energies values in interior
     for icc in 1:params.numberOfCarriers
-        xvals = Float64[]
-        yvals = Float64[]
-
-        # cell regions
+       
+        label_is_plotted = false
         for i in eachindex(cellregions)
             # determine band-edge energy value in cell and number of cell nodes
             cellValue = (params.bandEdgeEnergy[icc, cellregions[i]] + paramsnodal.bandEdgeEnergy[icc, i]) / q
             numberLocalCellNodes = length(cellnodes[:, i])
-            append!(xvals, coord[cellnodes[:, i]][:])
-            append!(yvals, fill(cellValue, numberLocalCellNodes))
+
+            # patch together cells
+            scalarplot!(
+                visualizer,
+                coord[cellnodes[:, i]][:],
+                fill(cellValue, numberLocalCellNodes);
+                title = "Band-edge energies",
+                xlabel = "space [m]",
+                ylabel = "energy [eV]",
+                label = label_is_plotted ? nothing : label_BEE[icc],
+                legend = :rc,
+                clear = false,
+                markershape = :cross,
+                color = colors[icc],
+                linewidth = 3,
+                linestyle = linestyles[icc],
+            )
+
+            label_is_plotted = true
         end
 
-        # boundary regions
-        bfaceregions = grid[BFaceRegions]
-        bfacenodes = grid[BFaceNodes]
+    end
 
-        for i in eachindex(bfaceregions[1:2]) # so werden nur die äußeren Randpunkte berücksichtigt, die intrinsic haben nämlich Wert 0 auf der Y-Achse
+    #plot different band-edge energy values on boundary
+    bfaceregions = grid[BFaceRegions]
+    bfacenodes = grid[BFaceNodes]
+
+    for icc in 1:params.numberOfCarriers
+        for i in eachindex(bfaceregions)
             # determine band-edge energy value in cell and number of cell nodes
             cellValue = (params.bBandEdgeEnergy[icc, bfaceregions[i]] + paramsnodal.bandEdgeEnergy[icc, bfacenodes[i]]) / q
             numberLocalCellNodes = length(bfacenodes[:, i])
-            append!(xvals, coord[bfacenodes[:, i]])
-            append!(yvals, fill(cellValue, numberLocalCellNodes))
+
+            # patch together cells
+            scalarplot!(
+                visualizer,
+                coord[bfacenodes[:, i]],
+                fill(cellValue, numberLocalCellNodes);
+                clear = false,
+                markershape = :cross,
+                color = colors[icc]
+            )
         end
 
-        scalarplot!(
-            visualizer,
-            xvals,
-            yvals;
-            color = colors[icc],
-            linestyle = linestyles[icc],
-            linewidth = 3,
-            markershape = :cross,
-            clear = false,
-            title = "Band-edge energies",
-            xlabel = "space [m]",
-            ylabel = "energy [eV]",
-            label = label_BEE[icc],
-            legend = :rc, # legend right center
-        )
-        
-        # Backup: so war es vorher
-        # for i in eachindex(cellregions)
-        #     # determine band-edge energy value in cell and number of cell nodes
-        #     cellValue = (params.bandEdgeEnergy[icc, cellregions[i]] + paramsnodal.bandEdgeEnergy[icc, i]) / q
-        #     numberLocalCellNodes = length(cellnodes[:, i])
-
-        #     # patch together cells
-        #     scalarplot!(
-        #         visualizer,
-        #         coord[cellnodes[:, i]][:],
-        #         fill(cellValue, numberLocalCellNodes);
-        #         title = "Band-edge energies",
-        #         #label = label_BEE[icc], so werden sie angezeigt, also Reihenfolge wichtig??
-        #         #legend = :rb,
-        #         clear = false,
-        #         markershape = :cross,
-        #         color = colors[icc],
-        #         linewidth = 3,
-        #         linestyle = linestyles[icc],
-        #     )
-        # end
-
-        # scalarplot!(
-        #     visualizer,
-        #     nothing,
-        #     nothing;
-        #     label = "hallo",
-        #     legend = :rb,
-        #     clear = false
-        # ) # legend
-    end
-
-    # plot different band-edge energy values on boundary
-    # bfaceregions = grid[BFaceRegions]
-    # bfacenodes = grid[BFaceNodes]
-
-    # for icc in 1:params.numberOfCarriers
-    #     xvals = Float64[]
-    #     yvals = Float64[]
-    #     for i in eachindex(bfaceregions)
-    #         # determine band-edge energy value in cell and number of cell nodes
-    #         cellValue = (params.bBandEdgeEnergy[icc, bfaceregions[i]] + paramsnodal.bandEdgeEnergy[icc, bfacenodes[i]]) / q
-    #         numberLocalCellNodes = length(bfacenodes[:, i])
-    #         append!(xvals, coord[bfacenodes[:, i]])
-    #         append!(yvals, fill(cellValue, numberLocalCellNodes))
-    #     end
-
-    #     @show xvals
-    #     @show yvals
-
-    #     scalarplot!(
-    #         visualizer,
-    #         xvals,
-    #         yvals;
-    #         color = colors[icc],
-    #         linestyle = linestyles[icc],
-    #         linewidth = 3,
-    #         markershape = :cross,
-    #         clear = false,
-    #         #title = "Band-edge energies",
-    #         #label = label_BEE[icc],
-    #         #legend = :rc, # legend right center
-    #     )
-
-        # for i in eachindex(bfaceregions)
-        #     # determine band-edge energy value in cell and number of cell nodes
-        #     cellValue = (params.bBandEdgeEnergy[icc, bfaceregions[i]] + paramsnodal.bandEdgeEnergy[icc, bfacenodes[i]]) / q
-        #     numberLocalCellNodes = length(bfacenodes[:, i])
-
-        #     @show icc
-        #     @show coord[bfacenodes[:, i]]
-        #     @show fill(cellValue, numberLocalCellNodes)
-
-        #     # patch together cells
-        #     scalarplot!(
-        #         visualizer,
-        #         coord[bfacenodes[:, i]],
-        #         fill(cellValue, numberLocalCellNodes);
-        #         clear = false,
-        #         markershape = :cross,
-        #         color = colors[icc]
-        #     )
-        # end
-
-   # end
+   end
 
     return nothing
 end
@@ -431,7 +362,8 @@ function plot_doping!(visualizer, ctsys, label_density)
 
     # plot different doping values in interior
     for icc in 1:params.numberOfCarriers
-
+        
+        label_is_plotted = false
         for i in eachindex(cellregions)
             # determine doping value in cell and number of cell nodes
             cellValue = params.doping[icc, cellregions[i]]
@@ -445,22 +377,16 @@ function plot_doping!(visualizer, ctsys, label_density)
                 title = "Doping values for charge carriers",
                 xlabel = "space [m]",
                 ylabel = "Doping [1/cm^3]",
+                label = label_is_plotted ? nothing : label_density[icc],
+                legend = :rc,
                 clear = false,
                 color = colors[icc],
                 linewidth = 3,
                 linestyle = linestyles[icc]
             )
+
+            label_is_plotted = true
         end
-        # Problem: So funktioniert die Legende nicht.
-        # legend
-        # scalarplot!(
-        #     visualizer,
-        #     NaN,
-        #     NaN,
-        #     color = colors[icc],
-        #     linewidth = 3,
-        #     label = label_density[icc]
-        # )
 
     end
 
@@ -489,14 +415,6 @@ function plot_doping!(visualizer, ctsys, label_density)
         end
 
     end
-
-    # Plotter.grid()
-    # Plotter.yscale("symlog")
-    # Plotter.xlabel("space [\$m\$]")
-    # Plotter.ylabel("Doping [\$\\frac{1}{cm^3}\$]")
-    # Plotter.title("Doping values for charge carriers")
-    # Plotter.legend(fancybox = true, loc = "best")
-    # Plotter.tight_layout()
 
     return nothing
 end
