@@ -46,7 +46,6 @@ function main(;
 
     ## primary data for I-V scan protocol
     scanrate = 1.0 * V / s
-    number_tsteps = 31
     endVoltage = voltageAcceptor # bias goes until the given voltage at acceptor boundary
     tend = endVoltage / scanrate
 
@@ -66,7 +65,6 @@ function main(;
     ## define by our own and parse to the model generator via the struct Data
     if otherScanProtocol
         ## scan protocol parameter
-        number_tsteps = 40
         frequency = 10.0 * Hz
         amplitude = 0.2 * V
         tend = 1 / frequency
@@ -156,7 +154,7 @@ function main(;
 
     ## Initialize Data instance and fill in predefined data
     ## Currently, the way to go is to pass a contact voltage function exactly here.
-    data = Data(grid, p.numberOfCarriers)
+    data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
@@ -259,36 +257,41 @@ function main(;
     end
     ################################################################################
     if test == false
-        println("IV Measurement loop")
+        println("IV Measurement")
     end
     ################################################################################
 
-    ## with fixed timestep sizes we can calculate the times a priori
-    tvalues = range(0, stop = tend, length = number_tsteps)
+    control.Δt = 0.5
+    control.Δt_grow = 1.0
+
+    if otherScanProtocol
+        control.Δt_min = 1.0e-3
+        control.Δt = 1.0e-3
+        control.Δt_grow = 1.3
+    end
+
+    ## calculation of solution
+    sol = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tend), control = control)
+
+    tvalues = sol.t
+    number_tsteps = length(tvalues)
 
     ## for saving I-V data
-    IV = zeros(0)                   # for IV values
-    ISRHn = zeros(0); ISRHp = zeros(0) # for SRH recombination current
-    IRadn = zeros(0); IRadp = zeros(0) # for radiative recombination current
+    IV = zeros(0)    # for IV values
+    ISRHn = zeros(0)
+    ISRHp = zeros(0) # for SRH recombination current
+    IRadn = zeros(0)
+    IRadp = zeros(0) # for radiative recombination current
 
     for istep in 2:number_tsteps
 
-        t = tvalues[istep]                                    # Actual time
-        Δu = contactVoltageFunction[p.bregionAcceptor](t) # Applied voltage
-        Δt = t - tvalues[istep - 1]                              # Time step size
+        Δt = tvalues[istep] - tvalues[istep - 1]  # Time step size
+        inival = sol.u[istep - 1]
+        solution = sol.u[istep]
 
-        ## Apply new voltage by setting non equilibrium boundary conditions
-        set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
-
-        if test == false
-            println("time value: t = $(t) s")
-        end
-
-        ## Solve time step problems with timestep Δt. inival plays the role of the solution
-        ## from last timestep
-        solution = solve(ctsys; inival = inival, control = control, tstep = Δt)
         ## get I-V data
         current = get_current_val(ctsys, solution, inival, Δt)
+
         IntSRH = integrate(ctsys, SRHRecombination!, solution)
         IntRad = integrate(ctsys, RadiativeRecombination!, solution)
 
@@ -368,7 +371,7 @@ function main(;
 end #  main
 
 function test()
-    testval = -0.6319142417604359; testvalOther = -1.121924017448251
+    testval = -0.6319153953275513; testvalOther = -1.1219097153257023
     return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
 end
 
