@@ -244,8 +244,6 @@ function main(;
     end
     ################################################################################
 
-    control.verbose = "e"
-
     control.Δt = 5.0e-2
     control.Δt_grow = 1.03
     ## calculation of solution
