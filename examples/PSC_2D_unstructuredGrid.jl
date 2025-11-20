@@ -51,12 +51,20 @@ module PSC_2D_unstructuredGrid
 
         ## primary data for I-V scan protocol
         scanrate = 0.4 * V / s
-        number_tsteps = 31
         endVoltage = voltageAcceptor # bias goes until the given voltage at acceptor boundary
-
-        ## with fixed timestep sizes we can calculate the times a priori
         tend = endVoltage / scanrate
-        tvalues = range(0, stop = tend, length = number_tsteps)
+
+        ## Define scan protocol function
+        function linearScanProtocol(t)
+            return if t == Inf
+                0.0
+            else
+                scanrate * t
+            end
+        end
+
+        ## Apply zero voltage on left boundary and a linear scan protocol on right boundary
+        contactVoltageFunction = [zeroVoltage, linearScanProtocol]
 
         if test == false
             println("*** done\n")
@@ -127,7 +135,7 @@ module PSC_2D_unstructuredGrid
         ################################################################################
 
         ## Initialize Data instance and fill in data
-        data = Data(grid, p.numberOfCarriers)
+        data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
 
         ## Possible choices: Stationary, Transient
         data.modelType = Transient
@@ -233,33 +241,33 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
+        control.Δt = 5.0e-2
+        control.Δt_grow = 1.03
+        ## calculation of solution
+        sol = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tend), control = control)
+
+        tvalues = sol.t
+        number_tsteps = length(tvalues)
+
         ## for saving I-V data
         IV = zeros(0) # for IV values
         biasValues = zeros(0) # for bias values
 
         for istep in 2:number_tsteps
 
-            t = tvalues[istep]       # Actual time
-            Δu = t * scanrate         # Applied voltage
-            Δt = t - tvalues[istep - 1] # Time step size
-
-            ## Apply new voltage; set non equilibrium boundary conditions
-            set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
-
-            if test == false
-                println("time value: t = $(t) s")
-            end
-
-            solution = solve(ctsys, inival = inival, control = control, tstep = Δt)
+            Δt = tvalues[istep] - tvalues[istep - 1]  # Time step size
+            inival = sol.u[istep - 1]
+            solution = sol.u[istep]
 
             ## get I-V data
             current = get_current_val(ctsys, solution, inival, Δt)
-
             push!(IV, current)
-            push!(biasValues, Δu)
 
             inival = solution
+
         end # time loop
+
+        biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
         if test == false
             println("*** done\n")
@@ -281,7 +289,7 @@ module PSC_2D_unstructuredGrid
             Plotter.zlabel("potential [V]")
             ## ################
             Plotter.figure()
-            Plotter.plot(biasValues, IV .* (cm)^2 / height, label = "", linewidth = 3, marker = "o")
+            Plotter.plot(biasValues[2:end], IV .* (cm)^2 / height, label = "", linewidth = 3, marker = "o")
             PyPlot.grid()
             Plotter.ylabel("total current [A]") #
             Plotter.xlabel("Applied Voltage [V]")
@@ -307,7 +315,7 @@ module PSC_2D_unstructuredGrid
     end #  main
 
     function test()
-        testval = -0.5677056490562654; testvalvacancyEnergyCalculation = -0.5699122214278122
+        testval = -0.567652680070852; testvalvacancyEnergyCalculation = -0.5698594336140043
         return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
     end
 

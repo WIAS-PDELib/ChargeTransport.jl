@@ -1870,21 +1870,24 @@ end
 """
 Calculates current for time dependent problem.
 """
-function get_current_val(ctsys, U, Uold, Δt) # DA: But caution, still need some small modification!
+function get_current_val(ctsys, U, Uold, Δt)
 
+    ipsi = ctsys.fvmsys.physics.data.index_psi
     factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
 
     # left outer boundary = 1; right outer boundary = 2 (caution with order)
     tf = testfunction(factory, [1], [2])
-    I = integrate(ctsys, tf, U, Uold, Δt)
+
+    IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, U)
+    IEdgeOld = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, Uold)
 
     current = 0.0
-    for ii in eachindex(I)
-        current = current + I[ii]
+    for ii in 1:(length(IEdge) - 1)
+        current = current + IEdge[ii]
     end
 
-    # DA: caution I[ipsi] not completely correct. In our examples, this does not effect something,
-    # but we need derivative here.
+    current = current + (IEdge[ipsi] - IEdgeOld[ipsi]) / Δt # last one corresponds to displacement current
+
     return current
 end
 ###########################################################
@@ -1899,11 +1902,13 @@ function get_current_val(ctsys, U)
 
     # left outer boundary = 1; right outer boundary = 2 (caution with order)
     tf = testfunction(factory, [1], [2])
-    I = VoronoiFVM.integrate(ctsys.fvmsys, tf, U)
+
+    IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, U)
 
     current = 0.0
-    for ii in eachindex(I)
-        current = current + I[ii]
+    # no displacement as we have steady state, this way last one is taken out as it corresponds to electric potential
+    for ii in 1:(length(IEdge) - 1)
+        current = current + IEdge[ii]
     end
 
     return current
