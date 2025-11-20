@@ -27,12 +27,20 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
 
     # primary data for I-V scan protocol
     scanrate = 1.0 * V / s
-    ntsteps = 31
     vend = voltageAcceptor # bias goes until the given voltage at acceptor boundary
     tend = vend / scanrate
 
-    # with fixed timestep sizes we can calculate the times a priori
-    tvalues = range(0, stop = tend, length = ntsteps)
+    # Define scan protocol function
+    function linearScanProtocol(t)
+        return if t == Inf
+            0.0
+        else
+            scanrate * t
+        end
+    end
+
+    # Apply zero voltage on left boundary and a linear scan protocol on right boundary
+    contactVoltageFunction = [zeroVoltage, linearScanProtocol]
 
     if test == false
         println(&quot;*** done\n&quot;)
@@ -105,7 +113,7 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
     ################################################################################
 
     # Initialize Data instance and fill in data
-    data = Data(grid, p.numberOfCarriers)
+    data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
 
     # Possible choices: Stationary, Transient
     data.modelType = Transient
@@ -187,48 +195,46 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
 
     ################################################################################
     if test == false
-        println(&quot;I-V Measurement Loop&quot;)
+        println(&quot;I-V Measurement&quot;)
     end
     ################################################################################
+
+    control.Δt = 5.0e-2
+    control.Δt_grow = 1.03
+    # calculation of solution
+    sol = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tend), control = control)
+
+    tvalues = sol.t
+    number_tsteps = length(tvalues)
 
     # for saving I-V data
     IV = zeros(0) # for IV values
     biasValues = zeros(0) # for bias values
 
-    for istep in 2:ntsteps
+    for istep in 2:number_tsteps
 
-        t = tvalues[istep]       # Actual time
-        Δu = t * scanrate         # Applied voltage
-        Δt = t - tvalues[istep - 1] # Time step size
-
-        # Apply new voltage (set non-equilibrium values)
-        set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
-
-        if test == false
-            println(&quot;time value: Δt = $(t)&quot;)
-        end
-
-        solution = solve(ctsys, inival = inival, control = control, tstep = Δt)
-        inival = solution
+        Δt = tvalues[istep] - tvalues[istep - 1]  # Time step size
+        inival = sol.u[istep - 1]
+        solution = sol.u[istep]
 
         # get I-V data
         current = get_current_val(ctsys, solution, inival, Δt)
-
         push!(IV, current)
-        push!(biasValues, Δu)
 
-        if plotting
-            label_solution, label_density, label_energy = set_plotting_labels(data)
-            label_solution[p.iphia] = &quot;\$ \\varphi_a\$&quot;
-
-            Plotter.clf()
-            plot_solution(Plotter, ctsys, solution, &quot;bias \$\\Delta u\$ = $(Δu)&quot;, label_solution)
-            Plotter.pause(0.5)
-        end
+        inival = solution
 
     end # time loop
 
-    ##res = [biasValues, IV]
+    biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
+
+    if plotting
+        Plotter.figure()
+        Plotter.plot(tvalues, biasValues, marker = &quot;o&quot;)
+        Plotter.xlabel(&quot;time [s]&quot;)
+        Plotter.ylabel(&quot;bias [V]&quot;)
+        Plotter.figure()
+        plot_IV(Plotter, biasValues[2:end], IV, &quot;Total current&quot;)
+    end
 
     if test == false
         println(&quot;*** done\n&quot;)
@@ -253,9 +259,9 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
 end # main
 
 function test()
-    testval = -0.5965842980773581; testvalvacancyEnergyCalculation = -0.5967127688772338
+    testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
     return main(test = true) ≈ testval &amp;&amp; main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
 end
 
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex105_PSC_gradedFlux/">« Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a class="docs-footer-nextpage" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Wednesday 22 October 2025 15:35">Wednesday 22 October 2025</span>. Using Julia version 1.12.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex105_PSC_gradedFlux/">« Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a class="docs-footer-nextpage" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.0 on <span class="colophon-date" title="Thursday 20 November 2025 15:37">Thursday 20 November 2025</span>. Using Julia version 1.12.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

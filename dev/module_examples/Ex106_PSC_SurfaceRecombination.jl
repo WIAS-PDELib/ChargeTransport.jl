@@ -42,12 +42,20 @@ function main(;
 
     ## primary data for I-V scan protocol
     scanrate = 1.0 * V / s
-    ntsteps = 31
     vend = voltageAcceptor # bias goes until the given voltage at acceptor boundary
     tend = vend / scanrate
 
-    ## with fixed timestep sizes we can calculate the times a priori
-    tvalues = range(0, stop = tend, length = ntsteps)
+    ## Define scan protocol function
+    function linearScanProtocol(t)
+        return if t == Inf
+            0.0
+        else
+            scanrate * t
+        end
+    end
+
+    ## Apply zero voltage on left boundary and a linear scan protocol on right boundary
+    contactVoltageFunction = [zeroVoltage, linearScanProtocol]
 
     if test == false
         println("*** done\n")
@@ -120,7 +128,7 @@ function main(;
     ################################################################################
 
     ## Initialize Data instance and fill in data
-    data = Data(grid, p.numberOfCarriers)
+    data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
 
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
@@ -202,48 +210,46 @@ function main(;
 
     ################################################################################
     if test == false
-        println("I-V Measurement Loop")
+        println("I-V Measurement")
     end
     ################################################################################
+
+    control.Δt = 5.0e-2
+    control.Δt_grow = 1.03
+    ## calculation of solution
+    sol = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tend), control = control)
+
+    tvalues = sol.t
+    number_tsteps = length(tvalues)
 
     ## for saving I-V data
     IV = zeros(0) # for IV values
     biasValues = zeros(0) # for bias values
 
-    for istep in 2:ntsteps
+    for istep in 2:number_tsteps
 
-        t = tvalues[istep]       # Actual time
-        Δu = t * scanrate         # Applied voltage
-        Δt = t - tvalues[istep - 1] # Time step size
-
-        ## Apply new voltage (set non-equilibrium values)
-        set_contact!(ctsys, p.bregionAcceptor, Δu = Δu)
-
-        if test == false
-            println("time value: Δt = $(t)")
-        end
-
-        solution = solve(ctsys, inival = inival, control = control, tstep = Δt)
-        inival = solution
+        Δt = tvalues[istep] - tvalues[istep - 1]  # Time step size
+        inival = sol.u[istep - 1]
+        solution = sol.u[istep]
 
         ## get I-V data
         current = get_current_val(ctsys, solution, inival, Δt)
-
         push!(IV, current)
-        push!(biasValues, Δu)
 
-        if plotting
-            label_solution, label_density, label_energy = set_plotting_labels(data)
-            label_solution[p.iphia] = "\$ \\varphi_a\$"
-
-            Plotter.clf()
-            plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(Δu)", label_solution)
-            Plotter.pause(0.5)
-        end
+        inival = solution
 
     end # time loop
 
-    ##res = [biasValues, IV]
+    biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
+
+    if plotting
+        Plotter.figure()
+        Plotter.plot(tvalues, biasValues, marker = "o")
+        Plotter.xlabel("time [s]")
+        Plotter.ylabel("bias [V]")
+        Plotter.figure()
+        plot_IV(Plotter, biasValues[2:end], IV, "Total current")
+    end
 
     if test == false
         println("*** done\n")
@@ -268,7 +274,7 @@ function main(;
 end # main
 
 function test()
-    testval = -0.5965842980773581; testvalvacancyEnergyCalculation = -0.5967127688772338
+    testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
     return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
 end
 
