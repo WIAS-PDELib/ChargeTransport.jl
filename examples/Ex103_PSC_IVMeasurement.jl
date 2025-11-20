@@ -365,13 +365,12 @@ function main(;
         end
     end
 
-    testval = sum(filter(!isnan, solution)) / length(solution) # when using sparse storage, we get NaN values in solution
-    return testval
+    return IV[end]
 
 end #  main
 
 function test()
-    testval = -0.6319153953275513; testvalOther = -1.1219097153257023
+    testval = 115.51652159878219; testvalOther = 0.004882940885734888
     return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
 end
 
