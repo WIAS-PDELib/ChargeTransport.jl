@@ -1906,11 +1906,12 @@ function get_current_val(ctsys, U)
     IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, U)
 
     current = 0.0
+    # no displacement as we have steady state, this way last one is taken out as it corresponds to electric potential
     for ii in 1:(length(IEdge) - 1)
         current = current + IEdge[ii]
     end
 
-    return current # no displacement as we have steady state
+    return current
 
 end
 
