@@ -73,11 +73,11 @@ function main(;
 
     if plotting
         if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global enviroment via the package manager and choose `Plotter = PyPlot`."
+            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
             plotting = false
         else
             if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global enviroment via the package manager and choose `Plotter = PyPlot`."
+                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
                 plotting = false
             end
         end
@@ -419,11 +419,11 @@ function GenerationStudy(;
 
     if plotting
         if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global enviroment via the package manager and choose `Plotter = PyPlot`."
+            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
             plotting = false
         else
             if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global enviroment via the package manager and choose `Plotter = PyPlot`."
+                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
                 plotting = false
             end
         end
