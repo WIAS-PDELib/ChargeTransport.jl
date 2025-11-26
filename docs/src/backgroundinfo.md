@@ -79,7 +79,7 @@ For a comprehensive overview of drift-diffusion models, semiconductor applicatio
 3. S. M. Sze and K. K. Ng. [Physics of Semiconductor Devices](https://onlinelibrary.wiley.com/doi/book/10.1002/0470068329). Wiley, 2006.
 
 
-# [Notation] (@id notation)
+# [Notation](@id notation)
 
 | **symbol** | **physical quantity** |   |   |   |   | **symbol** | **physical quantity** |
 | :---:         |     :---:      |          :---: |          :---: |          :---: |          :---: |          :---: |          :---: |
