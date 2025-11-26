@@ -72,16 +72,9 @@ function main(;
         verbose = false, test = false
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-                plotting = false
-            end
-        end
+    if  !isnothing(Plotter) && nameof(Plotter) != :PyPlot
+        @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
+        plotting = false
     end
 
     if plotting
@@ -559,10 +552,8 @@ function GenerationStudy(;
         Plotter.ylim(6.0e-1, 30.0)
         Plotter.yticks([1.0e0, 1.0e1, 2.0e1])
         Plotter.tight_layout()
-    end
 
-    ###################################
-    if plotting
+        ###################################
         Plotter.figure()
         Plotter.loglog(G0Vec, psimaxVec, marker = "o", markersize = size, color = "darkblue", linestyle = ":", linewidth = 5, label = "\$  ||\\psi||_{\\infty} \$ ")
         Plotter.loglog(G0Vec, phinmaxVec, marker = "o", markersize = size, color = "darkgreen", linewidth = 5, label = "\$  ||v_{\\mathrm{n}}||_{\\infty} \$ ")
@@ -579,10 +570,8 @@ function GenerationStudy(;
         Plotter.ylabel("\$ L^{\\infty} \$ norm", fontsize = 17)
         Plotter.title("Cn = $Cn; Cp = $Cp; BC = $DirichletVal, \$ \\lambda = \$ $λ")
         Plotter.tight_layout()
-    end
 
-    #####################################################################
-    if plotting
+        ###################################
         Plotter.figure()
         Blues = Plotter.get_cmap(:Blues)
         Oranges = Plotter.get_cmap(:Oranges)
@@ -611,10 +600,8 @@ function GenerationStudy(;
         Plotter.xlabel("\$ x \$", fontsize = 17)
         Plotter.ylabel("Potential", fontsize = 17)
         Plotter.tight_layout()
-    end
 
-    ###################
-    if plotting
+        ###################################
         Plotter.figure()
         Plotter.plot(coord', zp .* soleM1[iphip, :], linewidth = 5, color = Oranges(241))
         Plotter.plot(coord', zp .* sole0[iphip, :], linewidth = 5, color = Oranges(201))
@@ -629,10 +616,8 @@ function GenerationStudy(;
         Plotter.xlabel("\$ x \$", fontsize = 17)
         Plotter.ylabel("Potential", fontsize = 17)
         Plotter.tight_layout()
-    end
 
-    ###################
-    if plotting
+        ###################################
         Plotter.figure()
         Plotter.plot(coord', soleM1[ipsi, :], linewidth = 5, color = Blues(241))
         Plotter.plot(coord', sole0[ipsi, :], linewidth = 5, color = Blues(201))
@@ -647,11 +632,8 @@ function GenerationStudy(;
         Plotter.xlabel("\$ x \$", fontsize = 17)
         Plotter.ylabel("Potential", fontsize = 17)
         Plotter.tight_layout()
-    end
 
-    ######################################
-    ######################################
-    if plotting
+        ###################################
         nneM1 = FermiDiracOneHalfTeSCA.(zn * (soleM1[iphin, :] - soleM1[ipsi, :]))
         npeM1 = FermiDiracOneHalfTeSCA.(zp * (soleM1[iphip, :] - soleM1[ipsi, :]))
 
@@ -692,11 +674,9 @@ function GenerationStudy(;
         Plotter.ylabel("Density", fontsize = 17)
         Plotter.tight_layout()
 
-    end
-
-    if plotting
-        Plotter.figure()
+        ###################################
         if enableIons
+            Plotter.figure()
             Plotter.semilogy(coord', naeM1, linewidth = 5, color = Wistia(201))
             Plotter.semilogy(coord', nae0, linewidth = 5, color = Wistia(171))
             Plotter.semilogy(coord', nae1, linewidth = 5, color = Wistia(131))
@@ -711,7 +691,9 @@ function GenerationStudy(;
             Plotter.ylabel("Density", fontsize = 17)
             Plotter.tight_layout()
         end
+
     end
+
 
     return nothing
 

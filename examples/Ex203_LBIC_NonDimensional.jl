@@ -485,16 +485,9 @@ function ParameterStudy1D(;
         Plotter = nothing, plotting = false
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-                plotting = false
-            end
-        end
+    if  !isnothing(Plotter) && nameof(Plotter) != :PyPlot
+        @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
+        plotting = false
     end
 
     if plotting
