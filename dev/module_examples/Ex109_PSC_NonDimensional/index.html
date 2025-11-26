@@ -1,37 +1,63 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Nondimensionalized perovskite solar cell. · ChargeTransport.jl</title><meta name="title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta property="og:title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta property="twitter:title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta name="description" content="Documentation for ChargeTransport.jl."/><meta property="og:description" content="Documentation for ChargeTransport.jl."/><meta property="twitter:description" content="Documentation for ChargeTransport.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../general/">ChargeTransport.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../general/">Home</a></li><li><a class="tocitem" href="../../changes/">Changelog</a></li><li><a class="tocitem" href="../../backgroundinfo/">Mathematical drift-diffusion models</a></li><li><span class="tocitem">How to get started</span><ul><li><a class="tocitem" href="../../GaAs/">van Roosbroeck system</a></li><li><a class="tocitem" href="../../PSC/">Perovskite solar cell</a></li></ul></li><li><a class="tocitem" href="../../allindex/">Types, Constructors and Methods</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../Ex101_PIN/">GaAs diode (1D).</a></li><li><a class="tocitem" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D).</a></li><li><a class="tocitem" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D).</a></li><li><a class="tocitem" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D).</a></li><li><a class="tocitem" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li><li><a class="tocitem" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D).</a></li><li><a class="tocitem" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering.</a></li><li><a class="tocitem" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts.</a></li><li class="is-active"><a class="tocitem" href>Nondimensionalized perovskite solar cell.</a><ul class="internal"><li><a class="tocitem" href="#effective-DOS,-band-edge-energy-and-mobilities"><span>effective DOS, band-edge energy and mobilities</span></a></li></ul></li><li><a class="tocitem" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid).</a></li><li><a class="tocitem" href="../Ex202_Laser_simple/">Simple laser structure with 5 layers.</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Nondimensionalized perovskite solar cell.</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Nondimensionalized perovskite solar cell.</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WIAS-PDELib/ChargeTransport.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Nondimensionalized-perovskite-solar-cell."><a class="docs-heading-anchor" href="#Nondimensionalized-perovskite-solar-cell.">Nondimensionalized perovskite solar cell.</a><a id="Nondimensionalized-perovskite-solar-cell.-1"></a><a class="docs-heading-anchor-permalink" href="#Nondimensionalized-perovskite-solar-cell." title="Permalink"></a></h1><p>(<a href="../Ex109_PSC_NonDimensional.jl">source code</a>)</p><p>Simulation of charge transport in a non-dimensionalized three-layer perovskite solar cell. All physical parameters and constants are set to 1 besides the energies which are set to zero. This example serves an academic purpose.</p><pre><code class="language-julia hljs">module Ex109_PSC_NonDimensional
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Nondimensionalized perovskite solar cell. · ChargeTransport.jl</title><meta name="title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta property="og:title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta property="twitter:title" content="Nondimensionalized perovskite solar cell. · ChargeTransport.jl"/><meta name="description" content="Documentation for ChargeTransport.jl."/><meta property="og:description" content="Documentation for ChargeTransport.jl."/><meta property="twitter:description" content="Documentation for ChargeTransport.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../general/">ChargeTransport.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../general/">Home</a></li><li><a class="tocitem" href="../../changes/">Changelog</a></li><li><a class="tocitem" href="../../backgroundinfo/">Mathematical drift-diffusion models</a></li><li><span class="tocitem">How to get started</span><ul><li><a class="tocitem" href="../../GaAs/">van Roosbroeck system</a></li><li><a class="tocitem" href="../../PSC/">Perovskite solar cell</a></li></ul></li><li><a class="tocitem" href="../../allindex/">Types, Constructors and Methods</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../Ex101_PIN/">GaAs diode (1D).</a></li><li><a class="tocitem" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D).</a></li><li><a class="tocitem" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D).</a></li><li><a class="tocitem" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D).</a></li><li><a class="tocitem" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li><li><a class="tocitem" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D).</a></li><li><a class="tocitem" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering.</a></li><li><a class="tocitem" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts.</a></li><li class="is-active"><a class="tocitem" href>Nondimensionalized perovskite solar cell.</a><ul class="internal"><li><a class="tocitem" href="#A:-enableIons-false,-DirichletVal-2.0"><span>A: enableIons = false, DirichletVal = 2.0</span></a></li><li><a class="tocitem" href="#B:-enableIons-true,-DirichletVal-1.0"><span>B: enableIons = true,  DirichletVal = 1.0</span></a></li><li><a class="tocitem" href="#effective-DOS,-band-edge-energy-and-mobilities"><span>effective DOS, band-edge energy and mobilities</span></a></li></ul></li><li><a class="tocitem" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid).</a></li><li><a class="tocitem" href="../Ex202_Laser_simple/">Simple laser structure with 5 layers.</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Nondimensionalized perovskite solar cell.</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Nondimensionalized perovskite solar cell.</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WIAS-PDELib/ChargeTransport.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Nondimensionalized-perovskite-solar-cell."><a class="docs-heading-anchor" href="#Nondimensionalized-perovskite-solar-cell.">Nondimensionalized perovskite solar cell.</a><a id="Nondimensionalized-perovskite-solar-cell.-1"></a><a class="docs-heading-anchor-permalink" href="#Nondimensionalized-perovskite-solar-cell." title="Permalink"></a></h1><p>(<a href="../Ex109_PSC_NonDimensional.jl">source code</a>)</p><p>Simulation of charge transport in a non-dimensionalized three-layer perovskite solar cell. All physical parameters and constants are set to 1 besides the energies which are set to zero. This example serves an academic purpose. The main() method is doing the study for one specific prefactor G0 of the photogeneration, while the GenerationStudy() method does the parameter study with respect to G0. For the underlying manuscript</p><p><span>$Existence of solutions and uniform bounds for the stationary semiconductor equations with generation and ionic carriers$</span>,     by D. Abdel, A. Blaustein, M. Herda, C. Chainais-Hillairet, and J. Moatti.</p><p>the test cases are (for n = 80)</p><h2 id="A:-enableIons-false,-DirichletVal-2.0"><a class="docs-heading-anchor" href="#A:-enableIons-false,-DirichletVal-2.0">A: enableIons = false, DirichletVal = 2.0</a><a id="A:-enableIons-false,-DirichletVal-2.0-1"></a><a class="docs-heading-anchor-permalink" href="#A:-enableIons-false,-DirichletVal-2.0" title="Permalink"></a></h2><h2 id="B:-enableIons-true,-DirichletVal-1.0"><a class="docs-heading-anchor" href="#B:-enableIons-true,-DirichletVal-1.0">B: enableIons = true,  DirichletVal = 1.0</a><a id="B:-enableIons-true,-DirichletVal-1.0-1"></a><a class="docs-heading-anchor-permalink" href="#B:-enableIons-true,-DirichletVal-1.0" title="Permalink"></a></h2><pre><code class="language-julia hljs">module Ex109_PSC_NonDimensional
 
 using ChargeTransport
 using VoronoiFVM
-using ExtendableGrids  # grid initializer
-using PyPlot           # solution visualizer</code></pre><p>you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(;
-        n = 3,               # for number of nodes in each layer
-        Cn = 10, Cp = 10,    # doping
-        λ = 1.0,             # Debye length
-        DirichletVal = 1.0,  # Dirichlet value
-        G0 = 1.0,            # photogeneration prefactor
-        Plotter = PyPlot, plotting = false,
-        verbose = false, test = false, unknown_storage = :sparse
+using ExtendableGrids  # grid initializer</code></pre><p>using PyPlot           # solution visualizer</p><p>region numbers</p><pre><code class="language-julia hljs">region1 = 1
+region2 = 2
+region3 = 3
+regions = [region1, region2, region3]
+numberOfRegions = length(regions)</code></pre><p>boundary region numbers</p><pre><code class="language-julia hljs">bregion1 = 1
+bregion2 = 2
+
+# grid
+h1 = 1.0; h2 = 4.0; h3 = 2.0
+h_total = h1 + h2 + h3
+
+iphin = 1              # electron quasi Fermi potential
+iphip = 2              # hole quasi Fermi potential</code></pre><p>We define the physical data.</p><pre><code class="language-julia hljs">zn = -1; zp = 1; za = 1
+En = 0.0; Ep = 0.0; Ea = 0.0  # set the energies to 0
+Nn = 1.0; Np = 1.0; Na = 10.0 # set the effective DOS to 1
+μn = 1.0; μp = 1.0; μa = 1.0  # set the mobilities to 1
+T = 1.0                       # set temperature to 1
+
+# recombination parameters
+SRH_TrapDensity = 0.0
+SRH_LifeTime = 1.0
+Radiative = 1.0
+
+# doping
+Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(;
+        n = 80,               # for number of nodes in each layer
+        Cn = 10, Cp = 10,     # doping
+        λ = 1.0,              # Debye length
+        DirichletVal = 2.0,   # Dirichlet value
+        G0 = 1.0,             # photogeneration prefactor
+        enableIons = false,   # present vacancies or not
+        #################################
+        parameterStudy = false,
+        parseInival = false, inival = Array{Float64, 2},
+        #################################
+        Plotter = nothing, plotting = false,
+        verbose = false, test = false
     )
 
-    if plotting
-        Plotter.close(&quot;all&quot;)
+    if !isnothing(Plotter) &amp;&amp; nameof(Plotter) != :PyPlot
+        @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
+        plotting = false
     end
+
+    if plotting
+        Plotter.rc(&quot;font&quot;, family = &quot;sans-serif&quot;, size = 14)
+        Plotter.rc(&quot;mathtext&quot;, fontset = &quot;dejavusans&quot;)
+        Plotter.close(&quot;all&quot;)
+    end</code></pre><p>constants Here, we set the constants to unity<em>constants. In particular, we set: q = k</em>B = ε_0 = 1 When defining `ChargeTransport.constants&quot; the constants based on CODATA2022 are used.</p><pre><code class="language-julia hljs">    constants = ChargeTransport.unity_constants
 
     ################################################################################
     if test == false
         println(&quot;Set up grid and regions&quot;)
     end
-    ################################################################################</code></pre><p>constants Here, we set the constants to unity<em>constants. In particular, we set: q = k</em>B = ε_0 = 1 When defining `ChargeTransport.constants&quot; the constants based on CODATA2022 are used.</p><pre><code class="language-julia hljs">    constants = ChargeTransport.unity_constants</code></pre><p>region numbers</p><pre><code class="language-julia hljs">    region1 = 1
-    region2 = 2
-    region3 = 3
-    regions = [region1, region2, region3]
-    numberOfRegions = length(regions)</code></pre><p>boundary region numbers</p><pre><code class="language-julia hljs">    bregion1 = 1
-    bregion2 = 2
-
-    # grid
-    h1 = 1.0; h2 = 4.0; h3 = 2.0
-    h_total = h1 + h2 + h3
+    ################################################################################
 
     coord1 = collect(range(0.0; stop = h1, length = n))
     coord2 = collect(range(h1; stop = h1 + h2, length = 4 * n))
@@ -64,26 +90,20 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
     end
     ################################################################################
 
-    # set indices of the quasi Fermi potentials
-    iphin = 1              # electron quasi Fermi potential
-    iphip = 2              # hole quasi Fermi potential
-    ipsi = 3               # electric potential
-    numberOfCarriers = 2</code></pre><p>We define the physical data.</p><pre><code class="language-julia hljs">    zn = -1; zp = 1
-    En = 0.0; Ep = 0.0     # set the energies to 0
-    Nn = 1.0; Np = 1.0     # set the effective DOS to 1
-    μn = 1.0; μp = 1.0     # set the mobilities to 1
-    λ = λ                  # Debye length, entering model as `DielectricConstant`, i.e., prefactor in the displacement flux.
-    T = 1.0                # set temperature to 1
+    if enableIons &amp;&amp; DirichletVal != 1.0
+        @warn &quot;Caution, initial value for the ions is only correct for `DirichletVal = 1.0` as the average density need to be equal to Ca.
+        We adjusted the Dirichlet value to 1.0&quot;
+        DirichletVal = 1.0
+    end
 
-    # recombination parameters
-    SRH_TrapDensity = 0.0
-    SRH_LifeTime = 1.0
-    Radiative = 1.0
-
-    # doping
-    Cn = Cn
-    Cp = Cp
-    Ca = 0.0</code></pre><p>boundary value</p><pre><code class="language-julia hljs">    DirichletVal = DirichletVal</code></pre><p>photogeneration</p><pre><code class="language-julia hljs">    G(x) = G0 .* exp.(- (x .- h1))
+    if enableIons
+        iphia = 3          # vacancies
+        ipsi = 4           # electric potential
+        numberOfCarriers = 3
+    else
+        ipsi = 3           # electric potential
+        numberOfCarriers = 2
+    end</code></pre><p>photogeneration</p><pre><code class="language-julia hljs">    G(x) = G0 .* exp.(- (x .- h1))
     genData = zeros(length(coord))
     genData[length(coord1):(length(coord1) + length(coord2) - 1)] = G.(coord2)
 
@@ -102,7 +122,15 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
 
     # Following choices are possible for F: Boltzmann, FermiDiracOneHalfBednarczyk,
     # FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-    data.F .= Boltzmann
+    data.F .= FermiDiracOneHalfTeSCA
+
+    data.boundaryType[1] = OhmicContact
+    data.boundaryType[2] = OhmicContact
+
+    if enableIons
+        data.F[iphia] = FermiDiracMinusOne
+        enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [region2])
+    end
 
     # The desired recombination processes can be chosen here.
     data.bulkRecombination = set_bulk_recombination(;
@@ -129,6 +157,9 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
     params.temperature = T
     params.chargeNumbers[iphin] = zn
     params.chargeNumbers[iphip] = zp
+    if enableIons
+        params.chargeNumbers[iphia] = za
+    end
 
     for ireg in 1:numberOfRegions # region data
 
@@ -143,17 +174,15 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
 
     # doping
     params.doping[iphin, region1] = Cn
-    params.doping[iphin, region2] = Ca
-    params.doping[iphip, region3] = Cp</code></pre><p>Region dependent params is now a substruct of data which is again a substruct of the system and will be parsed in next step.</p><pre><code class="language-julia hljs">    data.params = params</code></pre><p>In the last step, we initialize our system with previous data which is likewise dependent on the parameters.</p><pre><code class="language-julia hljs">    ctsys = System(grid, data, unknown_storage = unknown_storage)
+    params.doping[iphip, region3] = Cp
 
-    # boundary model is adjusted manually with help of VoronoiFVM
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion1, 0.0)
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion1, 0.0)
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion1, asinh(Cn / 2))
-
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphin, bregion2, DirichletVal)
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, iphip, bregion2, DirichletVal)
-    VoronoiFVM.boundary_dirichlet!(ctsys.fvmsys, ipsi, bregion2, asinh(-Cp / 2) + DirichletVal)
+    # vacancy parameters
+    if enableIons
+        params.densityOfStates[iphia, region2] = Na
+        params.bandEdgeEnergy[iphia, region2] = Ea
+        params.mobility[iphia, region2] = μa
+        params.doping[iphia, region2] = Ca
+    end</code></pre><p>Region dependent params is now a substruct of data which is again a substruct of the system and will be parsed in next step.</p><pre><code class="language-julia hljs">    data.params = params</code></pre><p>In the last step, we initialize our system with previous data which is likewise dependent on the parameters.</p><pre><code class="language-julia hljs">    ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
         println(&quot;*** done\n&quot;)
@@ -168,11 +197,12 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
     control = VoronoiFVM.SolverControl()
     control.verbose = verbose
     control.maxiters = 50
-    control.abstol = 1.0e-14
-    control.reltol = 1.0e-14
-    control.tol_round = 1.0e-8
+    control.abstol = 1.0e-6
+    control.reltol = 1.0e-6
+    control.tol_round = 1.0e-6
     control.damp_initial = 0.5
-    control.max_round = 3
+    control.damp_growth = 1.61
+    control.max_round = 1
 
     if test == false
         println(&quot;*** done\n&quot;)
@@ -184,15 +214,56 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
     end
     ################################################################################
 
-    inival = ChargeTransport.unknowns(ctsys)
-    inival[iphin, :] = 0.0 .+ DirichletVal ./ h_total .* coord
-    inival[iphip, :] = 0.0 .+ DirichletVal ./ h_total .* coord
-    inival[ipsi, :] = asinh(Cn / 2) .+ ((asinh(-Cp / 2) + DirichletVal) - asinh(Cn / 2)) ./ h_total .* coord
+    # calculate equilibrium solution and as initial guess
+    inival2 = equilibrium_solve!(ctsys, control = control)
 
-    sol = ChargeTransport.solve(ctsys, inival = inival, control = control)
+    if parseInival
+        inival2 = inival
+    end
+
+    # we need to fix the average vacancy density
+    if enableIons
+        if G0 &lt; 0.1
+            inival2[iphia, :] .= 0.7
+        elseif G0 == 0.1
+            inival2[iphia, :] .= 0.705
+        elseif G0 == 0.5
+            inival2[iphia, :] .= 0.729
+        elseif G0 == 1.0
+            inival2[iphia, :] .= 0.757
+        elseif G0 == 5.0e0
+            inival2[iphia, :] .= 0.955
+        elseif G0 == 1.0e1
+            inival2[iphia, :] .= 1.143
+        elseif G0 == 5.0e1
+            inival2[iphia, :] .= 1.842
+        elseif G0 == 1.0e2
+            inival2[iphia, :] .= 2.209
+        elseif G0 == 5.0e2
+            inival2[iphia, :] .= 3.08
+        elseif G0 == 1.0e3
+            inival2[iphia, :] .= 3.435
+        end
+
+    end
+
+    set_contact!(ctsys, 2, Δu = DirichletVal)
+    sol = ChargeTransport.solve(ctsys, inival = inival2, control = control)
+
+    if enableIons &amp;&amp; test == false
+        integral = integrated_density(ctsys, sol = sol, icc = iphia, ireg = region2)
+        mOmega = data.regionVolumes[region2]
+
+        println(&quot;Given vacancy density is: &quot;, Ca)
+        println(&quot;Calculated average vacancy density is: &quot;, integral / mOmega)
+    end
 
     if test == false
         println(&quot;*** done\n&quot;)
+    end
+
+    if parameterStudy
+        return coord, sol
     end
 
     ################################################################################
@@ -201,49 +272,365 @@ using PyPlot           # solution visualizer</code></pre><p>you can set verbose 
     end
     ################################################################################
 
-    nn = exp.(zn * (sol[iphin, :] - sol[ipsi, :]))
-    np = exp.(zp * (sol[iphip, :] - sol[ipsi, :]))
+    nn = Nn .* data.F[iphin].(zn * (sol[iphin, :] - sol[ipsi, :]))
+    np = Np .* data.F[iphip].(zp * (sol[iphip, :] - sol[ipsi, :]))
+    if enableIons
+        na = Na .* data.F[iphia].(za * (sol[iphia, :] - sol[ipsi, :]))
+    end
 
     if plotting
 
-        figure()
-        PyPlot.plot(coord, sol[iphin, :], color = &quot;green&quot;, linewidth = 5, label = &quot;\$ \\varphi_{\\mathrm{n}}}\$&quot;)
-        PyPlot.plot(coord, sol[iphip, :], color = &quot;red&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ \\varphi_{\\mathrm{p}}}\$&quot;)
-        PyPlot.plot(coord, sol[ipsi, :], color = &quot;blue&quot;, linewidth = 5, label = &quot;\$ \\psi\$&quot;)
-        axvspan(0.0, 1.0, facecolor = [243 / 255 192 / 255 192 / 255])
-        axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
-        axvspan(5.0, 7.0, facecolor = [211 / 255 232 / 255 208 / 255])
-        xlabel(&quot;\$ x \$&quot;, fontsize = 17)
-        ylabel(&quot;Potential&quot;, fontsize = 17)
-        tight_layout()
-        PyPlot.legend(loc = &quot;center right&quot;, fontsize = 14)
+        Plotter.figure()
+        Plotter.plot(coord, zn .* sol[iphin, :], color = &quot;green&quot;, linewidth = 5, label = &quot;\$ v_{\\mathrm{n}}}\$&quot;)
+        Plotter.plot(coord, zp .* sol[iphip, :], color = &quot;red&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ v_{\\mathrm{p}}}\$&quot;)
+        Plotter.plot(coord, sol[ipsi, :], color = &quot;blue&quot;, linestyle = &quot;:&quot;, linewidth = 5, label = &quot;\$ \\psi\$&quot;)
+        if enableIons
+            Plotter.plot(coord[n:5n], za .* sol[iphia, n:5n], color = &quot;gold&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ v_{\\mathrm{a}}}\$&quot;)
+        end
+        Plotter.axvspan(0.0, 1.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        Plotter.axvspan(5.0, 7.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        Plotter.xlim(0.0, 7.0)
+        Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+        Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        Plotter.ylabel(&quot;Potential&quot;, fontsize = 17)
+        Plotter.tight_layout()
+        Plotter.legend(loc = &quot;center right&quot;, fontsize = 14)
         ########################################################
 
-        figure()
-        PyPlot.semilogy(coord, nn, color = &quot;green&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{n}}}\$&quot;)
-        PyPlot.semilogy(coord, np, color = &quot;red&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{p}}}\$&quot;)
-        PyPlot.legend(loc = &quot;center right&quot;, fontsize = 14)
-        axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
-        axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
-        axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
-        xlabel(&quot;\$ x \$&quot;, fontsize = 17)
-        ylabel(&quot;Density&quot;, fontsize = 17)
-        tight_layout()
+        Plotter.figure()
+        Plotter.semilogy(coord, nn, color = &quot;green&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{n}}}\$&quot;)
+        Plotter.semilogy(coord, np, color = &quot;red&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{p}}}\$&quot;)
+        if enableIons
+            Plotter.semilogy(coord[n:5n], na[n:5n], color = &quot;gold&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{a}}}\$&quot;)
+        end
+        Plotter.legend(loc = &quot;center right&quot;, fontsize = 14)
+        Plotter.xlim(0.0, 7.0)
+        Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+        Plotter.axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        Plotter.ylabel(&quot;Density&quot;, fontsize = 17)
+        Plotter.tight_layout()
 
     end
+
+    return sum(filter(!isnan, sol)) / length(sol)
 
     if test == false &amp;&amp; plotting
         println(&quot;*** done\n&quot;)
     end
 
-    return sum(filter(!isnan, sol)) / length(sol)
-
 end #  main
 
+
+#######################################################################
+#######################################################################</code></pre><p>For the underlying manuscript, the test cases are (for n = 80)</p><pre><code class="language-julia hljs"># A: enableIons = false, DirichletVal = 2.0
+# B: enableIons = true,  DirichletVal = 1.0
+
+function GenerationStudy(;
+        n = 80,               # for number of nodes in each layer
+        Cn = 10, Cp = 10,     # doping
+        λ = 1.0,              # Debye length
+        DirichletVal = 2.0,   # Dirichlet value
+        enableIons = false,   # enabling ions
+        Plotter = nothing, plotting = false,
+        verbose = false
+    )
+
+    if plotting
+        if isnothing(Plotter)
+            @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
+            plotting = false
+        else
+            if nameof(Plotter) != :PyPlot
+                @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
+                plotting = false
+            end
+        end
+    end
+
+    Plotter.rc(&quot;font&quot;, family = &quot;sans-serif&quot;, size = 14)
+    Plotter.rc(&quot;mathtext&quot;, fontset = &quot;dejavusans&quot;)
+    Plotter.close(&quot;all&quot;)
+
+    if enableIons &amp;&amp; DirichletVal != 1.0
+        @warn &quot;Caution, initial value for the ions is only correct for `DirichletVal = 1.0` as the average density need to be equal to Ca.
+        We adjusted the Dirichlet value to 1.0&quot;
+        DirichletVal = 1.0
+    end
+
+    if enableIons
+        iphia = 3          # vacancies
+        ipsi = 4           # electric potential
+        numberOfCarriers = 3
+    else
+        ipsi = 3           # electric potential
+        numberOfCarriers = 2
+    end
+
+    G0Vec = [1.0e-3, 5.0e-3, 1.0e-2, 5.0e-2, 1.0e-1, 5.0e-1, 1.0e0, 5.0e0, 1.0e1, 5.0e1, 1.0e2, 5.0e2, 1.0e3]
+
+    soleM1 = Array{Float64, 2}; sole0 = Array{Float64, 2}
+    sole1 = Array{Float64, 2}; sole2 = Array{Float64, 2}
+    ####
+    nnmaxVec = zeros(0); npmaxVec = zeros(0); namaxVec = zeros(0)
+    phinmaxVec = zeros(0); phipmaxVec = zeros(0)
+    phiamaxVec = zeros(0); psimaxVec = zeros(0)
+
+    ##### first one
+    G0 = G0Vec[1]
+    println(&quot;G0 = &quot;, G0)
+
+    coord, sol = main(n = n, Cn = Cn, Cp = Cp, λ = λ, DirichletVal = DirichletVal, G0 = G0, enableIons = enableIons, parameterStudy = true, test = true, verbose = verbose)
+
+    nn = FermiDiracOneHalfTeSCA.(zn * (sol[iphin, :] - sol[ipsi, :]))
+    np = FermiDiracOneHalfTeSCA.(zp * (sol[iphip, :] - sol[ipsi, :]))
+
+    ####
+    nnmax = maximum(abs.(nn))
+    npmax = maximum(abs.(np))
+    phinmax = maximum(abs.(sol[iphin, :]))
+    phipmax = maximum(abs.(sol[iphip, :]))
+    psimax = maximum(abs.(sol[ipsi, :]))
+
+    #####################################
+    push!(nnmaxVec, nnmax)
+    push!(npmaxVec, npmax)
+    push!(phinmaxVec, phinmax)
+    push!(phipmaxVec, phipmax)
+    push!(psimaxVec, psimax)
+
+    if enableIons
+        na = filter(!isnan, Na .* FermiDiracMinusOne.(za * (sol[iphia, :] - sol[ipsi, :])))
+        namax = maximum(abs.(na))
+        phiamax = maximum(abs.(filter(!isnan, sol[iphia, :])))
+
+        push!(namaxVec, namax)
+        push!(phiamaxVec, phiamax)
+    end
+
+    inival = sol
+
+    ######################################
+
+    for G0 in G0Vec[2:end]
+
+        println(&quot;G0 = &quot;, G0)
+
+        coord, sol = main(n = n, Cn = Cn, Cp = Cp, λ = λ, DirichletVal = DirichletVal, G0 = G0, enableIons = enableIons, parameterStudy = true, parseInival = true, inival = inival, test = true, verbose = verbose)
+
+        nn = FermiDiracOneHalfTeSCA.(zn * (sol[iphin, :] - sol[ipsi, :]))
+        np = FermiDiracOneHalfTeSCA.(zp * (sol[iphip, :] - sol[ipsi, :]))
+
+        ####
+        nnmax = maximum(abs.(nn))
+        npmax = maximum(abs.(np))
+        phinmax = maximum(abs.(sol[iphin, :]))
+        phipmax = maximum(abs.(sol[iphip, :]))
+        psimax = maximum(abs.(sol[ipsi, :]))
+
+        #####################################
+        push!(nnmaxVec, nnmax)
+        push!(npmaxVec, npmax)
+        push!(phinmaxVec, phinmax)
+        push!(phipmaxVec, phipmax)
+        push!(psimaxVec, psimax)
+
+        if enableIons
+            na = filter(!isnan, Na .* FermiDiracMinusOne.(za * (sol[iphia, :] - sol[ipsi, :])))
+            namax = maximum(abs.(na))
+            phiamax = maximum(abs.(filter(!isnan, sol[iphia, :])))
+
+            push!(namaxVec, namax)
+            push!(phiamaxVec, phiamax)
+        end
+
+        inival = sol
+
+        if G0 == 1.0e-1
+            soleM1 = copy(sol)
+        elseif G0 == 1.0e0
+            sole0 = copy(sol)
+        elseif G0 == 1.0e1
+            sole1 = copy(sol)
+        elseif G0 == 1.0e2
+            sole2 = copy(sol)
+        end
+    end
+
+    ###################################
+    if plotting
+        size = 12
+        if enableIons
+            Plotter.loglog(G0Vec, Ca .* ones(length(G0Vec)), color = &quot;gray&quot;, linestyle = &quot;:&quot;, linewidth = 4, label = &quot;\$  M_{\\mathrm{a}} \$ &quot;)
+        end
+        Plotter.loglog(G0Vec, nnmaxVec, marker = &quot;o&quot;, markersize = size, linewidth = 5, color = &quot;darkgreen&quot;, label = &quot;\$  || n_{\\mathrm{n}} ||_{\\infty} \$ &quot;)
+        #####
+        Plotter.loglog(G0Vec, npmaxVec, marker = &quot;o&quot;, linewidth = 5, linestyle = &quot;--&quot;, markersize = size, color = &quot;darkred&quot;, label = &quot;\$  || n_{\\mathrm{p}} ||_{\\infty} \$ &quot;)
+        if enableIons
+            Plotter.loglog(G0Vec, namaxVec, marker = &quot;o&quot;, linewidth = 5, markersize = size, color = &quot;gold&quot;, label = &quot;\$  || n_{\\mathrm{a}} ||_{\\infty} \$ &quot;)
+        end
+        Plotter.legend(fontsize = 15)
+        Plotter.xlabel(&quot; \$ G_0 \$ &quot;, fontsize = 17)
+        Plotter.ylabel(&quot;\$ L^{\\infty} \$ norm&quot;, fontsize = 17)
+        Plotter.title(&quot;Cn = $Cn; Cp = $Cp; BC = $DirichletVal, \$ \\lambda = \$ $λ&quot;)
+        Plotter.xlim(7.0e-4, 3.0e3)
+        Plotter.ylim(6.0e-1, 30.0)
+        Plotter.yticks([1.0e0, 1.0e1, 2.0e1])
+        Plotter.tight_layout()
+
+        ###################################
+        Plotter.figure()
+        Plotter.loglog(G0Vec, psimaxVec, marker = &quot;o&quot;, markersize = size, color = &quot;darkblue&quot;, linestyle = &quot;:&quot;, linewidth = 5, label = &quot;\$  ||\\psi||_{\\infty} \$ &quot;)
+        Plotter.loglog(G0Vec, phinmaxVec, marker = &quot;o&quot;, markersize = size, color = &quot;darkgreen&quot;, linewidth = 5, label = &quot;\$  ||v_{\\mathrm{n}}||_{\\infty} \$ &quot;)
+        Plotter.loglog(G0Vec, phipmaxVec, marker = &quot;o&quot;, markersize = size, linestyle = &quot;--&quot;, color = &quot;darkred&quot;, linewidth = 5, label = &quot;\$  ||v_{\\mathrm{p}}||_{\\infty} \$ &quot;)
+        if enableIons
+            Plotter.loglog(G0Vec, phiamaxVec, marker = &quot;o&quot;, markersize = size, color = &quot;gold&quot;, linewidth = 5, label = &quot;\$  ||v_{\\mathrm{a}}||_{\\infty} \$ &quot;)
+        end
+
+        Plotter.xlim(7.0e-4, 3.0e3)
+        Plotter.ylim(6.0e-1, 30.0)
+        Plotter.yticks([1.0e0, 1.0e1, 2.0e1])
+        Plotter.legend(fontsize = 15)
+        Plotter.xlabel(&quot; \$ G_0 \$ &quot;, fontsize = 17)
+        Plotter.ylabel(&quot;\$ L^{\\infty} \$ norm&quot;, fontsize = 17)
+        Plotter.title(&quot;Cn = $Cn; Cp = $Cp; BC = $DirichletVal, \$ \\lambda = \$ $λ&quot;)
+        Plotter.tight_layout()
+
+        ###################################
+        Plotter.figure()
+        Blues = Plotter.get_cmap(:Blues)
+        Oranges = Plotter.get_cmap(:Oranges)
+        Greens = Plotter.get_cmap(:Greens)
+        Wistia = Plotter.get_cmap(:Wistia)
+
+        if enableIons
+            Plotter.plot(coord[n:5n]&#39;, za .* soleM1[iphia, n:5n], linewidth = 5, color = Wistia(201))
+            Plotter.plot(coord[n:5n]&#39;, za .* sole0[iphia, n:5n], linewidth = 5, color = Wistia(171))
+            Plotter.plot(coord[n:5n]&#39;, za .* sole1[iphia, n:5n], linewidth = 5, color = Wistia(131))
+            Plotter.plot(coord[n:5n]&#39;, za .* sole2[iphia, n:5n], linewidth = 5, color = Wistia(101))
+        end
+
+        Plotter.plot(coord&#39;, zn .* soleM1[iphin, :], linewidth = 5, color = Greens(241))
+        Plotter.plot(coord&#39;, zn .* sole0[iphin, :], linewidth = 5, color = Greens(201))
+        Plotter.plot(coord&#39;, zn .* sole1[iphin, :], linewidth = 5, color = Greens(161))
+        Plotter.plot(coord&#39;, zn .* sole2[iphin, :], linewidth = 5, color = Greens(121))
+
+
+        Plotter.xlim(0.0, 7.0)
+        Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+        Plotter.ylim(-5.8, 7.5)
+        Plotter.axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        Plotter.ylabel(&quot;Potential&quot;, fontsize = 17)
+        Plotter.tight_layout()
+
+        ###################################
+        Plotter.figure()
+        Plotter.plot(coord&#39;, zp .* soleM1[iphip, :], linewidth = 5, color = Oranges(241))
+        Plotter.plot(coord&#39;, zp .* sole0[iphip, :], linewidth = 5, color = Oranges(201))
+        Plotter.plot(coord&#39;, zp .* sole1[iphip, :], linewidth = 5, color = Oranges(161))
+        Plotter.plot(coord&#39;, zp .* sole2[iphip, :], linewidth = 5, color = Oranges(121))
+        Plotter.xlim(0.0, 7.0)
+        Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+        Plotter.ylim(-5.8, 7.5)
+        Plotter.axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        Plotter.ylabel(&quot;Potential&quot;, fontsize = 17)
+        Plotter.tight_layout()
+
+        ###################################
+        Plotter.figure()
+        Plotter.plot(coord&#39;, soleM1[ipsi, :], linewidth = 5, color = Blues(241))
+        Plotter.plot(coord&#39;, sole0[ipsi, :], linewidth = 5, color = Blues(201))
+        Plotter.plot(coord&#39;, sole1[ipsi, :], linewidth = 5, color = Blues(161))
+        Plotter.plot(coord&#39;, sole2[ipsi, :], linewidth = 5, color = Blues(121))
+        Plotter.xlim(0.0, 7.0)
+        Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+        Plotter.ylim(-5.8, 7.5)
+        Plotter.axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        Plotter.ylabel(&quot;Potential&quot;, fontsize = 17)
+        Plotter.tight_layout()
+
+        ###################################
+        nneM1 = FermiDiracOneHalfTeSCA.(zn * (soleM1[iphin, :] - soleM1[ipsi, :]))
+        npeM1 = FermiDiracOneHalfTeSCA.(zp * (soleM1[iphip, :] - soleM1[ipsi, :]))
+
+        nne0 = FermiDiracOneHalfTeSCA.(zn * (sole0[iphin, :] - sole0[ipsi, :]))
+        npe0 = FermiDiracOneHalfTeSCA.(zp * (sole0[iphip, :] - sole0[ipsi, :]))
+
+        nne1 = FermiDiracOneHalfTeSCA.(zn * (sole1[iphin, :] - sole1[ipsi, :]))
+        npe1 = FermiDiracOneHalfTeSCA.(zp * (sole1[iphip, :] - sole1[ipsi, :]))
+
+        nne2 = FermiDiracOneHalfTeSCA.(zn * (sole2[iphin, :] - sole2[ipsi, :]))
+        npe2 = FermiDiracOneHalfTeSCA.(zp * (sole2[iphip, :] - sole2[ipsi, :]))
+
+        if enableIons
+            naeM1 = Na .* FermiDiracMinusOne.(za * (soleM1[iphia, :] - soleM1[ipsi, :]))
+            nae0 = Na .* FermiDiracMinusOne.(za * (sole0[iphia, :] - sole0[ipsi, :]))
+            nae1 = Na .* FermiDiracMinusOne.(za * (sole1[iphia, :] - sole1[ipsi, :]))
+            nae2 = Na .* FermiDiracMinusOne.(za * (sole2[iphia, :] - sole2[ipsi, :]))
+        end
+
+        Plotter.figure()
+        Plotter.semilogy(coord&#39;, nneM1, linewidth = 5, color = Greens(241))
+        Plotter.semilogy(coord&#39;, nne0, linewidth = 5, color = Greens(201))
+        Plotter.semilogy(coord&#39;, nne1, linewidth = 5, color = Greens(161))
+        Plotter.semilogy(coord&#39;, nne2, linewidth = 5, color = Greens(121))
+        #################
+        Plotter.semilogy(coord&#39;, npeM1, linewidth = 5, color = Oranges(241))
+        Plotter.semilogy(coord&#39;, npe0, linewidth = 5, color = Oranges(201))
+        Plotter.semilogy(coord&#39;, npe1, linewidth = 5, color = Oranges(161))
+        Plotter.semilogy(coord&#39;, npe2, linewidth = 5, color = Oranges(121))
+        ##########
+        Plotter.xlim(0.0, 7.0)
+        Plotter.ylim(3.0e-3, 1.5e1)
+        Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+        Plotter.axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+        Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+        Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+        Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+        Plotter.ylabel(&quot;Density&quot;, fontsize = 17)
+        Plotter.tight_layout()
+
+        ###################################
+        if enableIons
+            Plotter.figure()
+            Plotter.semilogy(coord&#39;, naeM1, linewidth = 5, color = Wistia(201))
+            Plotter.semilogy(coord&#39;, nae0, linewidth = 5, color = Wistia(171))
+            Plotter.semilogy(coord&#39;, nae1, linewidth = 5, color = Wistia(131))
+            Plotter.semilogy(coord&#39;, nae2, linewidth = 5, color = Wistia(101))
+            Plotter.xlim(0.0, 7.0)
+            Plotter.yticks([1.0e0, 1.0e1])
+            Plotter.xticks([0.0, 1.0, 3.0, 5.0, 7.0])
+            Plotter.axvspan(0.0, 1.0, facecolor = [211 / 255 232 / 255 208 / 255])
+            Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
+            Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
+            Plotter.xlabel(&quot;\$ x \$&quot;, fontsize = 17)
+            Plotter.ylabel(&quot;Density&quot;, fontsize = 17)
+            Plotter.tight_layout()
+        end
+
+    end
+
+
+    return nothing
+
+end
+
 function test()
-    testval = 0.4760637366166469
-    return main(test = true, unknown_storage = :dense) ≈ testval &amp;&amp; main(test = true, unknown_storage = :sparse) ≈ testval
+    testval = 0.9289261210695825
+    return main(test = true) ≈ testval
 end
 
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS/">« CIGS: stationary with Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 26 November 2025 15:18">Wednesday 26 November 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS/">« CIGS: stationary with Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 26 November 2025 15:19">Wednesday 26 November 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
