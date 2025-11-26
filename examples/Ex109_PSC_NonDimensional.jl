@@ -9,6 +9,7 @@ the GenerationStudy() method does the parameter study with respect to G0.
 For the underlying manuscript
 
 ``Existence of solutions and uniform bounds for the stationary semiconductor equations with generation and ionic carriers``,
+    by D. Abdel, A. Blaustein, M. Herda, C. Chainais-Hillairet, and J. Moatti.
 
 the test cases are (for n = 80)
 ## A: enableIons = false, DirichletVal = 2.0

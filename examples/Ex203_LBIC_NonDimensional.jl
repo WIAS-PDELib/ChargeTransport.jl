@@ -4,7 +4,8 @@
 
 Simulation of LBIC measurement technique with a focused laser in two dimensions, accompanying the manuscript
 
-``Existence of solutions and uniform bounds for the stationary semiconductor equations with generation and ionic carriers``.
+``Existence of solutions and uniform bounds for the stationary semiconductor equations with generation and ionic carriers``,
+    by D. Abdel, A. Blaustein, M. Herda, C. Chainais-Hillairet, and J. Moatti.
 
 =#
 
