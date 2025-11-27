@@ -92,7 +92,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
     if plotting
-        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1500, 500))
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800)) # auf Mariekes Computer angepasst
         gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", show = true)
     end
 
@@ -256,12 +256,10 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
         plot_energies!(vis[1, 2], ctsys, label_BEE)
         plot_doping!(vis[2, 1], ctsys, label_density)
         plot_electroNeutralSolutionBoltzmann!(vis[2,2], grid, psi0; plotGridpoints = true)
-        reveal(vis)
         
         println("*** done\n")
     end
 
-    return nothing
     ################################################################################
     if test == false
         println("Define control parameters for Solver")
@@ -330,18 +328,15 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
     ## plot solution and IV curve
     if plotting
          ################################################################################
-        println("Plot results") # ToDo: das noch ausführlicher
+        println("Plot results")
         ################################################################################
 
-        # Idee: Hier eine Zwischenüberschrift einfügen - Ergebnissplots ( Und oben dann Modellplots)
-        plot_energies!(vis[3,1], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_energy, plotGridpoints = false)
+        plot_energies!(vis[3,1], ctsys, solution, "Energies for applied voltage Δu = $(biasValues[end])", label_energy; plotGridpoints = true)
+        plot_solution!(vis[3,2], ctsys, solution, "Solution for applied voltage Δu = $(biasValues[end])", label_solution; plotGridpoints = true)
+        plot_densities!(vis[4,1], ctsys, solution, "Carrier densities for applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
+        plot_IV!(vis[4,2], biasValues, IV, "IV curve for applied voltage Δu = $(biasValues[end])", plotGridpoints = true)
+        
         reveal(vis)
-        # plot_solution!(vis[3,2], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_solution, plotGridpoints = true)
-        # reveal(vis)
-        # plot_densities!(vis[4,1], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
-        # reveal(vis)
-        # plot_IV!(vis[4,2], biasValues, IV, "Applied voltage Δu = $(biasValues[end])", plotGridpoints = true)
-        # reveal(vis)
     end
 
     testval = solution[15]
@@ -350,6 +345,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
     if test == false
         println("*** done\n")
     end
+
 
 end #  main
 

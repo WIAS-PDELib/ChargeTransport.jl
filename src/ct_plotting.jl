@@ -10,7 +10,6 @@ e.g. mobile ionic carriers or traps, this can be done within the main file.
 # Was? sys:1: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
 
 function set_plotting_labels(data)
-
     label_energy = Matrix{LaTeXString}(undef, 2, data.params.numberOfCarriers) # band-edge energies and potential
     label_BEE = Vector{LaTeXString}(undef, data.params.numberOfCarriers)    # band-edge energie parameters
     label_density = Vector{LaTeXString}(undef, data.params.numberOfCarriers)
@@ -40,9 +39,7 @@ One input parameter is the boolean plotGridpoints which makes it possible to plo
 which indicate where the nodes are located.
 
 """
-function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGridpoints = false)
-
-    Plotter.clf()
+function plot_densities!(visualizer, ctsys, solution, title, label_density, ; plotGridpoints = false)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -60,37 +57,40 @@ function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGr
 
     params = data.params
     colors = ["green", "red", "gold", "purple", "orange"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
     for icc in 1:params.numberOfCarriers
 
         # grids = Array{ExtendableGrid, 1}(undef, numberOfRegions)
         # nicc  = Array{Array{Float64, 1}, 1}(undef, numberOfRegions)
 
-        ## first region for label
-        label_icc = label_density[icc]
-        subg = subgrid(grid, [1])
-        ncc = get_density(solution, 1, ctsys, icc)
+        label_is_plotted = false
 
-        Plotter.semilogy(subg[Coordinates]', 1.0e-6 .* ncc, marker = marker, label = label_icc, color = colors[icc], linewidth = 2)
-
-        ## additional regions
-        for ireg in 2:numberOfRegions
+        for ireg in 1:numberOfRegions
             subg = subgrid(grid, [ireg])
             ncc = get_density(solution, ireg, ctsys, icc)
 
             ## Note that this implies a 1D plot, for multidimensional plots, you may work with
             ## GridVisualize.jl or write your own code.
-            Plotter.semilogy(subg[Coordinates]', 1.0e-6 .* ncc, marker = marker, color = colors[icc], linewidth = 2)
+            scalarplot!(
+                visualizer,
+                subg,
+                1.0e-6 .* ncc;
+                clear = false,
+                color = colors[icc],
+                label = label_is_plotted ? nothing : label_density[icc],
+                legend = :cc,
+                linestyle = linestyles[icc],
+                linewidth = 3,
+                title = title,
+                xlabel = L"\text{space } [m]",
+                ylabel = L"\text{density } [\frac{1}{cm^3}]",
+                yscale = :log
+            )
+            label_is_plotted = true
+
         end
-
     end
-
-    Plotter.grid()
-    Plotter.xlabel("space [\$m\$]")
-    Plotter.ylabel("density [\$\\frac{1}{cm^3}\$]")
-    Plotter.legend(fancybox = true, loc = "best", fontsize = 11)
-    Plotter.title(title)
-    Plotter.tight_layout()
 
     return nothing
 end
@@ -110,10 +110,7 @@ which indicate where the nodes are located.
 
 """
 
-# MO: scalarplot!() hat Probleme mit dem Input, hier weitermachen!
-function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plotGridpoints = false)
-
-    #Plotter.clf()
+function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGridpoints = false)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -125,7 +122,7 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plot
         println("plot_energies is so far only implemented in 1D")
     end
 
-    if plotGridpoints == true
+    if plotGridpoints
         marker = :circle
     else
         marker = :none
@@ -136,40 +133,13 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plot
 
     for icc in data.electricCarrierList
 
-        # grids = Array{ExtendableGrid, 1}(undef, numberOfRegions)
-        # nicc  = Array{Array{Float64, 1}, 1}(undef, numberOfRegions)
+        # Todo: Legend 
+        #grids = Array{ExtendableGrid, 1}(undef, numberOfRegions)
+        #nicc  = Array{Array{Float64, 1}, 1}(undef, numberOfRegions)
 
-        ## first region for label
-        subg = subgrid(grid, [1])
-        Ecc = get_BEE(icc, 1, ctsys)
-        solpsi = view(solution[data.index_psi, :], subg)
-        solcc = view(solution[icc, :], subg)
+        label_is_plotted = false
 
-        @show subg[Coordinates]'
-        @show Ecc ./ q .- solpsi
-
-        scalarplot!(
-            visualizer,
-            subg[Coordinates]',
-            Ecc ./ q .- solpsi,
-            label = label_energy[1, icc],
-            marker = marker,
-            linewidth = 2,
-            color = colors[icc],
-            linestyle = linestyles[1])
-
-        scalarplot!(
-            visualizer,
-            subg[Coordinates]',
-            -solcc,
-            label = label_energy[2, icc],
-            marker = marker,
-            linewidth = 2,
-            color = colors[icc],
-            linestyle = linestyles[2])
-
-        ## additional regions
-        for ireg in 2:data.params.numberOfRegions
+        for ireg in 1:data.params.numberOfRegions
             subg = subgrid(grid, [ireg])
             Ecc = get_BEE(icc, ireg, ctsys)
             solpsi = view(solution[data.index_psi, :], subg)
@@ -179,28 +149,44 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plot
             ## GridVisualize.jl or write your own code.
             scalarplot!(
                 visualizer,
-                subg[Coordinates]',
-                Ecc ./ q .- solpsi,
-                marker = marker,
+                subg,
+                Ecc ./ q .- solpsi;
+                markershape = marker,
+                title = title,
+                xlabel = L"\text{space } [m]",
+                ylabel = L"\text{energy } [eV]",
+                label = label_is_plotted ? nothing : label_energy[1, icc],
+                legend = :cc,
+                markersize = 8,
                 linewidth = 2,
                 color = colors[icc],
-                linestyle = linestyles[1])
+                linestyle = linestyles[1],
+                clear = false
+                )
 
             scalarplot!(
                 visualizer,
-                subg[Coordinates]',
+                subg,
                 - solcc,
-                marker = marker,
+                markershape = marker,
+                label = label_is_plotted ? nothing : label_energy[2, icc],
+                legend = :cc,
+                markersize = 8,
                 linewidth = 2,
                 color = colors[icc],
-                linestyle = linestyles[2])
+                linestyle = linestyles[2],
+                clear = false
+                )
+
+            label_is_plotted = true
         end
 
     end
 
     for iicc in data.ionicCarrierList
         icc = iicc.ionicCarrier
-        count = 0
+
+        label_is_plotted = false
 
         for ireg in 1:data.params.numberOfRegions
             if ireg ∈ iicc.regions
@@ -209,46 +195,36 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy, ; plot
                 solpsi = view(solution[data.index_psi, :], subg)
                 solcc = view(solution[icc, :], subg)
 
-                if count == 0
-                    label1 = label_energy[1, icc]
-                    label2 = label_energy[2, icc]
-                else
-                    label1 = ""
-                    label2 = ""
-                end
                 ## Note that this implies a 1D plot, for multidimensional plots, you may work with
                 ## GridVisualize.jl or write your own code.
                 scalarplot!(
                     visualizer,
-                    subg[Coordinates]',
+                    subg,
                     data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q),
-                    label = label1,
-                    marker = marker,
+                    label = label_is_plotted ? nothing : label_energy[1, icc],
+                    legend = :cc,
+                    markershape = marker,
                     linewidth = 2,
                     color = colors[icc],
-                    linestyle = linestyles[1])
+                    linestyle = linestyles[1]
+                    )
 
                 scalarplot!(
                     visualizer,
-                    subg[Coordinates]',
+                    subg,
                     data.params.chargeNumbers[icc] .* solcc,
-                    label = label2,
-                    marker = marker,
+                    label = label_is_plotted ? nothing : label_energy[2, icc],
+                    legend = :cc,
+                    markershape = marker,
                     linewidth = 2,
                     color = colors[icc],
-                    linestyle = linestyles[2])
+                    linestyle = linestyles[2]
+                    )
 
-                count = count + 1
+                label_is_plotted = true
             end
         end
     end
-
-    # Plotter.grid()
-    # Plotter.xlabel("space [\$m\$]")
-    # Plotter.ylabel("energies [\$eV\$]")
-    # Plotter.legend(fancybox = true, loc = "best")
-    # Plotter.title(title)
-    # Plotter.tight_layout()
 
     return nothing
 end
@@ -283,6 +259,7 @@ function plot_energies!(visualizer, ctsys, label_BEE)
     for icc in 1:params.numberOfCarriers
        
         label_is_plotted = false
+
         for i in eachindex(cellregions)
             # determine band-edge energy value in cell and number of cell nodes
             cellValue = (params.bandEdgeEnergy[icc, cellregions[i]] + paramsnodal.bandEdgeEnergy[icc, i]) / q
@@ -291,11 +268,11 @@ function plot_energies!(visualizer, ctsys, label_BEE)
             # patch together cells
             scalarplot!(
                 visualizer,
-                coord[cellnodes[:, i]][:],
+                coord[cellnodes[:, i]][:], # hier soll eigentlich ein @views vor, dann klappt aber der Input nicht mehr
                 fill(cellValue, numberLocalCellNodes);
                 title = "Band-edge energies",
-                xlabel = "space [m]",
-                ylabel = "energy [eV]",
+                xlabel = L"\text{space } [m]",
+                ylabel = L"\text{energy } [eV]",
                 label = label_is_plotted ? nothing : label_BEE[icc],
                 legend = :rc,
                 clear = false,
@@ -370,19 +347,20 @@ function plot_doping!(visualizer, ctsys, label_density)
             numberLocalCellNodes = length(cellnodes[:, i])
 
             # patch together cells (multiplying by 1.0e-6 gives us the densities in cm^(-3))
-            scalarplot!(
+            cellValue > 0 && scalarplot!(
                 visualizer,
                 coord[cellnodes[:, i]],
-                1.0e-6 .* fill(cellValue, numberLocalCellNodes),
-                title = "Doping values for charge carriers",
-                xlabel = "space [m]",
-                ylabel = "Doping [1/cm^3]",
-                label = label_is_plotted ? nothing : label_density[icc],
-                legend = :rc,
+                1.0e-6 .* fill(cellValue, numberLocalCellNodes);
                 clear = false,
                 color = colors[icc],
+                label = label_is_plotted ? nothing : label_density[icc],
+                legend = :rc,
+                linestyle = linestyles[icc],
                 linewidth = 3,
-                linestyle = linestyles[icc]
+                title = "Doping values for charge carriers",
+                xlabel = L"\text{space } [m]",
+                ylabel = L"\text{doping } [\frac{1}{cm^3}]",
+                yscale = :log
             )
 
             label_is_plotted = true
@@ -391,7 +369,6 @@ function plot_doping!(visualizer, ctsys, label_density)
     end
 
     # plot different doping values on boundary
-    # Problem hier: Wieso werden hier Werte bei 4*10^18 angezeigt, das sollte doch 1*10^18 sein??
     bfaceregions = g[BFaceRegions]
     bfacenodes = g[BFaceNodes]
 
@@ -403,7 +380,7 @@ function plot_doping!(visualizer, ctsys, label_density)
             numberLocalCellNodes = length(bfacenodes[:, i])
 
             # patch together cells
-            scalarplot!(
+            cellValue > 0 && scalarplot!(
                 visualizer,
                 coord[bfacenodes[:, i]],
                 1.0e-6 .* fill(cellValue, numberLocalCellNodes),
@@ -422,18 +399,23 @@ end
 """
 Plot doping for nodal dependent doping.
 """
-function plot_doping(Plotter, g::ExtendableGrid, paramsnodal::ParamsNodal)
+# Wo wird diese Funktion genutzt?, andere Beispiele durchgehen
+function plot_doping!(visualizer, g::ExtendableGrid, paramsnodal::ParamsNodal)
 
     coord = g[Coordinates]
 
-    Plotter.plot(coord[:], 1.0e-6 .* paramsnodal.doping[:], color = "green", marker = "x")
-
-    Plotter.grid()
-    Plotter.yscale("symlog")
-    Plotter.xlabel("space [\$m\$]")
-    Plotter.ylabel("Doping [\$\\frac{1}{cm^3}\$]")
-    Plotter.title("Doping values for charge carriers")
-    Plotter.tight_layout()
+    scalarplot!(
+        visualizer,
+        coord[:],
+        1.0e-6 .* paramsnodal.doping[:],
+        title = "Doping values for charge carriers",
+        xlabel = L"\text{space } [m]",
+        ylabel = L"\text{doping } [\frac{1}{cm^3}]",
+        yscale = :log,
+        color = :green,
+        markershape = :cross,
+        markersize = 8
+    )
 
     return nothing
 
@@ -448,7 +430,7 @@ which indicate where the nodes are located.
 """
 function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridpoints = false)
 
-    if plotGridpoints == true
+    if plotGridpoints
         marker = :circle
     else
         marker = :none
@@ -461,9 +443,8 @@ function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridp
         coord[:],
         psi0,
         title = "Electroneutral potential",
-        xlabel = "space [m]",
-        ylabel = "potential [V]",
-        #label = "electroneutral potential ψ_0", # brauchen wir das überhaupt, wenn es eine Überschrift gibt?
+        xlabel = L"\text{space } [m]",
+        ylabel = L"\text{potential } [V]",
         color = :blue,
         markershape = marker,
         markersize = 8
@@ -481,7 +462,7 @@ multidimensional plottings are not included.
 One input parameter is the boolean plotGridpoints which makes it possible to plot markers,
 which indicate where the nodes are located.
 """
-function plot_solution(Plotter, ctsys, solution, title, label_solution, ; plotGridpoints = false)
+function plot_solution!(visualizer, ctsys, solution, title, label_solution; plotGridpoints = false)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -491,27 +472,64 @@ function plot_solution(Plotter, ctsys, solution, title, label_solution, ; plotGr
     end
 
     if plotGridpoints == true
-        marker = "o"
+        marker = :circle
     else
-        marker = ""
+        marker = :none
     end
 
     coord = grid[Coordinates]'
     ipsi = data.index_psi
 
     colors = ["green", "red", "gold", "purple", "orange"]
-    linestyles = ["-", ":", "--", "-.", "-"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
-    Plotter.clf()
-    Plotter.plot(coord, solution[ipsi, :], marker = marker, label = "\$\\psi\$", color = "b", linewidth = 3)
+    scalarplot!(visualizer,
+                grid,
+                solution[ipsi, :];
+                clear = false,
+                color = :blue,
+                label = L"\psi",
+                legend = :rc,
+                linewidth = 3,
+                markershape = marker,
+                markersize = 8,
+                title = title,
+                xlabel = L"\text{space } [m]",
+                ylabel = L"\text{potential } [V]"
+                )
+    
     if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn
         ipsiStandard = data.barrierLoweringInfo.ipsiStandard
-        Plotter.plot(coord, solution[ipsiStandard, :], marker = marker, label = "\$\\psi\$ (Schottky contacts)", color = "black", linestyle = ":", linewidth = 3)
+
+        scalarplot!(visualizer,
+                    grid,
+                    solution[ipsiStandard, :];
+                    clear = false,
+                    color = :black,
+                    label = L"\psi (Schottky contacts)",
+                    legend = :cc,
+                    linestyle = :dot,
+                    linewidth = 3,
+                    markershape = marker,
+                    markersize = 8
+                    )
     end
 
     # electrons and holes
     for icc in data.electricCarrierList
-        Plotter.plot(coord ./ 1, solution[icc, :], label = label_solution[icc], marker = marker, color = colors[icc], linestyle = linestyles[1], linewidth = 3)
+
+        scalarplot!(visualizer,
+                    grid,
+                    solution[icc, :];
+                    clear = false,
+                    color = colors[icc],
+                    label = label_solution[icc],
+                    legend = :cc,
+                    linestyle = linestyles[1],
+                    linewidth = 3,
+                    markershape = marker,
+                    markersize = 8
+                    )
     end
 
     for icc in data.ionicCarrierList
@@ -529,20 +547,25 @@ function plot_solution(Plotter, ctsys, solution, title, label_solution, ; plotGr
 
         icc = icc.ionicCarrier
 
-        Plotter.plot(subgrid ./ 1, solution[icc, subregions], label = label_solution[icc], marker = marker, color = colors[icc], linestyle = linestyles[1], linewidth = 3)
+        scalarplot!(visualizer,
+                    subgrid ./ 1,
+                    solution[icc, subregions];
+                    clear = false,
+                    color = colors[icc],
+                    label = label_solution[icc],
+                    legend = :cc,
+                    linestyle = linestyles[1],
+                    linewidth = 3,
+                    markershape = marker,
+                    markersize = 8
+                    )
     end
-
-    Plotter.grid()
-    Plotter.xlabel("space [m]")
-    Plotter.ylabel("potential [V]")
-    Plotter.legend(fancybox = true, loc = "best", fontsize = 11)
-    Plotter.title(title)
-    Plotter.tight_layout()
 
     return nothing
 
 end
 
+# Diese Funktion muss eventuell auch geändert werden, andere Beispiele durchgehen
 function plot_solution(Plotter, grid, solution, agrid, t, Δu, label_solution)
 
     # Create a visualizer. Works with Plots (fast once compiled) and PyPlot
@@ -551,9 +574,9 @@ function plot_solution(Plotter, grid, solution, agrid, t, Δu, label_solution)
     ipsi = data.index_psi
 
     colors = ["green", "red", "gold", "purple", "orange"]
-    linestyles = ["-", ":", "--", "-.", "-"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
-    Plotter.clf()
+    #Plotter.clf()
     scalarplot!(p[1, 1], grid, solution[ipsi, :], label = "\$\\psi\$", color = "b", marker = "x", title = "time \$ t =\$ $t, bias \$\\Delta u\$ = $Δu", clear = true)
 
     for icc in [iphin, iphip]
@@ -582,20 +605,24 @@ Method for showing the total current.
 One input parameter is the boolean plotGridpoints which makes it possible to plot markers,
 which indicate where the nodes are located.
 """
-function plot_IV(Plotter, biasValues, IV, title, ; plotGridpoints = false)
+function plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints = false)
 
     if plotGridpoints == true
-        marker = "o"
+        marker = :circle
     else
-        marker = ""
+        marker = :none
     end
 
-    Plotter.plot(biasValues[1:length(IV)], IV, marker = marker)
-    Plotter.grid()
-    Plotter.title(title)
-    Plotter.xlabel("bias [V]")
-    Plotter.ylabel("total current [A]")
-    Plotter.tight_layout()
+    scalarplot!(visualizer,
+                biasValues[1:length(IV)],
+                IV;
+                color = :blue,
+                markershape = marker,
+                markersize = 8,
+                title = title,
+                xlabel = L"\text{bias } [V]",
+                ylabel = L"\text{total current } [A]"
+                )
 
     return nothing
 end
