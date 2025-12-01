@@ -157,29 +157,11 @@ Following specification is needed for a linear I-V scan protocol.
 
 ```julia
 scanrate = 1.0 * V / s
-number_tsteps = 31
 endVoltage = voltageAcceptor # bias goes until the given voltage at acceptor boundary
 tend = endVoltage / scanrate
 ```
 
-### Variant A: Solve the transient problem manually
-```julia
-## with fixed timestep sizes we can calculate the times a priori
-tvalues = range(0, stop = tend, length = number_tsteps)
-
-for istep = 2:number_tsteps
-
-    t  = tvalues[istep]                  # current time
-    Δu = t * scanrate                    # applied voltage
-    Δt = t - tvalues[istep-1]            # time step
-    set_contact!(ctsys, bregionAcceptor, Δu = Δu)
-    solution = solve(ctsys, inival = inival, control = control, tstep = Δt) # provide time step
-    inival   = solution
-
-end
-```
-
-### Variant B: Use internal time stepping
+### Use internal time stepping
 To make use of internal time stepping, the scan protocol need to be previously defined, e.g.
 
 ```julia

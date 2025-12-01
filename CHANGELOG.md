@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+
+## v1.2.6
+
+### Changed
+  - removed manual time stepping in all perovskite solar cell examples
+
+### Fixed
+  - displacement current was missing in current calculation
+
+
 ## v1.2.5
 
 ### Changed
@@ -32,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.2.1
 
-#### Fixed
+### Fixed
   - Fixed broken math mode in docs
   - fixed some plotting, by properly including parameters
   - fixed unnecessary photogeneration loop in notebook
