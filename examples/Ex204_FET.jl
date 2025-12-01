@@ -6,7 +6,7 @@ We consider an n-channel Metal-Oxide-Semiconductor (MOS) field effect transistor
 The material is silicon.
 =#
 
-module Ex203_FET
+module Ex204_FET
 
 using ChargeTransport
 using ExtendableGrids
@@ -189,10 +189,10 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
     end
 
     # doping                                                        #     n    p
-    params.doping[iphin, region_drain] = Nd_drain                     #   [Nd  0.0;
+    params.doping[iphin, region_drain] = Nd_drain                  #   [Nd  0.0;
     params.doping[iphin, region_source] = Nd_source                #    Nd  0.0;
     params.doping[iphip, region_gate] = Na_gate                    #    0.0  Na;
-    params.doping[iphip, region_bulk] = Na_bulk                    #    0.0  na]
+    params.doping[iphip, region_bulk] = Na_bulk                    #    0.0  Na]
 
     # Initialize Data instance
     data = Data(grid, numberOfCarriers)
@@ -200,14 +200,9 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
     data.modelType = Stationary
 
     # statistics
-    # Manual Seite 1-3: Boltzmann or Fermi-Dirac, glaube der Default ist Bolzmann (siehe Seite 79)
-    #data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
     data.F .= Boltzmann
 
     # recombination
-    # avalanche generation switched of, therefore I switched of everything
-    # sind die anderen per Default an oder aus??
-    # im Output steht teilweise, dass wir Recombination haben?!
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
         bulk_recomb_Auger = false,
@@ -216,17 +211,10 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
     )
 
     # boundary model
-    # in Tesca 999 corresponds to Neumann conditions
-
-    # in Tesca Gabez, also gate contacts (natural boundary conditions)
-    #data.boundaryType[bregion_gate] = OhmicContact # eigentlich Robin!!
-
-    # in Tesca Dibez, also Dirichlet boundary conditions
+	data.boundaryType[bregion_gate] = GateContact
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
-	# in Tesca Gabez, also gate contacts (natural boundary conditions)
-	data.boundaryType[bregion_gate] = GateContact # eigentlich Robin!!
 
     # flux discretization - depends on statistic (Boltzmann -> Scharfetter Gummel)
     data.fluxApproximation .= ScharfetterGummel
@@ -237,28 +225,23 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     control = SolverControl()
-    control.verbose = true # or false
-
-    # Das sind die Werte von der Diode, anpassen?!
+    control.verbose = true
     control.maxiters = 50
     control.abstol = 1.0e-7
     control.reltol = 1.0e-7
     control.tol_round = 1.0e-7
     control.damp_initial = 0.5
-    return control.max_round = 3
-
     
     # Solution in equilibrium
     solution_eq = equilibrium_solve!(ctsys, control = control)
 
-    # Todo: Dichteplots hinzufügen
     if plotting
         # Get psi from solution
         psi_eq = solution_eq[3, :]
 
         # Get coordinates from the Grid
-        Xpsi_eq = grid[Coordinates][1, :]
-        Ypsi_eq = grid[Coordinates][2, :]
+        #Xpsi_eq = grid[Coordinates][1, :]
+        #Ypsi_eq = grid[Coordinates][2, :]
 		
 		scalarplot!(vis[1, 2],
 					grid,
