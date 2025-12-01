@@ -93,7 +93,8 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
 	#u_applied_gate = # die ändert sich doch?! siehe unten!
 	#qss = 6e10 / (cm^2) 		                # surface charge dens. on gate [/cm**2]
 
-	qss = 1e8 / (cm^2)
+    # DA: As these are some surface charges, I think, we need to put either here or in the implementation of the Gate BC the elementary charge.
+	qss = q * 1.0e8/ (cm^2)#1e8 / (cm^2)
 
     ################################################################################
     if test == false
@@ -156,7 +157,8 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
 
 	# neu hinzugefügten Parameter für GateContact - müssen noch thematisch sortiert werden
 	# das Region dependent - für Verallgemeinerung?!, weil das bezieht sich ja alles aufs Gate
-	params.oxidePermittivity = εr_ox
+    # DA: I think you need to scale here with the vacuum permittivity, right?
+	params.oxidePermittivity = εr_ox  * ε_0
 	params.oxideThickness = thickness_ox
 	params.surfacechargeDensity = qss
 
@@ -231,7 +233,9 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
     control.reltol = 1.0e-7
     control.tol_round = 1.0e-7
     control.damp_initial = 0.5
-    
+    control.max_round = 3
+    #control.damp_growth = 1.21 # >= 1
+
     # Solution in equilibrium
     solution_eq = equilibrium_solve!(ctsys, control = control)
 
@@ -242,7 +246,7 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
         # Get coordinates from the Grid
         #Xpsi_eq = grid[Coordinates][1, :]
         #Ypsi_eq = grid[Coordinates][2, :]
-		
+
 		scalarplot!(vis[1, 2],
 					grid,
 					psi_eq;
@@ -269,14 +273,14 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
 
 	# IV Werte von Drain
 	IV = zeros(0)
-	
+
 	# Startwert
 	inival = copy(solution_eq)
 	solution = copy(solution_eq)
 
 	# Bias Loop
 	for Δu_gate in biasValues_gate
-		
+
     	println("bias value at gate: Δu = ", Δu_gate, " V")
 
 		# Müssen source und drain überhaupt angegeben werden??
@@ -293,16 +297,16 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
 			println("bias value at drain: Δu = ", Δu_drain, " V")
 
 			set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
-			
+
 			solution = solve(ctsys; inival = inival, control = control)
 			inival .= solution
 
 			## get I-V data
 	        current = get_current_val(ctsys, solution)
-	        push!(IV, abs.(zaus * current)) # zaus=wide of device 
+	        push!(IV, abs.(zaus * current)) # zaus=wide of device
 
 		end # bias drain
-			
+
 	end # bias gate
 
     =#
