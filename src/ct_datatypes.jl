@@ -54,6 +54,8 @@ abstract type MixedOhmicSchottkyContact end
 
 abstract type SchottkyBarrierLowering end
 
+abstract type GateContact end
+
 ############    inner boundary conditions     ############
 """
 $(TYPEDEF)
@@ -72,7 +74,7 @@ abstract type InterfaceRecombination end
 """
 Possible types of outer boundary model.
 """
-const OuterBoundaryModelType = Union{Type{OhmicContact}, Type{SchottkyContact}, Type{SchottkyBarrierLowering}, Type{MixedOhmicSchottkyContact}}
+const OuterBoundaryModelType = Union{Type{OhmicContact}, Type{SchottkyContact}, Type{SchottkyBarrierLowering}, Type{MixedOhmicSchottkyContact}, Type{GateContact}}
 
 
 """
