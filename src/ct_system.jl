@@ -258,6 +258,16 @@ $(TYPEDFIELDS)
 mutable struct Params
 
     ###############################################################
+    ####                   gate parameters                     ####
+    ###############################################################
+
+    oxidePermittivity::Float64
+
+    oxideThickness::Float64
+
+    surfacechargeDensity::Float64
+
+    ###############################################################
     ####                   integer numbers                     ####
     ###############################################################
     """
@@ -514,6 +524,14 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     @local_unitfactors K s
 
     params = Params()
+
+    ###############################################################
+    ####                   gate parameters                     ####
+    ###############################################################
+
+    oxidePermittivity = 1.0
+    oxideThickness = 1.0
+    surfacechargeDensity = 1.0
 
     ###############################################################
     ####                   integer numbers                     ####
@@ -1645,6 +1663,14 @@ function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
     ctsys.data.params.contactVoltage[ibreg] = Δu
     return
 
+end
+
+function __set_contact!(ctsys, ibreg, Δu, ::Type{GateContact})
+
+    ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+
+    return
 end
 
 ###########################################################
