@@ -607,6 +607,32 @@ function breaction!(f, u, bnode, data, ::Type{InterfaceRecombination})
     return
 end
 
+###########################################################################
+###########################################################################
+
+# Robin boundary conditions for Gate contact
+function breaction!(f, u, bnode, data, ::Type{GateContact})
+
+    params = data.params
+   
+    ipsi = data.index_psi
+
+    @show bnode.region
+    @show params.surfacechargeDensity
+    @show params.oxidePermittivity
+    @show params.oxideThickness
+    @show params.contactVoltage[bnode.region]
+    @show u[ipsi]
+
+    # Robin Condition psi
+    f[ipsi] = params.surfacechargeDensity - (params.oxidePermittivity / params.oxideThickness) * (u[ipsi] - params.contactVoltage[bnode.region])
+
+    # Dirichlet Conditions phin and phip (electrons and holes)
+    # Homogeneous Neumann boundary conditions by default - wir müssen also nichts weiter machen
+    return
+
+end
+
 ##########################################################
 ##########################################################
 

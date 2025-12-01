@@ -10,20 +10,18 @@ module Ex203_FET
 
 using ChargeTransport
 using ExtendableGrids
-#using LessUnitful: @unitfactors # instead of @local_unitfactors
 
-#using PlutoVista
-#using PlutoUI
+# Plotting
 using GLMakie
 using GridVisualize # gridplot function from ChargeTransport not working in 2D
 #using PyPlot
 
+function main( ; plotting = true, Plotter = GLMakie, test = false)
 
-function main(; plotting = true, Plotter = GLMakie, test = false)
-
-    if plotting
-        Plotter.close("all")
-    end
+	# wenn PyPlot
+	#if plotting
+    #    Plotter.close("all")
+    #end
 
     # unit factors
     @local_unitfactors μm cm s ns V K
@@ -53,13 +51,17 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     bregion_bulk = 4
     bregion_neutral = 5
 
-    # depth of the device  [cm]
-    zaus = 15.0e-4 * cm
-
     ########## physical values of Si at room temperature ##########
     # https://de.wikipedia.org/wiki/Silicium
     # https://www.ioffe.ru/SVA/NSM/Semicond/Si/bandstr.html#Masses
     Ec = 1.107 * eV                      # conduction band-edge energy
+	zaus=15e-4 * cm	 							# depth of the device  [cm]
+	thickness_ox = 0.044e-4 * cm		        # oxide thickness on gate [cm]
+
+	########## physical values of Si at room temperature ##########
+	# https://de.wikipedia.org/wiki/Silicium
+	# https://www.ioffe.ru/SVA/NSM/Semicond/Si/bandstr.html#Masses
+	Ec = 1.107 * eV                      # conduction band-edge energy
     Ev = 0.0 * eV                        # valence band-edge energy, referenz
 
     Nc = 3.2e19 / (cm^3)               # conduction band density of states
@@ -69,8 +71,9 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     # Todo: probieren
     mun = 1000.0 * (cm^2) / (V * s)     # electron mobility
     mup = 350.0 * (cm^2) / (V * s)      # hole mobility
-    # https://en.wikipedia.org/wiki/Relative_permittivity
-    εr = 11.68 * 1.0                    # relative dielectric permittivity of Si
+	# https://en.wikipedia.org/wiki/Relative_permittivity
+    εr = 11.68 * 1.0			        # relative dielectric permittivity of Si
+	εr_ox = 3.9 * 1.0			        # relative dielectric permittivity of SiO2
     T = 300.0 * K                       # room temperature
 
     # Recombination parameters
@@ -79,11 +82,18 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     SRH_LifeTime = 1.0 * ns
     Radiative = 1.0e-10 * cm^3 / s
 
-    # doping (Vereinfacht, nur eine Dotierung pro Region)
-    Na_gate = 1.0e16 / cm^3
-    Nd_drain = 1.0e19 / cm^3
-    Nd_source = 1.0e19 / cm^3
-    Na_bulk = 1.0e15 / cm^3
+	# Doping (Vereinfacht, nur eine Dotierung pro Region)
+	Na_gate = 1e16 / cm^3
+	Nd_drain  = 1e19 / cm^3
+	Nd_source   = 1e19 / cm^3
+	Na_bulk    = 1e15 / cm^3
+
+	# Voltage information
+	#u_contact_gate = 0.55	* V	                # contact voltage on gate [V], siehe unten
+	#u_applied_gate = # die ändert sich doch?! siehe unten!
+	#qss = 6e10 / (cm^2) 		                # surface charge dens. on gate [/cm**2]
+
+	qss = 1e8 / (cm^2)
 
     ################################################################################
     if test == false
@@ -135,16 +145,28 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
 
 
     if plotting
-        GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (1000, 500), title = "Grid")
+		# Für GridVisualize Ansatz
+		vis = GridVisualizer(; Plotter, layout = (2, 2), size = (1000, 500))
+        gridplot!(vis[1, 1], grid; Plotter, title = "Grid", show = true)
+
+		#ChargeTransport.gridplot(grid, Plotter = Plotter, title = "Grid") wenn PyPlot
     end
 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
-    params.temperature = T
-    params.chargeNumbers[iphin] = -1
-    params.chargeNumbers[iphip] = 1
+	# neu hinzugefügten Parameter für GateContact - müssen noch thematisch sortiert werden
+	# das Region dependent - für Verallgemeinerung?!, weil das bezieht sich ja alles aufs Gate
+	params.oxidePermittivity = εr_ox
+	params.oxideThickness = thickness_ox
+	params.surfacechargeDensity = qss
 
-    for ireg in 1:grid[NumCellRegions] # region data
+	# bereits bestehende Parameter
+	params.temperature = T
+	params.chargeNumbers[iphin] = -1
+	params.chargeNumbers[iphip] = 1
+
+	# wieso braucht man hier eine Schleife??
+	for ireg in 1:grid[NumCellRegions] # region data
 
         params.dielectricConstant[ireg] = εr * ε_0
 
@@ -197,12 +219,14 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     # in Tesca 999 corresponds to Neumann conditions
 
     # in Tesca Gabez, also gate contacts (natural boundary conditions)
-    data.boundaryType[bregion_gate] = OhmicContact # eigentlich Robin!!
+    #data.boundaryType[bregion_gate] = OhmicContact # eigentlich Robin!!
 
     # in Tesca Dibez, also Dirichlet boundary conditions
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
+	# in Tesca Gabez, also gate contacts (natural boundary conditions)
+	data.boundaryType[bregion_gate] = GateContact # eigentlich Robin!!
 
     # flux discretization - depends on statistic (Boltzmann -> Scharfetter Gummel)
     data.fluxApproximation .= ScharfetterGummel
@@ -223,33 +247,38 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     control.damp_initial = 0.5
     return control.max_round = 3
 
-    #=
+    
     # Solution in equilibrium
     solution_eq = equilibrium_solve!(ctsys, control = control)
 
-    # Todo: das noch überarbeiten!!
     # Todo: Dichteplots hinzufügen
     if plotting
-        # psi aus Lösung rausholen
+        # Get psi from solution
         psi_eq = solution_eq[3, :]
 
-        # Get coordinates aus dem Grid
+        # Get coordinates from the Grid
         Xpsi_eq = grid[Coordinates][1, :]
         Ypsi_eq = grid[Coordinates][2, :]
+		
+		scalarplot!(vis[1, 2],
+					grid,
+					psi_eq;
+					clear = false
+					) # Ansatz mit GridVisualize, aber hier kein surfaceplot
 
-        Plotter.figure()
-        Plotter.surf(Xpsi_eq[:], Ypsi_eq[:], psi_eq[:])
 
-        Plotter.title("Equilibrium Solution")
-        Plotter.xlabel("length [m]")
-        Plotter.ylabel("width [m]")
-        Plotter.zlabel("potential [V]")
-        Plotter.tight_layout()
+        #Plotter.figure()
+        #Plotter.surf(Xpsi_eq[:], Ypsi_eq[:], psi_eq[:])
+
+        #Plotter.title("Equilibrium Solution")
+        #Plotter.xlabel("length [m]")
+        #Plotter.ylabel("width [m]")
+        #Plotter.zlabel("potential [V]")
+        #Plotter.tight_layout()
         #Plotter.gcf()
 
         # scalarplot(grid, psi_eq, Plotter = GLMakie)
     end
-    =#
 
     #= hier ist noch ein convergence error - erstmal auf Gleichgewichtslösung konzentrieren
     biasValues_gate = range(0.0, stop = 5.0, length = 10)
@@ -270,6 +299,8 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
 		# Müssen source und drain überhaupt angegeben werden??
 		set_contact!(ctsys, bregion_source, Δu = 0.0)
 		set_contact!(ctsys, bregion_bulk, Δu = 0.0)
+
+		#u_contact_gate = 0.55	* V	                # contact voltage on gate [V]
 		set_contact!(ctsys, bregion_gate, Δu = Δu_gate)
 
 		# Startwerte nach hier verschieben??

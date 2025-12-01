@@ -60,6 +60,7 @@ export QFModelType, DiscontQF, ContQF
 
 export OuterBoundaryModelType, OuterBoundaryModelType, InterfaceModelType
 export OhmicContact, SchottkyContact, SchottkyBarrierLowering, MixedOhmicSchottkyContact
+export GateContact
 export InterfaceNone, InterfaceRecombination
 
 export OhmicContactModelType, OhmicContactDirichlet, OhmicContactRobin
