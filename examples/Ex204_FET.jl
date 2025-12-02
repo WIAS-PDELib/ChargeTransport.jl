@@ -90,11 +90,9 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
 
 	# Voltage information
 	#u_contact_gate = 0.55	* V	                # contact voltage on gate [V], siehe unten
-	#u_applied_gate = # die ändert sich doch?! siehe unten!
-	#qss = 6e10 / (cm^2) 		                # surface charge dens. on gate [/cm**2]
-
+	
     # DA: As these are some surface charges, I think, we need to put either here or in the implementation of the Gate BC the elementary charge.
-	qss = q * 1.0e8/ (cm^2)#1e8 / (cm^2)
+	qss = q * 6e10/ (cm^2)
 
     ################################################################################
     if test == false
@@ -146,9 +144,13 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
 
 
     if plotting
+        # Nur mit Makie
+        #fig = Figure()
+        #gridplot!(fig[1, 1], grid; clear = false, title = "Grid", show = true)
+
 		# Für GridVisualize Ansatz
 		vis = GridVisualizer(; Plotter, layout = (2, 2), size = (1000, 500))
-        gridplot!(vis[1, 1], grid; Plotter, title = "Grid", show = true)
+        gridplot!(vis[1, 1], grid; clear = false, title = "Grid", show = true)
 
 		#ChargeTransport.gridplot(grid, Plotter = Plotter, title = "Grid") wenn PyPlot
     end
@@ -240,19 +242,36 @@ function main( ; plotting = true, Plotter = GLMakie, test = false)
     solution_eq = equilibrium_solve!(ctsys, control = control)
 
     if plotting
-        # Get psi from solution
+        # Surface plot equlibrium solution
         psi_eq = solution_eq[3, :]
 
-        # Get coordinates from the Grid
-        #Xpsi_eq = grid[Coordinates][1, :]
-        #Ypsi_eq = grid[Coordinates][2, :]
+		#scalarplot!(vis[1, 2],
+	   # 			grid,
+	#				psi_eq;
+		#			clear = false,
+        #            scene3d = :Axis3
+		#			) # Ansatz mit GridVisualize, aber hier kein surfaceplot
 
-		scalarplot!(vis[1, 2],
-					grid,
-					psi_eq;
-					clear = false
-					) # Ansatz mit GridVisualize, aber hier kein surfaceplot
+        coords = grid[Coordinates]
 
+        # number of points in each direction
+        nx = length(unique(coords[1, :]))
+        ny = length(unique(coords[2, :]))
+
+        # reshape to 2D arrays
+        X = reshape(coords[1, :], nx, ny)
+        Y = reshape(coords[2, :], nx, ny)
+        Z = reshape(psi_eq, nx, ny)
+
+        #ax = vis[1,2]
+        
+        fig = Figure()
+        ax = Axis3(fig[1, 2])
+
+        surface!(ax, X, Y, Z; shading = false)
+        wireframe!(ax, X, Y, Z; color = :black, linewidth = 0.5)
+
+        fig
 
         #Plotter.figure()
         #Plotter.surf(Xpsi_eq[:], Ypsi_eq[:], psi_eq[:])
