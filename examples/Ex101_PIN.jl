@@ -249,7 +249,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
         println("Plot electroneutral potential, band-edge energies and doping")
         ################################################################################
         ## set legend for plotting routines. Either you can use the predefined labels or write your own.
-        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data, Plotter)
 
         psi0 = electroNeutralSolution(ctsys)
 

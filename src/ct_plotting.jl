@@ -9,7 +9,8 @@ e.g. mobile ionic carriers or traps, this can be done within the main file.
 # Wo? Mariekes Windows Computer
 # Was? sys:1: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
 
-function set_plotting_labels(data)
+function set_plotting_labels(data, Plotter)
+
     label_energy = Matrix{LaTeXString}(undef, 2, data.params.numberOfCarriers) # band-edge energies and potential
     label_BEE = Vector{LaTeXString}(undef, data.params.numberOfCarriers)    # band-edge energie parameters
     label_density = Vector{LaTeXString}(undef, data.params.numberOfCarriers)
@@ -27,7 +28,24 @@ function set_plotting_labels(data)
     label_energy[1, iphip] = L"E_v-q\psi"; label_energy[2, iphip] = L"- q \varphi_p"; label_BEE[iphip] = L"E_v"
     label_density[iphip] = L"n_p";              label_solution[iphip] = L"\varphi_p"
 
+    if nameof(Plotter) == :PlutoVista
+        @warn "remove PlutoVista hack and function hack"
+
+        label_solution = String.(label_solution)
+        label_density = String.(label_density)
+        label_energy = String.(label_energy)
+        label_BEE = String.(label_BEE)
+    end
+
     return label_solution, label_density, label_energy, label_BEE
+end
+
+function PlutoVista_hack(Plotter, latexstring)
+    if nameof(Plotter) == :PlutoVista
+        return String(latexstring)
+    else 
+        return latexstring
+    end
 end
 
 """
@@ -83,8 +101,8 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = title,
-                xlabel = L"\text{space } [m]",
-                ylabel = L"\text{density } [\frac{1}{cm^3}]",
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{density } [\frac{1}{cm^3}]"),
                 yscale = :log
             )
             label_is_plotted = true
@@ -153,8 +171,8 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 Ecc ./ q .- solpsi;
                 markershape = marker,
                 title = title,
-                xlabel = L"\text{space } [m]",
-                ylabel = L"\text{energy } [eV]",
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy } [eV]"),
                 label = label_is_plotted ? nothing : label_energy[1, icc],
                 legend = :cc,
                 markersize = 8,
@@ -271,8 +289,8 @@ function plot_energies!(visualizer, ctsys, label_BEE)
                 coord[cellnodes[:, i]][:], # hier soll eigentlich ein @views vor, dann klappt aber der Input nicht mehr
                 fill(cellValue, numberLocalCellNodes);
                 title = "Band-edge energies",
-                xlabel = L"\text{space } [m]",
-                ylabel = L"\text{energy } [eV]",
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy } [eV]"),
                 label = label_is_plotted ? nothing : label_BEE[icc],
                 legend = :rc,
                 clear = false,
@@ -358,8 +376,8 @@ function plot_doping!(visualizer, ctsys, label_density)
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = "Doping values for charge carriers",
-                xlabel = L"\text{space } [m]",
-                ylabel = L"\text{doping } [\frac{1}{cm^3}]",
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{doping } [\frac{1}{cm^3}]"),
                 yscale = :log
             )
 
@@ -409,8 +427,8 @@ function plot_doping!(visualizer, g::ExtendableGrid, paramsnodal::ParamsNodal)
         coord[:],
         1.0e-6 .* paramsnodal.doping[:],
         title = "Doping values for charge carriers",
-        xlabel = L"\text{space } [m]",
-        ylabel = L"\text{doping } [\frac{1}{cm^3}]",
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{doping } [\frac{1}{cm^3}]"),
         yscale = :log,
         color = :green,
         markershape = :cross,
@@ -443,8 +461,8 @@ function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridp
         coord[:],
         psi0,
         title = "Electroneutral potential",
-        xlabel = L"\text{space } [m]",
-        ylabel = L"\text{potential } [V]",
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential } [V]"),
         color = :blue,
         markershape = marker,
         markersize = 8
@@ -494,8 +512,8 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
                 markershape = marker,
                 markersize = 8,
                 title = title,
-                xlabel = L"\text{space } [m]",
-                ylabel = L"\text{potential } [V]"
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential } [V]")
                 )
     
     if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn
@@ -620,8 +638,8 @@ function plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints = false)
                 markershape = marker,
                 markersize = 8,
                 title = title,
-                xlabel = L"\text{bias } [V]",
-                ylabel = L"\text{total current } [A]"
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{bias } [V]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{total current } [A]")
                 )
 
     return nothing
