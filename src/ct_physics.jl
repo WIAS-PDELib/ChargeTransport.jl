@@ -600,14 +600,12 @@ function breaction!(f, u, bnode, data, ::Type{GateContact})
     params = data.params
     ipsi = data.index_psi
 
-
     # Robin Condition psi
     f[ipsi] = (params.oxidePermittivity / params.oxideThickness) * (u[ipsi] - params.contactVoltage[bnode.region])  -  params.surfacechargeDensity
 
     # Dirichlet Conditions phin and phip (electrons and holes)
-    # Homogeneous Neumann boundary conditions by default - wir müssen also nichts weiter machen
+    # Homogeneous Neumann boundary conditions by default
     return
-
 end
 
 ##########################################################
