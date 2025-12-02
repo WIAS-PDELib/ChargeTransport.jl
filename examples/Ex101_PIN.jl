@@ -255,8 +255,8 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
 
         plot_energies!(vis[1, 2], ctsys, label_BEE)
         plot_doping!(vis[2, 1], ctsys, label_density)
-        plot_electroNeutralSolutionBoltzmann!(vis[2,2], grid, psi0; plotGridpoints = true)
-        
+        plot_electroNeutralSolutionBoltzmann!(vis[2, 2], grid, psi0; plotGridpoints = true)
+
         println("*** done\n")
     end
 
@@ -327,15 +327,15 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
 
     ## plot solution and IV curve
     if plotting
-         ################################################################################
+        ################################################################################
         println("Plot results")
         ################################################################################
 
-        plot_energies!(vis[3,1], ctsys, solution, "Energies for applied voltage Δu = $(biasValues[end])", label_energy; plotGridpoints = true)
-        plot_solution!(vis[3,2], ctsys, solution, "Solution for applied voltage Δu = $(biasValues[end])", label_solution; plotGridpoints = true)
-        plot_densities!(vis[4,1], ctsys, solution, "Carrier densities for applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
-        plot_IV!(vis[4,2], biasValues, IV, "IV curve for applied voltage Δu = $(biasValues[end])", plotGridpoints = true)
-        
+        plot_energies!(vis[3, 1], ctsys, solution, "Energies for applied voltage Δu = $(biasValues[end])", label_energy; plotGridpoints = true)
+        plot_solution!(vis[3, 2], ctsys, solution, "Solution for applied voltage Δu = $(biasValues[end])", label_solution; plotGridpoints = true)
+        plot_densities!(vis[4, 1], ctsys, solution, "Carrier densities for applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
+        plot_IV!(vis[4, 2], biasValues, IV, "IV curve for applied voltage Δu = $(biasValues[end])", plotGridpoints = true)
+
         reveal(vis)
     end
 

@@ -43,7 +43,7 @@ end
 function PlutoVista_hack(Plotter, latexstring)
     if nameof(Plotter) == :PlutoVista
         return String(latexstring)
-    else 
+    else
         return latexstring
     end
 end
@@ -151,7 +151,7 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
 
     for icc in data.electricCarrierList
 
-        # Todo: Legend 
+        # Todo: Legend
         #grids = Array{ExtendableGrid, 1}(undef, numberOfRegions)
         #nicc  = Array{Array{Float64, 1}, 1}(undef, numberOfRegions)
 
@@ -171,8 +171,8 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 Ecc ./ q .- solpsi;
                 markershape = marker,
                 title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy } [eV]"),
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"space [$m$]"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"energy [$eV$]"),
                 label = label_is_plotted ? nothing : label_energy[1, icc],
                 legend = :cc,
                 markersize = 8,
@@ -180,7 +180,7 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 color = colors[icc],
                 linestyle = linestyles[1],
                 clear = false
-                )
+            )
 
             scalarplot!(
                 visualizer,
@@ -194,7 +194,7 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 color = colors[icc],
                 linestyle = linestyles[2],
                 clear = false
-                )
+            )
 
             label_is_plotted = true
         end
@@ -225,7 +225,7 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                     linewidth = 2,
                     color = colors[icc],
                     linestyle = linestyles[1]
-                    )
+                )
 
                 scalarplot!(
                     visualizer,
@@ -237,7 +237,7 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                     linewidth = 2,
                     color = colors[icc],
                     linestyle = linestyles[2]
-                    )
+                )
 
                 label_is_plotted = true
             end
@@ -275,7 +275,7 @@ function plot_energies!(visualizer, ctsys, label_BEE)
 
     #plot different band-edge energies values in interior
     for icc in 1:params.numberOfCarriers
-       
+
         label_is_plotted = false
 
         for i in eachindex(cellregions)
@@ -326,7 +326,7 @@ function plot_energies!(visualizer, ctsys, label_BEE)
             )
         end
 
-   end
+    end
 
     return nothing
 end
@@ -357,7 +357,7 @@ function plot_doping!(visualizer, ctsys, label_density)
 
     # plot different doping values in interior
     for icc in 1:params.numberOfCarriers
-        
+
         label_is_plotted = false
         for i in eachindex(cellregions)
             # determine doping value in cell and number of cell nodes
@@ -501,53 +501,56 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
     colors = ["green", "red", "gold", "purple", "orange"]
     linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
-    scalarplot!(visualizer,
-                grid,
-                solution[ipsi, :];
-                clear = false,
-                color = :blue,
-                label = L"\psi",
-                legend = :rc,
-                linewidth = 3,
-                markershape = marker,
-                markersize = 8,
-                title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential } [V]")
-                )
-    
+    scalarplot!(
+        visualizer,
+        grid,
+        solution[ipsi, :];
+        clear = false,
+        color = :blue,
+        label = L"\psi",
+        legend = :rc,
+        linewidth = 3,
+        markershape = marker,
+        markersize = 8,
+        title = title,
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space } [m]"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential } [V]")
+    )
+
     if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn
         ipsiStandard = data.barrierLoweringInfo.ipsiStandard
 
-        scalarplot!(visualizer,
-                    grid,
-                    solution[ipsiStandard, :];
-                    clear = false,
-                    color = :black,
-                    label = L"\psi (Schottky contacts)",
-                    legend = :cc,
-                    linestyle = :dot,
-                    linewidth = 3,
-                    markershape = marker,
-                    markersize = 8
-                    )
+        scalarplot!(
+            visualizer,
+            grid,
+            solution[ipsiStandard, :];
+            clear = false,
+            color = :black,
+            label = L"\psi (Schottky contacts)",
+            legend = :cc,
+            linestyle = :dot,
+            linewidth = 3,
+            markershape = marker,
+            markersize = 8
+        )
     end
 
     # electrons and holes
     for icc in data.electricCarrierList
 
-        scalarplot!(visualizer,
-                    grid,
-                    solution[icc, :];
-                    clear = false,
-                    color = colors[icc],
-                    label = label_solution[icc],
-                    legend = :cc,
-                    linestyle = linestyles[1],
-                    linewidth = 3,
-                    markershape = marker,
-                    markersize = 8
-                    )
+        scalarplot!(
+            visualizer,
+            grid,
+            solution[icc, :];
+            clear = false,
+            color = colors[icc],
+            label = label_solution[icc],
+            legend = :cc,
+            linestyle = linestyles[1],
+            linewidth = 3,
+            markershape = marker,
+            markersize = 8
+        )
     end
 
     for icc in data.ionicCarrierList
@@ -565,18 +568,19 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
 
         icc = icc.ionicCarrier
 
-        scalarplot!(visualizer,
-                    subgrid ./ 1,
-                    solution[icc, subregions];
-                    clear = false,
-                    color = colors[icc],
-                    label = label_solution[icc],
-                    legend = :cc,
-                    linestyle = linestyles[1],
-                    linewidth = 3,
-                    markershape = marker,
-                    markersize = 8
-                    )
+        scalarplot!(
+            visualizer,
+            subgrid ./ 1,
+            solution[icc, subregions];
+            clear = false,
+            color = colors[icc],
+            label = label_solution[icc],
+            legend = :cc,
+            linestyle = linestyles[1],
+            linewidth = 3,
+            markershape = marker,
+            markersize = 8
+        )
     end
 
     return nothing
@@ -631,16 +635,17 @@ function plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints = false)
         marker = :none
     end
 
-    scalarplot!(visualizer,
-                biasValues[1:length(IV)],
-                IV;
-                color = :blue,
-                markershape = marker,
-                markersize = 8,
-                title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{bias } [V]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{total current } [A]")
-                )
+    scalarplot!(
+        visualizer,
+        biasValues[1:length(IV)],
+        IV;
+        color = :blue,
+        markershape = marker,
+        markersize = 8,
+        title = title,
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{bias } [V]"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{total current } [A]")
+    )
 
     return nothing
 end
