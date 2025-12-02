@@ -12,9 +12,13 @@ GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LessUnitful = "f29f6376-6e90-4d80-80c9-fb8ec61203d5"
+PlutoVista = "646e1f28-b900-46d7-9d87-d554eb38a413"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
+
+[sources]
+GridVisualize = {path = "C:\\Users\\marie\\.julia\\dev\\GridVisualize"}
 
 [compat]
 Aqua = "0.8.14"
@@ -27,6 +31,7 @@ GridVisualize = "1"
 Interpolations = "0.16"
 LaTeXStrings = "1.4.0"
 LessUnitful = "1.2.1"
+PlutoVista = "1.2.1"
 Printf = "1.10"
 Roots = "2.0"
 SimplexGridFactory = "2.6.0"
