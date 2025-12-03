@@ -12,6 +12,7 @@ using ChargeTransport
 using ExtendableGrids
 using GLMakie
 using GridVisualize
+# using PyPlot
 
 function main(; plotting = true, Plotter = GLMakie, test = false)
 
@@ -305,8 +306,26 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
         return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
     end
 
-    vmin = 1.0e13
-    vmax = 1.0e21
+    ## visualizing with PyPlot
+    vmin = 1.0e15
+    vmax = 1.0e25
+
+    zn = -1
+    zp = +1
+    ipsi = 3
+
+    nn = Nc .* exp.(zn * (q * (solution_eq[iphin, :] .- solution_eq[ipsi, :]) .+ Ec) ./ (k_B * T))
+
+    np = Nv .* exp.(zp * (q * (solution_eq[iphip, :] .- solution_eq[ipsi, :]) .+ Ev) ./ (k_B * T))
+
+
+    PyPlot.figure()
+    PyPlot.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+    PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
+    PyPlot.ylabel(" \$y\$ [nm]", fontsize = 17)
+    PyPlot.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+    PyPlot.tight_layout()
+
     PyPlot.figure()
     PyPlot.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
     PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
