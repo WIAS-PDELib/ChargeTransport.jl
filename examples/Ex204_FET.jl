@@ -74,10 +74,10 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     Na_bulk = 1.0e15 / cm^3
 
     # Voltage information
-    U_add_gate = 0.55 * V                   # contact voltage on gate [V], siehe unten
+    U_add_gate = 0.0 * V                   # contact voltage on gate [V], siehe unten
 
     # DA: As these are some surface charges, I think, we need to put either here or in the implementation of the Gate BC the elementary charge.
-    qss = q * 6.0e10 / (cm^2)
+    qss = 6.0e10 / (cm^2)
 
     ################################################################################
     if test == false
@@ -192,7 +192,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     params.doping[iphip, region_bulk] = Na_bulk                    #    0.0  Na]
 
     # Initialize Data instance
-    data = Data(grid, numberOfCarriers)
+    data = Data(grid, numberOfCarriers, constants = constants)
 
     data.modelType = Stationary
 
@@ -208,7 +208,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     )
 
     # boundary model
-    data.boundaryType[bregion_gate] = GateContact
+    data.boundaryType[bregion_gate] = OhmicContact #GateContact
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
@@ -233,8 +233,8 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     ################################################################################
 
     control = SolverControl()
-    control.verbose = false
-    control.maxiters = 50
+    control.verbose = true
+    control.maxiters = 70
     control.abstol = 1.0e-7
     control.reltol = 1.0e-7
     control.tol_round = 1.0e-7
@@ -334,9 +334,9 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     end
     ################################################################################
 
-    biasValues_gate = range(0.0, stop = 5.0, length = 10)
-    biasValues_drain = range(0.0, stop = 5.0, length = 20)
-    IV = zeros(0)
+    biasValues_gate = range(0.0, stop = 5.0, length = 4) # 4 Steps in Tesca
+    biasValues_drain = range(0.0, stop = 5.0, length = 12) # 12 steps in Tesca
+    #IV = zeros(0)
 
     inival = copy(solution_eq)
     solution = copy(solution_eq)
@@ -346,30 +346,36 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
 
         println("bias value at gate: Δu = ", Δu_gate, " V")
 
-        # Müssen source und drain überhaupt angegeben werden?
-
-        set_contact!(ctsys, bregion_source, Δu = 0.0)
-        set_contact!(ctsys, bregion_bulk, Δu = 0.0)
         set_contact!(ctsys, bregion_gate, Δu = Δu_gate)
+        set_contact!(ctsys, bregion_source, Δu = 0.0)
+        set_contact!(ctsys, bregion_drain, Δu = 0.0)
+        set_contact!(ctsys, bregion_bulk, Δu = 0.0)
 
-        # Startwerte nach hier verschieben?
+        solution = solve(ctsys; inival = inival, control = control)
+        inival .= solution
 
-        for Δu_drain in biasValues_drain
+        ## get I-V data
+        #current = get_current_val(ctsys, solution)
+        #push!(IV, abs.(zaus * current)) # zaus=wide of device
+    end
 
-            println("bias value at drain: Δu = ", Δu_drain, " V")
+    for Δu_drain in biasValues_drain
 
-            set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
+        println("bias value at drain: Δu = ", Δu_drain, " V")
 
-            solution = solve(ctsys; inival = inival, control = control)
-            inival .= solution
+        set_contact!(ctsys, bregion_gate, Δu = 5.0)
+        set_contact!(ctsys, bregion_source, Δu = 0.0)
+        set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
+        set_contact!(ctsys, bregion_bulk, Δu = 0.0)
 
-            ## get I-V data
-            current = get_current_val(ctsys, solution)
-            push!(IV, abs.(zaus * current)) # zaus=wide of device
+        solution = solve(ctsys; inival = inival, control = control)
+        inival .= solution
 
-        end # bias drain
+        ## get I-V data
+        #current = get_current_val(ctsys, solution)
+        #push!(IV, abs.(zaus * current)) # zaus=wide of device
 
-    end # bias gate
+    end
 
     if test == false
         println("*** done\n")
