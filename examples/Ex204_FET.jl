@@ -51,10 +51,12 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     thickness_ox = 0.044e-4 * cm                        # oxide thickness on gate [cm]
 
     ########## physical values of Si at room temperature ##########
-    Ec = 1.107 * eV                                     # conduction band-edge energy
-    Ev = 0.0 * eV                                       # valence band-edge energy, referenz
-    Nc = 3.2e19 / (cm^3)                                # conduction band density of states
-    Nv = 1.8e19 / (cm^3)                                # valence band densitiy of states
+
+    Ec = 0.562 * eV                                     # conduction band-edge energy
+    Ev = -0.562 * eV                                    # valence band-edge energy
+    Nc = 2.86e19 / (cm^3)                                # conduction band density of states
+    Nv = 3.1e19 / (cm^3)                                # valence band densitiy of states
+
     mun = 1200.0 * (cm^2) / (V * s)                     # electron mobility
     mup = 350.0 * (cm^2) / (V * s)                      # hole mobility
     εr = 11.68 * 1.0                                    # relative dielectric permittivity of Si
@@ -74,7 +76,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     Na_bulk = 1.0e15 / cm^3
 
     # Voltage information
-    U_add_gate = 0.0 * V                   # contact voltage on gate [V], siehe unten
+    U_add_gate = 0.55 * V                   # contact voltage on gate [V], siehe unten
 
     # DA: As these are some surface charges, I think, we need to put either here or in the implementation of the Gate BC the elementary charge.
     qss = 6.0e10 / (cm^2)
@@ -100,10 +102,14 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
 
     # Refinement x-direction
     X1 = geomspace(x0, x1, 2.0e-7, 5.0e-8)
-    X2 = collect(x1:(0.2 * μm):x4)
-    X3 = geomspace(x4, x5, 5.0e-8, 2.0e-7)
+    X2 = collect(range(x1, x2, length = 3))
+    X3 = collect(x2:(0.2 * μm):x3)
+    X4 = collect(range(x3, x4, length = 3))
+    X5 = geomspace(x4, x5, 5.0e-8, 2.0e-7)
     X_temp = glue(X1, X2)
-    X = glue(X_temp, X3)
+    X_temp = glue(X_temp, X3)
+    X_temp = glue(X_temp, X4)
+    X = glue(X_temp, X5)
 
     # Refinement y-direction
     Y1 = collect(-2.4:0.2:-1.2) .* μm
@@ -121,12 +127,15 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     cellmask!(grid, [x0, y0], [x5, y1], region_bulk)
 
     # boundary regions
-    bfacemask!(grid, [x0, y0], [x5, y2], bregion_neutral)
+
     bfacemask!(grid, [x2, y2], [x3, y2], bregion_gate)
     bfacemask!(grid, [x0, y2], [x1, y2], bregion_drain)
     bfacemask!(grid, [x4, y2], [x5, y2], bregion_source)
     bfacemask!(grid, [x0, y0], [x5, y0], bregion_bulk)
-
+    bfacemask!(grid, [x0, y0], [x0, y2], 0)
+    bfacemask!(grid, [x5, y0], [x5, y2], 0)
+    bfacemask!(grid, [x1, y2], [x2, y2], 0)
+    bfacemask!(grid, [x3, y2], [x4, y2], 0)
 
     if plotting
         vis = GridVisualizer(; Plotter, layout = (2, 2), size = (1200, 600))
@@ -208,7 +217,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     )
 
     # boundary model
-    data.boundaryType[bregion_gate] = OhmicContact #GateContact
+    data.boundaryType[bregion_gate] = GateContact
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
@@ -221,6 +230,35 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     # Definition ChargeTransport System
     ctsys = System(grid, data, unknown_storage = :sparse)
 
+
+    params.bDoping[:, :] .= 0.0
+    params.bDoping[iphin, bregion_drain] = Nd_drain                  #   [Nd  0.0;
+    params.bDoping[iphin, bregion_source] = Nd_source                #    Nd  0.0;
+    params.bDoping[iphip, bregion_gate] = Na_gate                    #    0.0  Na;
+    params.bDoping[iphip, bregion_bulk] = Na_bulk                    #    0.0  Na]
+
+    params.bDensityOfStates[iphin, :] .= Nc
+    params.bDensityOfStates[iphip, :] .= Nv
+
+    params.bBandEdgeEnergy[iphin, :] .= Ec
+    params.bBandEdgeEnergy[iphip, :] .= Ev
+
+    #=
+    @show params.densityOfStates
+    @show params.bDensityOfStates
+    @show params.bandEdgeEnergy
+    @show params.bBandEdgeEnergy
+    @show params.doping
+    @show params.bDoping
+
+    C = Nd_drain
+    ni = sqrt(Nc * Nv * exp(- (Ec - Ev) / (k_B * T)))
+    ψ0 = 0.5 * (Ec + Ev) / q + k_B * T / q * (- 0.5 * log(Nc / Nv) + asinh(C / (2 * ni)))
+
+    @show ψ0
+    #return
+
+    =#
     if test == false
         show_params(ctsys)
         println("*** done\n")
@@ -258,6 +296,25 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     if test == false
         println("*** done\n")
     end
+
+    # THX at JF!!!
+    # https://github.com/j-fu/GridVisualize.jl/blob/1f2b299a436b7750702ccca282fa14152d80ebf9/src/pyplot.jl#L86
+    function tridata(grid::ExtendableGrid)
+        coord = grid[Coordinates]
+        cellnodes = Matrix(grid[CellNodes])
+        return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
+    end
+
+    vmin = 1.0e13
+    vmax = 1.0e21
+    PyPlot.figure()
+    PyPlot.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+    PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
+    PyPlot.ylabel(" \$y\$ [nm]", fontsize = 17)
+    PyPlot.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+    PyPlot.tight_layout()
+
+    return
 
     if plotting
         # Surface plot equlibrium solution
@@ -328,6 +385,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
         reveal(vis)
     end
 
+    #=
     ################################################################################
     if test == false
         println("Bias loop")
@@ -380,6 +438,8 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     if test == false
         println("*** done\n")
     end
+
+    =#
 
     return
 end # function main
