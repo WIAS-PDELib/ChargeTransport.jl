@@ -16,9 +16,6 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
 
-[sources]
-GridVisualize = {path = "C:\\Users\\marie\\.julia\\dev\\GridVisualize"}
-
 [compat]
 Aqua = "0.8.14"
 Compat = "4.18.0"
