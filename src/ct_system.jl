@@ -206,6 +206,8 @@ mutable struct Params
 
     surfacechargeDensity::Float64
 
+    additionalVoltage::Float64
+
     ###############################################################
     ####                   integer numbers                     ####
     ###############################################################
@@ -327,7 +329,7 @@ mutable struct Params
 
     """
     An array to define the reaction coefficient at internal boundaries.
-
+    
     """
     bReactionCoefficient::Array{Float64, 2}
 
@@ -462,9 +464,10 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####                   gate parameters                     ####
     ###############################################################
 
-    oxidePermittivity = 1.0
-    oxideThickness = 1.0
-    surfacechargeDensity = 1.0
+    params.oxidePermittivity = 1.0
+    params.oxideThickness = 1.0
+    params.surfacechargeDensity = 1.0
+    params.additionalVoltage = 1.0
 
     ###############################################################
     ####                   integer numbers                     ####
