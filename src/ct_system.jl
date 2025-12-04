@@ -258,18 +258,6 @@ $(TYPEDFIELDS)
 mutable struct Params
 
     ###############################################################
-    ####                   gate parameters                     ####
-    ###############################################################
-
-    oxidePermittivity::Float64
-
-    oxideThickness::Float64
-
-    surfacechargeDensity::Float64
-
-    additionalVoltage::Float64
-
-    ###############################################################
     ####                   integer numbers                     ####
     ###############################################################
     """
@@ -491,6 +479,18 @@ mutable struct Params
     dielectricConstantImageForce::Array{Float64, 1}
 
     """
+    A region dependent dielectric constant for the oxide.
+    """
+
+    dielectricConstantOxide::Array{Float64, 1}
+
+    """
+    A region dependent thickness of the oxide.
+    """
+
+    thicknessOxide::Array{Float64, 1}
+
+    """
     A region dependent array for the prefactor in the generation process which is the
     incident photon flux.
     """
@@ -510,6 +510,18 @@ mutable struct Params
     """
     recombinationRadiative::Array{Float64, 1}
 
+    """
+    A region dependent surface charge density for gate contacts.
+    """
+
+    surfacechargeDensityGate::Array{Float64, 1}
+
+    """
+    A region dependent additional Voltage for gate contacts.
+    """
+
+    additionalVoltageGate::Array{Float64, 1}
+
     ###############################################################
     Params() = new() # standard constructor
 
@@ -526,15 +538,6 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     @local_unitfactors K s
 
     params = Params()
-
-    ###############################################################
-    ####                   gate parameters                     ####
-    ###############################################################
-
-    params.oxidePermittivity = 1.0
-    params.oxideThickness = 1.0
-    params.surfacechargeDensity = 1.0
-    params.additionalVoltage = 1.0
 
     ###############################################################
     ####                   integer numbers                     ####
@@ -609,10 +612,14 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ###############################################################
     params.dielectricConstant = ones(Float64, numberOfRegions)
     params.dielectricConstantImageForce = zeros(Float64, numberOfRegions)
+    params.dielectricConstantOxide = ones(Float64, numberOfRegions)
+    params.thicknessOxide = zeros(Float64, numberOfRegions)
     params.generationUniform = zeros(Float64, numberOfRegions)
     params.generationIncidentPhotonFlux = zeros(Float64, numberOfRegions)
     params.generationAbsorption = zeros(Float64, numberOfRegions)
     params.recombinationRadiative = zeros(Float64, numberOfRegions)
+    params.surfacechargeDensityGate = zeros(Float64, numberOfRegions)
+    params.additionalVoltageGate = zeros(Float64, numberOfRegions)
 
     ###############################################################
     return params
