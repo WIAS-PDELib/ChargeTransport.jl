@@ -12,10 +12,11 @@ using ChargeTransport
 using ExtendableGrids
 using GLMakie
 using GridVisualize
-# using PyPlot
+using PyPlot
 
 function main(; plotting = true, Plotter = GLMakie, test = false)
 
+    # for Makie plots
     if plotting
         Plotter.closeall()
     end
@@ -32,6 +33,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     ########## charge carriers ##########
     iphin = 1                            # quasi Fermi potential for electrons
     iphip = 2                            # quasi Fermi potential for holes
+    ipsi = 3 # needed for PyPlot Plotting
     numberOfCarriers = 2
 
     ########## device geometry ##########
@@ -159,23 +161,17 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
-    # neu hinzugefügten Parameter für GateContact - müssen noch thematisch sortiert werden
-    # das Region dependent - für Verallgemeinerung?!, weil das bezieht sich ja alles aufs Gate
-    # DA: I think you need to scale here with the vacuum permittivity, right?
-    params.oxidePermittivity = εr_ox * ε_0 # umbennen zu dielectricConstantOxide
-    params.oxideThickness = thickness_ox
-    params.surfacechargeDensity = qss
-    params.additionalVoltage = U_add_gate
-
     # bereits bestehende Parameter
     params.temperature = T
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
 
-    # wieso braucht man hier eine Schleife??
     for ireg in 1:grid[NumCellRegions] # region data
-
         params.dielectricConstant[ireg] = εr * ε_0
+        params.dielectricConstantOxide[ireg] = εr_ox * ε_0
+        params.thicknessOxide[ireg] = thickness_ox
+        params.surfacechargeDensityGate[ireg] = qss
+        params.additionalVoltageGate[ireg] = U_add_gate
 
         # effective DOS, band-edge energy and mobilities
         params.densityOfStates[iphin, ireg] = Nc
@@ -231,7 +227,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     # Definition ChargeTransport System
     ctsys = System(grid, data, unknown_storage = :sparse)
 
-
+    # Add doping on boundary (if not added 0 on boundary)
     params.bDoping[:, :] .= 0.0
     params.bDoping[iphin, bregion_drain] = Nd_drain                  #   [Nd  0.0;
     params.bDoping[iphin, bregion_source] = Nd_source                #    Nd  0.0;
@@ -244,22 +240,6 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
     params.bBandEdgeEnergy[iphin, :] .= Ec
     params.bBandEdgeEnergy[iphip, :] .= Ev
 
-    #=
-    @show params.densityOfStates
-    @show params.bDensityOfStates
-    @show params.bandEdgeEnergy
-    @show params.bBandEdgeEnergy
-    @show params.doping
-    @show params.bDoping
-
-    C = Nd_drain
-    ni = sqrt(Nc * Nv * exp(- (Ec - Ev) / (k_B * T)))
-    ψ0 = 0.5 * (Ec + Ev) / q + k_B * T / q * (- 0.5 * log(Nc / Nv) + asinh(C / (2 * ni)))
-
-    @show ψ0
-    #return
-
-    =#
     if test == false
         show_params(ctsys)
         println("*** done\n")
@@ -298,45 +278,10 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
         println("*** done\n")
     end
 
-    # THX at JF!!!
-    # https://github.com/j-fu/GridVisualize.jl/blob/1f2b299a436b7750702ccca282fa14152d80ebf9/src/pyplot.jl#L86
-    function tridata(grid::ExtendableGrid)
-        coord = grid[Coordinates]
-        cellnodes = Matrix(grid[CellNodes])
-        return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
-    end
-
-    ## visualizing with PyPlot
-    vmin = 1.0e15
-    vmax = 1.0e25
-
-    zn = -1
-    zp = +1
-    ipsi = 3
-
-    nn = Nc .* exp.(zn * (q * (solution_eq[iphin, :] .- solution_eq[ipsi, :]) .+ Ec) ./ (k_B * T))
-
-    np = Nv .* exp.(zp * (q * (solution_eq[iphip, :] .- solution_eq[ipsi, :]) .+ Ev) ./ (k_B * T))
-
-
-    PyPlot.figure()
-    PyPlot.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
-    PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
-    PyPlot.ylabel(" \$y\$ [nm]", fontsize = 17)
-    PyPlot.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-    PyPlot.tight_layout()
-
-    PyPlot.figure()
-    PyPlot.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
-    PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
-    PyPlot.ylabel(" \$y\$ [nm]", fontsize = 17)
-    PyPlot.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
-    PyPlot.tight_layout()
-
-    return
-
     if plotting
-        # Surface plot equlibrium solution
+        ################################################################################
+        # Surface plot equlibrium with Makie
+        ################################################################################
         psi_eq = solution_eq[3, :]
 
         # Get grid coordinates
@@ -349,7 +294,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
         Y = reshape(coords[2, :], nx, ny)
         Z = reshape(psi_eq, nx, ny)
 
-        fig = Figure()
+        fig = GLMakie.Figure()
         ax = Axis3(
             fig[1, 1];
             xlabel = "length [m]",
@@ -363,8 +308,47 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
 
         display(GLMakie.Screen(), fig) # open new window
 
+        ################################################################################
+        # Density plots equilibrium with PyPlot
+        ################################################################################
+        # MO: Just one figure plottet at a time
+        function tridata(grid::ExtendableGrid)
+            coord = grid[Coordinates]
+            cellnodes = Matrix(grid[CellNodes])
+            return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
+        end
 
-        # Density plots equilibrium solution
+        ## visualizing with PyPlot
+        vmin = 1.0e15
+        vmax = 1.0e25
+
+        nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution_eq[iphin, :] .- solution_eq[ipsi, :]) .+ Ec) ./ (k_B * T))
+        np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution_eq[iphip, :] .- solution_eq[ipsi, :]) .+ Ev) ./ (k_B * T))
+
+        fig_n = PyPlot.figure()
+        PyPlot.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
+        PyPlot.ylabel(" \$y\$ [nm]", fontsize = 17)
+        PyPlot.title("n density")
+        PyPlot.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        PyPlot.tight_layout()
+
+        display(fig_n)
+
+        fig_h = PyPlot.figure()
+        PyPlot.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        PyPlot.xlabel(" \$x\$ [nm]", fontsize = 17)
+        PyPlot.ylabel(" \$y\$ [nm]", fontsize = 17)
+        PyPlot.title("h density")
+        PyPlot.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        PyPlot.tight_layout()
+
+        #display(fig_h)
+
+        ################################################################################
+        # Density plots equilibrium with Makie
+        ################################################################################
+        #=
         grid = ctsys.fvmsys.grid
         numberOfRegions = grid[NumCellRegions]
 
@@ -402,6 +386,7 @@ function main(; plotting = true, Plotter = GLMakie, test = false)
             )
         end
         reveal(vis)
+        =#
     end
 
     #=
