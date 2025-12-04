@@ -326,12 +326,36 @@ mutable struct Params
     """
     contactVoltage::Array{Float64, 1}
 
-
     """
     An array containing a constant value for the electric potential
     in case of Dirichlet boundary conditions.
     """
     bψEQ::Array{Float64, 1}
+
+    """
+    A boundary region dependent dielectric constant for the oxide.
+    """
+
+    dielectricConstantOxide::Array{Float64, 1}
+
+    """
+    A boundary region dependent thickness of the oxide.
+    """
+
+    thicknessOxide::Array{Float64, 1}
+
+    """
+    A boundary region dependent surface charge density for gate contacts.
+    """
+
+    surfacechargeDensityGate::Array{Float64, 1}
+
+    """
+    A boundary region dependent additional Voltage for gate contacts.
+    """
+
+    additionalVoltageGate::Array{Float64, 1}
+
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -479,18 +503,6 @@ mutable struct Params
     dielectricConstantImageForce::Array{Float64, 1}
 
     """
-    A region dependent dielectric constant for the oxide.
-    """
-
-    dielectricConstantOxide::Array{Float64, 1}
-
-    """
-    A region dependent thickness of the oxide.
-    """
-
-    thicknessOxide::Array{Float64, 1}
-
-    """
     A region dependent array for the prefactor in the generation process which is the
     incident photon flux.
     """
@@ -509,18 +521,6 @@ mutable struct Params
     A region dependent array for the radiative recombination rate.
     """
     recombinationRadiative::Array{Float64, 1}
-
-    """
-    A region dependent surface charge density for gate contacts.
-    """
-
-    surfacechargeDensityGate::Array{Float64, 1}
-
-    """
-    A region dependent additional Voltage for gate contacts.
-    """
-
-    additionalVoltageGate::Array{Float64, 1}
 
     ###############################################################
     Params() = new() # standard constructor
@@ -562,6 +562,10 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
     params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
     params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
+    params.dielectricConstantOxide = zeros(Float64, numberOfBoundaryRegions)
+    params.thicknessOxide = zeros(Float64, numberOfBoundaryRegions)
+    params.surfacechargeDensityGate = zeros(Float64, numberOfBoundaryRegions)
+    params.additionalVoltageGate = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -612,14 +616,10 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ###############################################################
     params.dielectricConstant = ones(Float64, numberOfRegions)
     params.dielectricConstantImageForce = zeros(Float64, numberOfRegions)
-    params.dielectricConstantOxide = ones(Float64, numberOfRegions)
-    params.thicknessOxide = zeros(Float64, numberOfRegions)
     params.generationUniform = zeros(Float64, numberOfRegions)
     params.generationIncidentPhotonFlux = zeros(Float64, numberOfRegions)
     params.generationAbsorption = zeros(Float64, numberOfRegions)
     params.recombinationRadiative = zeros(Float64, numberOfRegions)
-    params.surfacechargeDensityGate = zeros(Float64, numberOfRegions)
-    params.additionalVoltageGate = zeros(Float64, numberOfRegions)
 
     ###############################################################
     return params
