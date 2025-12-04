@@ -93,7 +93,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
 
     if plotting
         vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800)) # auf Mariekes Computer angepasst
-        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", show = true)
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\rm space[m]", show = true)
     end
 
     if test == false
