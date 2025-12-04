@@ -101,8 +101,8 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm density~[\frac{1}{cm^3}]"),
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{density [$\frac{1}{\text{cm}^3}$]}"),
                 yscale = :log
             )
             label_is_plotted = true
@@ -170,8 +170,8 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 Ecc ./ q .- solpsi;
                 markershape = marker,
                 title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm energy~[eV]"),
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy [eV]}"),
                 label = label_is_plotted ? nothing : label_energy[1, icc],
                 legend = :cc,
                 markersize = 8,
@@ -288,8 +288,8 @@ function plot_energies!(visualizer, ctsys, label_BEE)
                 coord[cellnodes[:, i]][:], # hier soll eigentlich ein @views vor, dann klappt aber der Input nicht mehr
                 fill(cellValue, numberLocalCellNodes);
                 title = "Band-edge energies",
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm energy~[eV]"),
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy [eV]}"),
                 label = label_is_plotted ? nothing : label_BEE[icc],
                 legend = :rc,
                 clear = false,
@@ -357,7 +357,6 @@ function plot_doping!(visualizer, ctsys, label_density)
     # plot different doping values in interior
     for icc in 1:params.numberOfCarriers
 
-        label_is_plotted = false
         for i in eachindex(cellregions)
             # determine doping value in cell and number of cell nodes
             cellValue = params.doping[icc, cellregions[i]]
@@ -370,17 +369,15 @@ function plot_doping!(visualizer, ctsys, label_density)
                 1.0e-6 .* fill(cellValue, numberLocalCellNodes);
                 clear = false,
                 color = colors[icc],
-                label = label_is_plotted ? nothing : label_density[icc],
+                label = i == firstindex(cellregions) ? label_density[icc] : nothing,
                 legend = :rc,
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = "Doping values for charge carriers",
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm doping~[\frac{1}{cm^3}]"),
+                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+                ylabel = PlutoVista_hack(visualizer[:Plotter], L"doping [$\frac{1}{\text{cm}^3}$]"),
                 yscale = :log
             )
-
-            label_is_plotted = true
         end
 
     end
@@ -426,8 +423,8 @@ function plot_doping!(visualizer, g::ExtendableGrid, paramsnodal::ParamsNodal)
         coord[:],
         1.0e-6 .* paramsnodal.doping[:],
         title = "Doping values for charge carriers",
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm doping~[\frac{1}{cm^3}]"),
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{doping [$\frac{1}{\text{cm}^3}$]"),
         yscale = :log,
         color = :green,
         markershape = :cross,
@@ -460,8 +457,8 @@ function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridp
         coord[:],
         psi0,
         title = "Electroneutral potential",
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm potential~[V]"),
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential [V]}"),
         color = :blue,
         markershape = marker,
         markersize = 8
@@ -512,8 +509,8 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
         markershape = marker,
         markersize = 8,
         title = title,
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm space~[m]"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm potential~[V]")
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential [V]}")
     )
 
     if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn
@@ -525,7 +522,7 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
             solution[ipsiStandard, :];
             clear = false,
             color = :black,
-            label = L"\psi~(Schottky contacts)",
+            label = L"$\psi$ (Schottky contacts)",
             legend = :cc,
             linestyle = :dot,
             linewidth = 3,
@@ -641,8 +638,8 @@ function plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints = false)
         markershape = marker,
         markersize = 8,
         title = title,
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\rm bias~[V]"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\rm total~current~[A]")
+        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{bias [V]}"),
+        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{total current [A]}")
     )
 
     return nothing
