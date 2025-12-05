@@ -151,8 +151,6 @@ function main(;
     data.boundaryType[p.bregionDonor1] = OhmicContact     # bottom boundary Dirichlet condition
     #                                                     # rest is set to Neumann by default
 
-    data.fluxApproximation .= ExcessChemicalPotential
-    #data.fluxApproximation .= ScharfetterGummel          # if F=Boltzmann
 
     if test == false
         println("*** done\n")

@@ -156,8 +156,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
         data.boundaryType[bregionRight] = SchottkyContact
     end
 
-    data.fluxApproximation .= ExcessChemicalPotential
-
     enable_ionic_carrier!(data, ionicCarrier = iphix, regions = [regionflake])
 
     if test == false

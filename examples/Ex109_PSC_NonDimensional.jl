@@ -186,10 +186,6 @@ function main(;
     # generation model
     data.generationModel = GenerationUserDefined
 
-    ## flux discretization scheme
-    data.fluxApproximation .= ExcessChemicalPotential
-
-
     if test == false
         println("*** done\n")
     end

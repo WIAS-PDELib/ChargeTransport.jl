@@ -330,6 +330,7 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test
 
     ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
     ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
+    ## Default is ExcessChemicalPotential. Here, we need a graded variant
     data.fluxApproximation .= ScharfetterGummelGraded
 
     ################################################################################

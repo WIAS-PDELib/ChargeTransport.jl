@@ -128,8 +128,6 @@ function main(;
 
     enable_ionic_carrier!(data1D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
-    data1D.fluxApproximation .= ExcessChemicalPotential
-
     ########################
     data3D = Data(grid3D, p.numberOfCarriers)
     data3D.modelType = Transient
@@ -144,8 +142,6 @@ function main(;
     data3D.boundaryType[p.bregionAcceptor] = OhmicContact
 
     enable_ionic_carrier!(data3D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
-
-    data3D.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")

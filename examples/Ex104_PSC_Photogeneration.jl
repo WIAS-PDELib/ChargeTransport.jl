@@ -197,7 +197,6 @@ function main(;
     )
     data.boundaryType[p.bregionAcceptor] = OhmicContact
     data.boundaryType[p.bregionDonor] = OhmicContact
-    data.fluxApproximation .= ExcessChemicalPotential
 
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 

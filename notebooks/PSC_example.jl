@@ -341,7 +341,6 @@ begin
     data.boundaryType[p.bregionAcceptor] = OhmicContact
     data.boundaryType[p.bregionDonor] = OhmicContact
     data.generationModel = GenerationBeerLambert
-    data.fluxApproximation .= ExcessChemicalPotential
 
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 

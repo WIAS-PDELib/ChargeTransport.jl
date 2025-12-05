@@ -1054,9 +1054,12 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ###############################################################
     ####                 Numerics information                  ####
     ###############################################################
-    data.fluxApproximation = FluxApproximationType[ScharfetterGummel for i in 1:numberOfCarriers]
+    ## Following choices are possible for the flux discretization scheme: ScharfetterGummel,
+    ## ScharfetterGummelGraded, ExcessChemicalPotential, ExcessChemicalPotentialGraded,
+    ## DiffusionEnhanced, GeneralizedSG
+    data.fluxApproximation = FluxApproximationType[ExcessChemicalPotential for i in 1:numberOfCarriers]
     data.calculationType = OutOfEquilibrium      # do performances InEquilibrium or OutOfEquilibrium
-    data.modelType = Stationary            # indicates if we need additional time dependent part
+    data.modelType = Stationary                  # indicates if we need additional time dependent part
     data.generationModel = GenerationNone        # generation model
     data.λ1 = 1.0                   # λ1: embedding parameter for NLP
     data.λ2 = 1.0                   # λ2: embedding parameter for G

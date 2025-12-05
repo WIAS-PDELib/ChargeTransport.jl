@@ -262,11 +262,7 @@ function main(;
     # generation model
     data.generationModel = GenerationUserDefined
 
-    ## flux discretization scheme
-    data.fluxApproximation .= ExcessChemicalPotential
-
-    ## Define the unity constants also in the discrete counterpart of the model
-    data.constants = constants
+    ## flux discretization scheme is by default excess chemical potential flux scheme
 
     if test == false
         println("*** done\n")

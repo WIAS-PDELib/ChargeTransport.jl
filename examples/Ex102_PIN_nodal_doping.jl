@@ -139,10 +139,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     data.boundaryType[bregionAcceptor] = OhmicContact
     data.boundaryType[bregionDonor] = OhmicContact
 
-    ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
-    ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ScharfetterGummel
-
     if test == false
         println("*** done\n")
     end
@@ -284,6 +280,9 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     end # bias loop
 
+    if test == false
+        println("*** done\n")
+    end
 
     if plotting # plot solution and IV curve
         Plotter.figure()

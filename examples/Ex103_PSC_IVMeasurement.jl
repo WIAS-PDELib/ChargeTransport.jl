@@ -180,10 +180,6 @@ function main(;
     ## In this application ion vacancies only live in active perovskite layer.
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
-    ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
-    ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ExcessChemicalPotential
-
     if test == false
         println("*** done\n")
     end

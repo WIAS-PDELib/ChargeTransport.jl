@@ -175,11 +175,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     data.boundaryType[bregionAcceptor] = OhmicContact
     data.boundaryType[bregionDonor] = OhmicContact
 
-    ## Following choices are possible for the flux discretization scheme: ScharfetterGummel,
-    ## ScharfetterGummelGraded, ExcessChemicalPotential, ExcessChemicalPotentialGraded,
-    ## DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ExcessChemicalPotential
-
     if test == false
         println("*** done\n")
     end
