@@ -141,7 +141,11 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ## Initialize Data instance and fill in predefined data
     data = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
     data.modelType = Transient
-    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[iphin] = FermiDiracOneHalfTeSCA
+    data.F[iphip] = FermiDiracOneHalfTeSCA
+
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
         bulk_recomb_Auger = false,
@@ -156,6 +160,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
         data.boundaryType[bregionRight] = SchottkyContact
     end
 
+    ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
     enable_ionic_carrier!(data, ionicCarrier = iphix, regions = [regionflake])
 
     if test == false

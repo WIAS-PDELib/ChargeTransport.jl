@@ -126,6 +126,9 @@ function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
 
+    # set by default for the ionic carrier the Fermi Dirac integral of order -1 as statistics function
+    data.F[ionicCarrier] = FermiDiracMinusOne
+
     push!(data.ionicCarrierList, enableIons)
 
     return
@@ -1015,6 +1018,9 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ####                   model information                   ####
     ###############################################################
 
+    # Choose statistical relation between density and qF potential
+    # options: Boltzmann, FermiDiracOneHalfBednarczyk,
+    #          FermiDiracOneHalfTeSCA FermiDiracMinusOne, Blakemore
     data.F = TFuncs[ Boltzmann for i in 1:numberOfCarriers]
     data.qFModel = ContQF
 

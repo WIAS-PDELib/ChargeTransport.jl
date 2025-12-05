@@ -135,9 +135,7 @@ function main(;
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary
 
-    ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
-    ## FermiDiracMinusOne, Blakemore.
-    ## Can be a vector with different statistics (for n and p).
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
     data.F .= FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;

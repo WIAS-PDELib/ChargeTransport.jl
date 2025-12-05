@@ -116,7 +116,8 @@ function main(;
     ## Note that we define the data struct with respect to the three-dimensional grid, since we also defined there the outer no flux boundary conditions.
     data1D = Data(grid1D, p.numberOfCarriers)
     data1D.modelType = Transient
-    data1D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data1.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data1.F[p.iphip] = FermiDiracOneHalfTeSCA
     data1D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
@@ -131,7 +132,8 @@ function main(;
     ########################
     data3D = Data(grid3D, p.numberOfCarriers)
     data3D.modelType = Transient
-    data3D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data3.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data3.F[p.iphip] = FermiDiracOneHalfTeSCA
     data3D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,

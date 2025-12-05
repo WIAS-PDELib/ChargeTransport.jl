@@ -123,10 +123,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary
 
-    ## Possible choices for F: Boltzmann, FermiDiracOneHalfBednarczyk,
-    ## FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-    data.F .= Boltzmann
-
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
         bulk_recomb_Auger = false,

@@ -6,6 +6,7 @@ We simulate charge transport in a GaAs pin diode, where we use the van Roosbroec
 system of equations as charge transport model. The unknowns are given by the quasi Fermi
 potentials of electrons and holes $\varphi_n$, $\varphi_p$ and the electric potential $\psi$.
 The simulations are performed out of equilibrium and for the stationary problem.
+By default, we assume a Boltzmann relation between densities and potentials.
 =#
 
 module Ex101_PIN
@@ -155,10 +156,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     ## Following variable declares, if we want to solve stationary or transient problem
     data.modelType = Stationary
-
-    ## Following choices are possible for F: Boltzmann, FermiDiracOneHalfBednarczyk,
-    ## FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-    data.F .= Boltzmann
 
     ## Here, we need to specify which numbers are associated with electron and hole quasi
     ## Fermi potential. Further, the desired recombination processes can be chosen here.

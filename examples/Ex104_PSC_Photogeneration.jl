@@ -187,7 +187,10 @@ function main(;
     end
 
     data.modelType = Transient
-    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data.F[p.iphip] = FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
@@ -198,6 +201,7 @@ function main(;
     data.boundaryType[p.bregionAcceptor] = OhmicContact
     data.boundaryType[p.bregionDonor] = OhmicContact
 
+    ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if userdefinedGeneration

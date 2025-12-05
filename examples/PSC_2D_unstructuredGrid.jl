@@ -140,8 +140,9 @@ module PSC_2D_unstructuredGrid
         ## Possible choices: Stationary, Transient
         data.modelType = Transient
 
-        ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-        data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+        ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+        data.F[p.iphin] = FermiDiracOneHalfTeSCA
+        data.F[p.iphip] = FermiDiracOneHalfTeSCA
 
         data.bulkRecombination = set_bulk_recombination(;
             iphin = p.iphin, iphip = p.iphip,

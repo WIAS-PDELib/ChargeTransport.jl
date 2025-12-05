@@ -103,10 +103,8 @@ data = Data(grid, numberOfCarriers)
 # Solve the stationary problem instead of the transient one
 data.modelType = Stationary
 
-# Choose statistical relation between density and qF potential
-# options: Boltzmann, FermiDiracOneHalfBednarczyk,
-#          FermiDiracOneHalfTeSCA FermiDiracMinusOne, Blakemore
-data.F .= Boltzmann
+# by default, we set as statistics function for electrons and holes Boltzmann, if you want to have a more
+# general description like FermiDirac, please use data.F .= FermiDiracOneHalfTeSCA
 
 # Enable/Disable recombination processes, the default is stationary SRH recombination.
 data.bulkRecombination = set_bulk_recombination(;
