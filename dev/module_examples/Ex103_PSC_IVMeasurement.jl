@@ -159,9 +159,9 @@ function main(;
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
 
-    ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
-    ## FermiDiracMinusOne, Blakemore
-    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data.F[p.iphip] = FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
@@ -178,11 +178,8 @@ function main(;
     ## With this method, the user enable the ionic carrier parsed to ionicCarrier and gives
     ## gives the information on which regions this ionic carrier is defined.
     ## In this application ion vacancies only live in active perovskite layer.
+    ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
-
-    ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
-    ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
