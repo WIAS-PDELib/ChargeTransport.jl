@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -----------------------------------------------------------------------------------------------
 
+## v1.2.7
+
+### Changed
+  - we rely now more on default values and deleted the definition of the `fluxApproximation` and the statistics function `F` (if Boltzmann) from the examples
+
+### Fixed
+  - The default for the boundary values of the parameters `doping`, `densityOfStates`, and `bandEdgeEnergy`can be set as in the neighboring region. This was not done correctly.
+
 ## v1.2.6
 
 ### Changed

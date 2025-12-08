@@ -1309,27 +1309,29 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     enable_species!(ctsys, data.index_psi, 1:data.params.numberOfRegions)
 
     ######################################
-    # Fill in boundary parameters. Note the convention that left boundary = 1, right boundary = 2
-    # and that first region = 1, second region = 2
-    bregionLeft = 1
-    bregionRight = 2
-    regionLeft = 1
-    regionRight = data.params.numberOfRegions
+    # Fill in boundary parameters. By default, we set the boundary values the same as the adjacent inner cell.
+    for ibreg in 1:data.params.numberOfBoundaryRegions
+        ibregIndex = findfirst(==(ibreg), grid[BFaceRegions]) # index of first b face with boundary region ibreg
 
-    for icc in data.chargeCarrierList
-        if iszero(data.paramsnodal.densityOfStates[icc, :])
-            data.params.bDensityOfStates[icc, bregionLeft] = data.params.densityOfStates[icc, regionLeft]
-            data.params.bDensityOfStates[icc, bregionRight] = data.params.densityOfStates[icc, regionRight]
-        end
+        # as alternative, one could have:
+        # ibface = grid[BFaceFaces][ibregIndex] # general face number of boundary face
+        # icell = grid[FaceCells][1, ibface] # adjacent cell, by default the first entry is non-zero
+        icell = grid[ExtendableGrids.BFaceCells][1, ibregIndex] # adjacent cell, by default the first entry is non-zero
 
-        if iszero(data.paramsnodal.bandEdgeEnergy[icc, :])
-            data.params.bBandEdgeEnergy[icc, bregionLeft] = data.params.bandEdgeEnergy[icc, regionLeft]
-            data.params.bBandEdgeEnergy[icc, bregionRight] = data.params.bandEdgeEnergy[icc, regionRight]
-        end
+        ireg = grid[CellRegions][icell] # region number to which the cell belongs
 
-        if iszero(data.paramsnodal.doping)
-            data.params.bDoping[icc, bregionLeft] = data.params.doping[icc, regionLeft]
-            data.params.bDoping[icc, bregionRight] = data.params.doping[icc, regionRight]
+        for icc in data.chargeCarrierList # do it for each charge carrier
+            if iszero(data.paramsnodal.densityOfStates[icc, :]) # only fill in boundary values, if user did not implement nodal variant
+                data.params.bDensityOfStates[icc, ibreg] = data.params.densityOfStates[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :])
+                data.params.bBandEdgeEnergy[icc, ibreg] = data.params.bandEdgeEnergy[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.doping)
+                data.params.bDoping[icc, ibreg] = data.params.doping[icc, ireg]
+            end
         end
 
     end
@@ -1412,18 +1414,30 @@ function build_system(grid, data, ::Type{DiscontQF}; kwargs...)
     data.index_psi = ContinuousQuantity(fvmsys, 1:data.params.numberOfRegions)
 
     #########################################
-    # Fill in boundary parameters. Note the convention that left boundary = 1, right boundary = 2
-    # and that first region = 1, second region = 2
-    bregionLeft = 1
-    bregionRight = 2
-    regionLeft = 1
-    regionRight = data.params.numberOfRegions
-    for icc in data.chargeCarrierList
-        data.params.bDensityOfStates[icc, bregionLeft] = data.params.densityOfStates[icc, regionLeft]
-        data.params.bBandEdgeEnergy[icc, bregionLeft] = data.params.bandEdgeEnergy[icc, regionLeft]
+    # Fill in boundary parameters. By default, we set the boundary values the same as the adjacent inner cell.
+    for ibreg in 1:data.params.numberOfBoundaryRegions
+        ibregIndex = findfirst(==(ibreg), grid[BFaceRegions]) # index of first b face with boundary region ibreg
 
-        data.params.bDensityOfStates[icc, bregionRight] = data.params.densityOfStates[icc, regionRight]
-        data.params.bBandEdgeEnergy[icc, bregionRight] = data.params.bandEdgeEnergy[icc, regionRight]
+        # as alternative, one could have:
+        # ibface = grid[BFaceFaces][ibregIndex] # general face number of boundary face
+        # icell = grid[FaceCells][1, ibface] # adjacent cell, by default the first entry is non-zero
+        icell = grid[ExtendableGrids.BFaceCells][1, ibregIndex] # adjacent cell, by default the first entry is non-zero
+
+        ireg = grid[CellRegions][icell] # region number to which the cell belongs
+
+        for icc in data.chargeCarrierList # do it for each charge carrier
+            if iszero(data.paramsnodal.densityOfStates[icc, :]) # only fill in boundary values, if user did not implement nodal variant
+                data.params.bDensityOfStates[icc, ibreg] = data.params.densityOfStates[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :])
+                data.params.bBandEdgeEnergy[icc, ibreg] = data.params.bandEdgeEnergy[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.doping)
+                data.params.bDoping[icc, ibreg] = data.params.doping[icc, ireg]
+            end
+        end
 
     end
 
