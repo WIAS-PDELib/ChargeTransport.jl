@@ -9,6 +9,8 @@ The material is silicon.
 module Ex204_FET
 
 using ChargeTransport
+using VoronoiFVM # for IV Curve
+
 using ExtendableGrids
 using PythonPlot
 
@@ -151,7 +153,6 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
 
-    # bereits bestehende Parameter
     params.temperature = T
     params.chargeNumbers[iphin] = -1
     params.chargeNumbers[iphip] = 1
@@ -167,7 +168,6 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         params.mobility[iphin, ireg] = mun
         params.mobility[iphip, ireg] = mup
 
-        # recombination parameters, wird das immer übergeben? auch wenn Recombination = false?
         params.recombinationRadiative[ireg] = Radiative
         params.recombinationSRHLifetime[iphin, ireg] = SRH_LifeTime
         params.recombinationSRHLifetime[iphip, ireg] = SRH_LifeTime
@@ -244,7 +244,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     end
     ################################################################################
 
-    control = SolverControl()
+    control = ChargeTransport.SolverControl()
     control.verbose = true
     control.maxiters = 70
     control.abstol = 1.0e-7
@@ -323,7 +323,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         display(gcf())
     end
 
-    #=
+
     ################################################################################
     if test == false
         println("Bias loop")
@@ -331,45 +331,52 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     ################################################################################
 
     biasValues_gate = range(0.0, stop = 5.0, length = 4) # 4 Steps in Tesca
-    biasValues_drain = range(0.0, stop = 5.0, length = 12) # 12 steps in Tesca
-    #IV = zeros(0)
+    biasValues_drain = range(0.0, stop = 5.0, length = 43) # 12 steps in Tesca, bis length = 42 bricht es nach zwei Schritten ab
+
+    IV_drain = zeros(0)
 
     inival = copy(solution_eq)
     solution = copy(solution_eq)
 
-    # Bias Loop
+    # Bias Loop Gate
     for Δu_gate in biasValues_gate
 
         println("bias value at gate: Δu = ", Δu_gate, " V")
 
         set_contact!(ctsys, bregion_gate, Δu = Δu_gate)
-        set_contact!(ctsys, bregion_source, Δu = 0.0)
-        set_contact!(ctsys, bregion_drain, Δu = 0.0)
-        set_contact!(ctsys, bregion_bulk, Δu = 0.0)
 
-        solution = solve(ctsys; inival = inival, control = control)
+        solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
         inival .= solution
 
-        ## get I-V data
-        #current = get_current_val(ctsys, solution)
-        #push!(IV, abs.(zaus * current)) # zaus=wide of device
     end
 
+    # Bias Loop Drain
     for Δu_drain in biasValues_drain
 
         println("bias value at drain: Δu = ", Δu_drain, " V")
 
         set_contact!(ctsys, bregion_gate, Δu = 5.0)
-        set_contact!(ctsys, bregion_source, Δu = 0.0)
         set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
-        set_contact!(ctsys, bregion_bulk, Δu = 0.0)
 
-        solution = solve(ctsys; inival = inival, control = control)
+        solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
         inival .= solution
 
         ## get I-V data
-        #current = get_current_val(ctsys, solution)
-        #push!(IV, abs.(zaus * current)) # zaus=wide of device
+        factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
+
+        # 2 drain, 3 source
+        tf = VoronoiFVM.testfunction(factory, [2], [3])
+
+        IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
+
+        current = 0.0
+        # no displacement as we have steady state, this way last one is taken out as it corresponds to electric potential
+        for ii in 1:(length(IEdge) - 1)
+            current = current + IEdge[ii]
+        end
+
+        push!(IV_drain, zaus * current) # zaus=wide of device, total current
+        #push!(IV_drain, current)
 
     end
 
@@ -377,7 +384,70 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         println("*** done\n")
     end
 
-    =#
+    if plotting
+
+        ################################################################################
+        # Electrostatic Potential with PythonPlot
+        ################################################################################
+
+        XX = grid[Coordinates][1, :]; YY = grid[Coordinates][2, :]
+
+        Plotter.figure()
+        Plotter.surf(XX[:], YY[:], solution[ipsi, :])
+        Plotter.title("Electrostatic potential")
+        Plotter.xlabel("length [m]")
+        Plotter.ylabel("height [m]")
+        Plotter.zlabel("potential [V]")
+        display(gcf())
+
+        ################################################################################
+        # Density plots with PythonPlot
+        ################################################################################
+
+        function tridata(grid::ExtendableGrid)
+            coord = grid[Coordinates]
+            cellnodes = Matrix(grid[CellNodes])
+            return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
+        end
+
+        vmin = 1.0e15
+        vmax = 1.0e25
+
+        nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution[iphin, :] .- solution[ipsi, :]) .+ Ec) ./ (k_B * T))
+        np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution[iphip, :] .- solution[ipsi, :]) .+ Ev) ./ (k_B * T))
+
+        Plotter.figure()
+        Plotter.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        Plotter.xlabel(" \$x\$ [nm]", fontsize = 12)
+        Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
+        Plotter.title("electron density")
+        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        Plotter.tight_layout()
+        display(gcf())
+
+        Plotter.figure()
+        Plotter.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        Plotter.xlabel(" \$x\$ [nm]", fontsize = 12)
+        Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
+        Plotter.title("hole density")
+        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        Plotter.tight_layout()
+        display(gcf())
+
+        ################################################################################
+        # IV Curve with PythonPlot
+        ################################################################################
+
+        Plotter.figure()
+        Plotter.plot(biasValues_drain, IV_drain)
+        Plotter.grid()
+        Plotter.title("IV Curve")
+        Plotter.xlabel("bias [V]")
+        Plotter.ylabel("total current [A]")
+        Plotter.tight_layout()
+        display(gcf())
+
+    end
 
     return
 end # function main
