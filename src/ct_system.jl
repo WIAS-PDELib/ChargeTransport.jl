@@ -126,6 +126,9 @@ function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
 
+    # set by default for the ionic carrier the Fermi Dirac integral of order -1 as statistics function
+    data.F[ionicCarrier] = FermiDiracMinusOne
+
     push!(data.ionicCarrierList, enableIons)
 
     return
@@ -1015,6 +1018,9 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ####                   model information                   ####
     ###############################################################
 
+    # Choose statistical relation between density and qF potential
+    # options: Boltzmann, FermiDiracOneHalfBednarczyk,
+    #          FermiDiracOneHalfTeSCA FermiDiracMinusOne, Blakemore
     data.F = TFuncs[ Boltzmann for i in 1:numberOfCarriers]
     data.qFModel = ContQF
 
@@ -1054,9 +1060,12 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ###############################################################
     ####                 Numerics information                  ####
     ###############################################################
-    data.fluxApproximation = FluxApproximationType[ScharfetterGummel for i in 1:numberOfCarriers]
+    ## Following choices are possible for the flux discretization scheme: ScharfetterGummel,
+    ## ScharfetterGummelGraded, ExcessChemicalPotential, ExcessChemicalPotentialGraded,
+    ## DiffusionEnhanced, GeneralizedSG
+    data.fluxApproximation = FluxApproximationType[ExcessChemicalPotential for i in 1:numberOfCarriers]
     data.calculationType = OutOfEquilibrium      # do performances InEquilibrium or OutOfEquilibrium
-    data.modelType = Stationary            # indicates if we need additional time dependent part
+    data.modelType = Stationary                  # indicates if we need additional time dependent part
     data.generationModel = GenerationNone        # generation model
     data.λ1 = 1.0                   # λ1: embedding parameter for NLP
     data.λ2 = 1.0                   # λ2: embedding parameter for G

@@ -212,7 +212,6 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
 
     data.boundaryType[bregionAcceptor] = SchottkyContact
     data.boundaryType[bregionDonor] = OhmicContact
-    data.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")

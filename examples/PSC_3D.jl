@@ -116,7 +116,8 @@ function main(;
     ## Note that we define the data struct with respect to the three-dimensional grid, since we also defined there the outer no flux boundary conditions.
     data1D = Data(grid1D, p.numberOfCarriers)
     data1D.modelType = Transient
-    data1D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data1D.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data1D.F[p.iphip] = FermiDiracOneHalfTeSCA
     data1D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
@@ -128,12 +129,11 @@ function main(;
 
     enable_ionic_carrier!(data1D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
-    data1D.fluxApproximation .= ExcessChemicalPotential
-
     ########################
     data3D = Data(grid3D, p.numberOfCarriers)
     data3D.modelType = Transient
-    data3D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data3D.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data3D.F[p.iphip] = FermiDiracOneHalfTeSCA
     data3D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
@@ -144,8 +144,6 @@ function main(;
     data3D.boundaryType[p.bregionAcceptor] = OhmicContact
 
     enable_ionic_carrier!(data3D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
-
-    data3D.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
