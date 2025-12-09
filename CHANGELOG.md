@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.3.0
+
+### Added
+
+  - Implemented single state traps as a carrier spiecies with no flux
+  - Added addTrapCaptureEscape! function to compute reaction between traps and mobile electrical species.
+  - Added example Ex110_MoS2_withIons_withTraps.jl to test traps 
 
 ## v1.2.7
 
