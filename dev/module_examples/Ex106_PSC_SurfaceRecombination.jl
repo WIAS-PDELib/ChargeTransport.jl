@@ -240,12 +240,28 @@ function main(;
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
     if plotting
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
+        ## add labels for anion vacancy
+        label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"
+        label_density[p.iphia] = "\$ n_a \$";      label_solution[p.iphia] = "\$ \\varphi_a\$"
+
+        Plotter.figure()
+        plot_densities(Plotter, ctsys, solution, "bias \$\\Delta u\$ ", label_density)
+        Plotter.figure()
+        plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$", label_solution)
+
         Plotter.figure()
         Plotter.plot(tvalues, biasValues, marker = "o")
         Plotter.xlabel("time [s]")
         Plotter.ylabel("bias [V]")
+        Plotter.tight_layout()
         Plotter.figure()
-        plot_IV(Plotter, biasValues[2:end], IV, "Total current")
+        ###########
+        Plotter.plot(biasValues[2:end], IV .* (cm^2) .* 1.0e3, linewidth = 5, color = "darkblue")
+        Plotter.grid()
+        Plotter.xlabel("bias [V]")
+        Plotter.ylabel("current density [mAcm\$^{-2} \$]")
+        Plotter.tight_layout()
     end
 
     if test == false
@@ -271,8 +287,8 @@ function main(;
 end # main
 
 function test()
-    testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
-    return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+    testval = -0.5968266458974157
+    return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testval
 end
 
 

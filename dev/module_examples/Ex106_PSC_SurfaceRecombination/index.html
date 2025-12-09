@@ -225,12 +225,28 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
     if plotting
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
+        # add labels for anion vacancy
+        label_energy[1, p.iphia] = &quot;\$E_a-q\\psi\$&quot;; label_energy[2, p.iphia] = &quot;\$ - q \\varphi_a\$&quot;; label_BEE[p.iphia] = &quot;\$E_a\$&quot;
+        label_density[p.iphia] = &quot;\$ n_a \$&quot;;      label_solution[p.iphia] = &quot;\$ \\varphi_a\$&quot;
+
+        Plotter.figure()
+        plot_densities(Plotter, ctsys, solution, &quot;bias \$\\Delta u\$ &quot;, label_density)
+        Plotter.figure()
+        plot_solution(Plotter, ctsys, solution, &quot;bias \$\\Delta u\$&quot;, label_solution)
+
         Plotter.figure()
         Plotter.plot(tvalues, biasValues, marker = &quot;o&quot;)
         Plotter.xlabel(&quot;time [s]&quot;)
         Plotter.ylabel(&quot;bias [V]&quot;)
+        Plotter.tight_layout()
         Plotter.figure()
-        plot_IV(Plotter, biasValues[2:end], IV, &quot;Total current&quot;)
+        ###########
+        Plotter.plot(biasValues[2:end], IV .* (cm^2) .* 1.0e3, linewidth = 5, color = &quot;darkblue&quot;)
+        Plotter.grid()
+        Plotter.xlabel(&quot;bias [V]&quot;)
+        Plotter.ylabel(&quot;current density [mAcm\$^{-2} \$]&quot;)
+        Plotter.tight_layout()
     end
 
     if test == false
@@ -256,9 +272,9 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
 end # main
 
 function test()
-    testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
-    return main(test = true) ≈ testval &amp;&amp; main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+    testval = -0.5968266458974157
+    return main(test = true) ≈ testval &amp;&amp; main(test = true, vacancyEnergyCalculation = false) ≈ testval
 end
 
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex105_PSC_gradedFlux/">« Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a class="docs-footer-nextpage" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 8 December 2025 14:32">Monday 8 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex105_PSC_gradedFlux/">« Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a class="docs-footer-nextpage" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 9 December 2025 16:43">Tuesday 9 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
