@@ -371,7 +371,6 @@ function main(;
 end #  main
 
 function test()
-    313.5831186052757; 0.004948787699852842
     testval = 313.58311884281136; testvalOther = 0.004948787599489832
     @show main(test = true, otherScanProtocol = false)
     @show main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false)
