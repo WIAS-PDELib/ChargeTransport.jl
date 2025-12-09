@@ -352,6 +352,22 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
         end
 
     end
+    # if trap carriers are present
+    for iicc in data.trapCarrierList 
+        # add trap carriers only in defined regions (otherwise get NaN error)
+        if bnode.cellregions[1] ∈ iicc.regions    # bnode.cellregions = [bnode.region, 0] for outer boundary.
+            icc = iicc.trapCarrier           # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+            ncc = get_density!(u, bnode, data, icc)
+
+            # subtract doping
+            f[ipsi] = f[ipsi] - params.chargeNumbers[icc] * (params.bDoping[icc, bnode.region])
+            # add charge carrier
+            f[ipsi] = f[ipsi] + params.chargeNumbers[icc] * ncc
+
+        end
+    end
 
     f[ipsi] = f[ipsi] - paramsnodal.doping[bnode.index]
     f[ipsi] = - data.λ1 * 1 / tiny_penalty_value * data.constants.q * f[ipsi]
@@ -694,6 +710,15 @@ function reaction!(f, u, node, data, ::Type{InEquilibrium})
             f[icc] = u[icc]
         end
     end
+    for iicc in data.trapCarrierList 
+        # add trap carriers only in defined regions (otherwise get NaN error)
+        if node.region ∈ iicc.regions
+            icc = iicc.trapCarrier            # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+            f[icc] = u[icc]
+        end
+    end
 
     return
 end
@@ -861,6 +886,19 @@ function RHSPoisson!(f, u, node, data, ipsi)
             f[ipsi] = f[ipsi] + data.params.chargeNumbers[icc] * ncc   # add charge carrier
         end
     end
+    for iicc in data.trapCarrierList 
+        # add trap carriers only in defined regions (otherwise get NaN error)
+        if node.region ∈ iicc.regions
+
+            icc = iicc.trapCarrier           # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+            
+            ncc = get_density!(u, node, data, icc)
+
+            f[ipsi] = f[ipsi] - data.params.chargeNumbers[icc] * (data.params.doping[icc, node.region])  # subtract doping
+            f[ipsi] = f[ipsi] + data.params.chargeNumbers[icc] * ncc   # add charge carrier
+        end
+    end
 
     f[ipsi] = f[ipsi] - data.paramsnodal.doping[node.index]
     f[ipsi] = - data.constants.q * data.λ1 * f[ipsi]
@@ -875,10 +913,12 @@ Function which builds right-hand side of electric charge carriers.
 """
 function RHSContinuityEquations!(f, u, node, data)
 
-    # dependent on user information concerncing recombination
+    # dependent on user information concerning recombination
     if data.bulkRecombination.bulk_recomb
         addRecombination!(f, u, node, data)
     end
+    # dependent on user information concerning trap dynamics
+    addTrapCaptureEscape!(f, u, node, data)
     # dependent on user information concerning laser model
     addStimulatedRecombination!(f, u, node, data, data.laserModel)
     # dependent on user information concerncing generation
@@ -1025,6 +1065,13 @@ function storage!(f, u, node, data, ::Type{OutOfEquilibrium})
         # Here we do not need to check, if carrier is present in a specific region.
         # This is directly handled by VoronoiFVM.
         icc = iicc.ionicCarrier           # species number chosen by user
+        icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+        ncc = get_density!(u, node, data, icc)
+        f[icc] = q * params.chargeNumbers[icc] * ncc
+    end
+    for iicc in data.trapCarrierList 
+        icc = iicc.trapCarrier            # species number chosen by user
         icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
 
         ncc = get_density!(u, node, data, icc)
@@ -1572,4 +1619,86 @@ function Photogeneration!(f, u, node, data)
     end
 
     return
+end
+
+"""
+$(TYPEDSIGNATURES)
+No trap: Do nothing
+"""
+function addTrapCaptureEscape!(f, u, node, data, ::Type{NoTrap})
+    nothing
+end
+"""
+$(TYPEDSIGNATURES)
+A simple trap with one state that can either be filled or empty
+"""
+function addTrapCaptureEscape!(f, u, node, data, ::Type{SingleStateTrap}) 
+    
+    (; k_B, q) = data.constants
+
+    capture=data.params.recombinationTrapCaptureRates
+    
+    T=data.params.temperature
+    for icc in data.chargeCarrierList
+        ncc=get_density!(u,node,data,icc)
+        Nc=data.params.densityOfStates[icc]
+
+        # Account for non-Boltzmann statistics in detailed balance to compute escape rate.
+        # It is assumed that the trap is described using FermiDiracMinusOne. The correction
+        # is of F(η)/exp(η) where F is the function used in the carrier state equation.
+        if(data.F[icc]==Boltzmann)
+            nonBoltzmannEnhancementFactor=1.0
+        else
+            nonBoltzmannEnhancementFactor=ncc/(Nc*exp(etaFunction!(u, node, data, icc)))
+        end
+
+        Ec  = data.params.bandEdgeEnergy[icc]
+        zc  = data.params.chargeNumbers[icc]
+        
+        for iitc in data.trapCarrierList 
+            # add trap carriers only in defined regions (otherwise get NaN error)
+            if node.region ∈ iitc.regions
+                itc = iitc.trapCarrier            # species number chosen by user
+                itc = data.chargeCarrierList[itc] # find correct index within chargeCarrierList
+                s = capture[itc,icc,node.region]
+
+                if(s>0) # Only compute where there is capture
+                    zt = data.params.chargeNumbers[itc]
+                    
+                    ntc = get_density!(u, node, data, itc)
+                    Nt  = data.params.densityOfStates[itc]
+                    Et  = data.params.bandEdgeEnergy[itc]
+
+                    signTrapsignBand = sign(zc*zt) # Used to convert between donor/acceptor trap
+                    
+                    # Escape computed from detailed balance assuming traps described using FD-minus one
+                    e = s*Nc*exp((sign(zc)*(Ec-Et))/(k_B*T)) * nonBoltzmannEnhancementFactor
+
+                    # Allow for both acceptor and donor trap in one line
+                    # e.g.  If acceptor traps (trap charge = -1) then reaction with 
+                    # conduction band is  r = Nt*( s*n*(1-f) - e*f ). Reaction with
+                    # the valence band is r = Nt*( s*p*f - e*(1-f) ). 
+                    # For donor traps the (1-f) and f swaps, which is done using 
+                    # the signTrapsignBand variable
+                    captureFactor= (signTrapsignBand+1)/2 - signTrapsignBand*ntc/Nt 
+                    escapeFactor = 1-captureFactor
+                    r= Nt*(s*ncc*captureFactor - e*escapeFactor)
+                    
+                    # For the reaction expression we use the charge of the band as (e.g.) holes can enter 
+                    # an electron trap from the valence band, and using the trap charge would not capture this.
+                    f[icc] = f[icc] + q * zc * r    #
+                    f[itc] = f[itc] - q * zc * r    #
+                end
+            end
+        end
+    end
+
+end
+
+"""
+$(TYPEDSIGNATURES)
+Include recombination between bands and traps
+"""
+function addTrapCaptureEscape!(f, u, node, data)
+    addTrapCaptureEscape!(f, u, node, data, data.bulkRecombination.bulk_recomb_trap)
 end
