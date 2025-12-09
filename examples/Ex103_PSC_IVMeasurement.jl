@@ -258,7 +258,6 @@ function main(;
     end
     ################################################################################
 
-    control.verbose = "e"
     control.Δt = 0.5
     control.Δt_grow = 1.0
 
@@ -363,14 +362,18 @@ function main(;
         end
     end
 
-    return IV[1]
+    if otherScanProtocol
+        return IV[1]
+    else
+        return sum(IV)
+    end
 
 end #  main
 
 function test()
-    testval = 0.0004746066911463672; testvalOther = 0.004948787599489832
+    testval = 313.58311884281136; testvalOther = 0.004948787599489832
     @show main(test = true, otherScanProtocol = false)
-    @show main(test = true, otherScanProtocol = true)
+    @show main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false)
     return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) ≈ testvalOther
 end
 
