@@ -362,16 +362,16 @@ function main(;
         end
     end
 
-    return IV[end]
+    return sum(IV)
 
 end #  main
 
 function test()
-    testval = 115.51652159878219; testvalOther = 0.004882940885734888
+    testval = 313.58311884281136; testvalOther = 0.020587929377962843
     @show main(test = true, otherScanProtocol = false)
     @show main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false)
     @show main(test = true, otherScanProtocol = true)
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) ≈ testvalOther
 end
 
 if test == false
