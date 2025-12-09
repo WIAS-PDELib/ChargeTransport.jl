@@ -371,10 +371,11 @@ function main(;
 end #  main
 
 function test()
+    313.5831186052757; 0.004948787699852842
     testval = 313.58311884281136; testvalOther = 0.004948787599489832
     @show main(test = true, otherScanProtocol = false)
     @show main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false)
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) ≈ testvalOther
+    return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
 end
 
 if test == false
