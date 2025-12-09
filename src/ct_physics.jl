@@ -1636,9 +1636,9 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{SingleStateTrap})
     
     (; k_B, q) = data.constants
 
-    capture=data.params.recombinationTrapCaptureRates
-    
-    T=data.params.temperature
+    capture = data.params.recombinationTrapCaptureRates
+    T       = data.params.temperature
+
     for icc in data.chargeCarrierList
         ncc=get_density!(u,node,data,icc)
         Nc=data.params.densityOfStates[icc]
@@ -1647,9 +1647,9 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{SingleStateTrap})
         # It is assumed that the trap is described using FermiDiracMinusOne. The correction
         # is of F(η)/exp(η) where F is the function used in the carrier state equation.
         if(data.F[icc]==Boltzmann)
-            nonBoltzmannEnhancementFactor=1.0
+            nonBoltzmannReductionFactor=1.0
         else
-            nonBoltzmannEnhancementFactor=ncc/(Nc*exp(etaFunction!(u, node, data, icc)))
+            nonBoltzmannReductionFactor=ncc/(Nc*exp(etaFunction!(u, node, data, icc)))
         end
 
         Ec  = data.params.bandEdgeEnergy[icc]
@@ -1669,18 +1669,16 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{SingleStateTrap})
                     Nt  = data.params.densityOfStates[itc]
                     Et  = data.params.bandEdgeEnergy[itc]
 
-                    signTrapsignBand = sign(zc*zt) # Used to convert between donor/acceptor trap
-                    
                     # Escape computed from detailed balance assuming traps described using FD-minus one
-                    e = s*Nc*exp((sign(zc)*(Ec-Et))/(k_B*T)) * nonBoltzmannEnhancementFactor
+                    e = s*Nc*exp(zc*(Ec-Et)/(k_B*T)) * nonBoltzmannReductionFactor
 
                     # Allow for both acceptor and donor trap in one line
                     # e.g.  If acceptor traps (trap charge = -1) then reaction with 
                     # conduction band is  r = Nt*( s*n*(1-f) - e*f ). Reaction with
                     # the valence band is r = Nt*( s*p*f - e*(1-f) ). 
-                    # For donor traps the (1-f) and f swaps, which is done using 
-                    # the signTrapsignBand variable
-                    captureFactor= (signTrapsignBand+1)/2 - signTrapsignBand*ntc/Nt 
+                    # For donor traps the (1-f) and f swaps, which is done 
+                    # using sign(zc*zt).
+                    captureFactor= (sign(zc*zt)+1)/2 - sign(zc*zt)*ntc/Nt 
                     escapeFactor = 1-captureFactor
                     r= Nt*(s*ncc*captureFactor - e*escapeFactor)
                     
@@ -1688,8 +1686,8 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{SingleStateTrap})
                     # an electron trap from the valence band, and using the trap charge would not capture this.
                     f[icc] = f[icc] + q * zc * r    #
                     f[itc] = f[itc] - q * zc * r    #
-                end
-            end
+                end 
+            end 
         end
     end
 
