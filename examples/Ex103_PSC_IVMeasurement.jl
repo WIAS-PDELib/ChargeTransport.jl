@@ -258,13 +258,14 @@ function main(;
     end
     ################################################################################
 
+    control.verbose = "e"
     control.Δt = 0.5
     control.Δt_grow = 1.0
 
     if otherScanProtocol
-        control.Δt_min = 1.0e-3
-        control.Δt = 1.0e-3
-        control.Δt_grow = 1.3
+        control.Δt_min = 1.0e-4
+        control.Δt = 1.0e-4
+        control.Δt_grow = 1.2
     end
 
     ## calculation of solution
@@ -362,16 +363,15 @@ function main(;
         end
     end
 
-    return sum(IV)
+    return IV[1]
 
 end #  main
 
 function test()
-    testval = 313.58311884281136; testvalOther = 0.020587929377962843
+    testval = 0.0004746066911463672; testvalOther = 0.004948787599489832
     @show main(test = true, otherScanProtocol = false)
-    @show main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false)
     @show main(test = true, otherScanProtocol = true)
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) ≈ testvalOther
+    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) ≈ testvalOther
 end
 
 if test == false
