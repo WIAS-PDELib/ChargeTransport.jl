@@ -16,7 +16,6 @@ using PyPlot
 # you can set verbose also to true to display some solver information
 function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, barrierLowering = true)
 
-    
 
     ################################################################################
     if test == false
@@ -25,18 +24,18 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ################################################################################
 
     @local_unitfactors μm cm s ns V K ps Hz W m
-    
+
 
     constants = ChargeTransport.constants
     (; q, k_B, ε_0, Planck_constant, m_e) = constants
-    eV = q*V
+    eV = q * V
 
 
     ## region numbers
     regionflake = 1
 
     ## boundary region numbers
-    bregionLeft  = 1
+    bregionLeft = 1
     bregionRight = 2
 
     ## grid
@@ -45,9 +44,9 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     # non-uniform grid
     coord1 = geomspace(0.0, h_flake / 2, 5.0e-4 * h_flake, 2.0e-2 * h_flake)
     coord2 = geomspace(h_flake / 2, h_flake, 2.0e-2 * h_flake, 5.0e-4 * h_flake)
-    coord  = glue(coord1, coord2)
+    coord = glue(coord1, coord2)
 
-    grid   = simplexgrid(coord)
+    grid = simplexgrid(coord)
 
     ## set region in grid
     cellmask!(grid, [0.0], [h_flake], regionflake, tol = 1.0e-18)
@@ -77,29 +76,29 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     # We define the physical data
     T = 300.0 * K
-    εr =  9.0 * 1.0                   # relative dielectric permittivity
-    εi =  1.0 * εr                    # image force dielectric permittivity
+    εr = 9.0 * 1.0                   # relative dielectric permittivity
+    εi = 1.0 * εr                    # image force dielectric permittivity
 
     Ec = - 4.0 * eV
     Ev = - 5.3 * eV
-    Et = Ec - 0.5*eV                  # Trap level (0.5 eV below the conduction band)
+    Et = Ec - 0.5 * eV                  # Trap level (0.5 eV below the conduction band)
     Ex = - 4.38 * eV
 
     Nc = 2 * (2 * pi * 0.55 * m_e * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
     Nv = 2 * (2 * pi * 0.71 * m_e * k_B * T / (Planck_constant^2))^(3 / 2) / m^3
-    
+
     Nt = 5.0e21 / (m^3)              # Trap density
     Nx = 1.0e28 / (m^3)              # Vacancy density
 
-    μn = 1.00e-4 * (m^2) / (V * s)  # Electron mobility
-    μp = 1.00e-4 * (m^2) / (V * s)  # Hole mobility
+    μn = 1.0e-4 * (m^2) / (V * s)  # Electron mobility
+    μp = 1.0e-4 * (m^2) / (V * s)  # Hole mobility
     μx = 0.8e-13 * (m^2) / (V * s)  # Vacancy mobility
-                                    # Traps are frozen and have no flux expression
-                                    # -> No mobility for trap species
-    
+    # Traps are frozen and have no flux expression
+    # -> No mobility for trap species
+
 
     ## Schottky contact
-    barrierLeft  = 0.225 * eV
+    barrierLeft = 0.225 * eV
     barrierRight = 0.215 * eV
     An = 4 * pi * q * 0.55 * m_e * k_B^2 / Planck_constant^3
     Ap = 4 * pi * q * 0.71 * m_e * k_B^2 / Planck_constant^3
@@ -111,22 +110,22 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     Area = 2.1e-11 * m^2 # Area of electrode
 
     ## Trap capture and escape parameters
-    vth = sqrt(3.0 * k_B * T / (0.55 * m_e) )       # Thermal velocity
-    σₙ         = 1.0e-16 * (cm^2)                   # Scattering cross section
-    sₙ         = σₙ * vth                           # Capture rate (escape calculated automatically from detailed balance)
+    vth = sqrt(3.0 * k_B * T / (0.55 * m_e))       # Thermal velocity
+    σₙ = 1.0e-16 * (cm^2)                           # Scattering cross section
+    sₙ = σₙ * vth                                   # Capture rate (escape calculated automatically from detailed balance)
     if test == false
-        println("Capture rate: $(sₙ)") 
-        # The capture rate assuming Boltzmann statistics can be written directly, 
+        println("Capture rate: $(sₙ)")
+        # The capture rate assuming Boltzmann statistics can be written directly,
         # however corrections due to non-Boltzmann statistics depends on the carrier
-        # density in the band. 
-        println("Approximate escape rate: $(sₙ*Nc*exp((Et-Ec)/(k_B*T)))") 
+        # density in the band.
+        println("Approximate escape rate: $(sₙ * Nc * exp((Et - Ec) / (k_B * T)))")
     end
-    
+
 
     # Scan protocol information
-    endTime   =  9.6 * s
-    amplitude = 12.0 * V 
-    scanrate  =  4.0 * amplitude / endTime
+    endTime = 9.6 * s
+    amplitude = 12.0 * V
+    scanrate = 4.0 * amplitude / endTime
 
     ## Define scan protocol function
     function scanProtocol(t)
@@ -162,13 +161,13 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     data = Data(grid, numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
     data.modelType = Transient
     data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne, FermiDiracMinusOne]
-    
+
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = false,
         bulk_recomb_SRH = false,
-        bulk_recomb_trap=ChargeTransport.SingleStateTrap    # Set trap type to a singe-state trap
+        bulk_recomb_trap = ChargeTransport.SingleStateTrap    # Set trap type to a singe-state trap
     )
     if barrierLowering
         data.boundaryType[bregionLeft] = SchottkyBarrierLowering
@@ -181,7 +180,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     data.fluxApproximation .= ExcessChemicalPotential
 
     # Populate trap and ionic carrier list from carrier list
-    enable_trap_carrier!( data,  trapCarrier = iphit, regions = [regionflake])
+    enable_trap_carrier!(data, trapCarrier = iphit, regions = [regionflake])
     enable_ionic_carrier!(data, ionicCarrier = iphix, regions = [regionflake])
 
     if test == false
@@ -198,9 +197,9 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     params.temperature = T
     params.chargeNumbers[iphin] = -1
-    params.chargeNumbers[iphip] =  1
+    params.chargeNumbers[iphip] = 1
     params.chargeNumbers[iphit] = -1    # Charge of trap in filled state: -1 -> Acceptor. +1 -> Donor
-    params.chargeNumbers[iphix] =  2
+    params.chargeNumbers[iphix] = 2
 
     for ireg in 1:length([regionflake])           # region data
 
@@ -215,12 +214,12 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
         params.bandEdgeEnergy[iphip, ireg] = Ev
         params.mobility[iphin, ireg] = μn
         params.mobility[iphip, ireg] = μp
-        
+
         # Immobile traps density, depth and capture rate
         params.densityOfStates[iphit, ireg] = Nt
         params.bandEdgeEnergy[iphit, ireg] = Et
-        params.recombinationTrapCaptureRates[iphit,iphin,ireg] = sₙ
-        
+        params.recombinationTrapCaptureRates[iphit, iphin, ireg] = sₙ
+
 
         # Vacancies
         params.densityOfStates[iphix, ireg] = Nx
@@ -229,12 +228,12 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     end
 
-    params.SchottkyBarrier[bregionLeft]  = barrierLeft
+    params.SchottkyBarrier[bregionLeft] = barrierLeft
     params.SchottkyBarrier[bregionRight] = barrierRight
     params.bVelocity[iphin, bregionLeft] = vn
-    params.bVelocity[iphin, bregionRight]= vn
+    params.bVelocity[iphin, bregionRight] = vn
     params.bVelocity[iphip, bregionLeft] = vp
-    params.bVelocity[iphip, bregionRight]= vp
+    params.bVelocity[iphip, bregionRight] = vp
 
     ## interior doping
     params.doping[iphin, regionflake] = Nd
@@ -255,18 +254,18 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     control = SolverControl()
     control.verbose = verbose
     control.damp_initial = 0.5
-    control.damp_growth  = 1.61 # >= 1
-    control.max_round    = 5
+    control.damp_growth = 1.61 # >= 1
+    control.max_round = 5
 
-    control.abstol       = 1.0e-9
-    control.reltol       = 1.0e-9
-    control.tol_round    = 1.0e-9
+    control.abstol = 1.0e-9
+    control.reltol = 1.0e-9
+    control.tol_round = 1.0e-9
 
-    control.Δu_opt       = Inf
-    control.Δt           = 1.0e-4
-    control.Δt_min       = 1.0e-5
-    control.Δt_max       = 5.0e-2
-    control.Δt_grow      = 1.05
+    control.Δu_opt = Inf
+    control.Δt = 1.0e-4
+    control.Δt_min = 1.0e-5
+    control.Δt_max = 5.0e-2
+    control.Δt_grow = 1.05
 
     if test == false
         println("*** done\n")
@@ -278,11 +277,11 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     end
     ################################################################################
 
-   
+
     ## initialize solution and starting vectors
-    solEQ  = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0)
+    solEQ = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0)
     inival = copy(solEQ)
-    
+
 
     if plotting
         label_solution, label_density, label_energy = set_plotting_labels(data)
@@ -308,7 +307,7 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     end
     ################################################################################
 
-    sol = solve(ctsys, inival = inival, times = (0.0,endTime), control = control)
+    sol = solve(ctsys, inival = inival, times = (0.0, endTime), control = control)
 
     if test == false
         println("*** done\n")
@@ -375,14 +374,14 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     end
 
-    testval=sum(filter(!isnan, sol.u[end])) / length(sol.u[end])
+    testval = sum(filter(!isnan, sol.u[end])) / length(sol.u[end])
     return testval
 
 end #  main
 
 
 function test()
-    return main(;verbose="",test=true)≈-6894.342164365617
+    return main(; verbose = "", test = true) ≈ -6894.342164365617
 end
 
 end # Module

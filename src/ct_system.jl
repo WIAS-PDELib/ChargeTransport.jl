@@ -185,7 +185,7 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     push!(data.trapCarrierList, enableTraps)
 
-    if(data.F[trapCarrier]!==FermiDiracMinusOne)
+    if (data.F[trapCarrier] !== FermiDiracMinusOne)
         @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
     end
 
@@ -1319,7 +1319,7 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     data.index_psi = num_species_sys
 
     ionicCarrierListHelp = Int64[]
-    trapCarrierListHelp  = Int64[]
+    trapCarrierListHelp = Int64[]
     # store indices of ionic carriers
     for iicc in data.ionicCarrierList
         push!(ionicCarrierListHelp, iicc.ionicCarrier)

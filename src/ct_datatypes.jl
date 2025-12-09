@@ -231,7 +231,7 @@ abstract type NoTrap end
 """
 Data type for trap model
 """
-const TrapModelType = Union{Type{SingleStateTrap},Type{NoTrap}}
+const TrapModelType = Union{Type{SingleStateTrap}, Type{NoTrap}}
 
 ##########################################################
 ##########################################################
