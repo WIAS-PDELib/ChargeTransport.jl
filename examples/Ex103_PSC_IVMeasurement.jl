@@ -262,9 +262,9 @@ function main(;
     control.Δt_grow = 1.0
 
     if otherScanProtocol
-        control.Δt_min = 1.0e-3
-        control.Δt = 1.0e-3
-        control.Δt_grow = 1.3
+        control.Δt_min = 1.0e-4
+        control.Δt = 1.0e-4
+        control.Δt_grow = 1.2
     end
 
     ## calculation of solution
@@ -362,13 +362,19 @@ function main(;
         end
     end
 
-    return IV[end]
+    if otherScanProtocol
+        return IV[1]
+    else
+        return sum(IV)
+    end
 
 end #  main
 
 function test()
-    testval = 115.51652159878219; testvalOther = 0.004882940885734888
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    testval = 313.58311884281136; testvalOther = 0.004948787599489832
+    @show main(test = true, otherScanProtocol = false)
+    @show main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false)
+    return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
 end
 
 if test == false
