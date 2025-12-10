@@ -189,6 +189,36 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
         end
     end
 
+
+    for iicc in data.trapCarrierList
+        icc = iicc.trapCarrier
+        count = 0
+
+        for ireg in 1:data.params.numberOfRegions
+            if ireg ∈ iicc.regions
+                subg = subgrid(grid, [ireg])
+                Ecc = get_BEE(icc, ireg, ctsys)
+                solpsi = view(solution[data.index_psi, :], subg)
+                solcc = view(solution[icc, :], subg)
+
+                if count == 0
+                    label1 = label_energy[1, icc]
+                    label2 = label_energy[2, icc]
+                else
+                    label1 = ""
+                    label2 = ""
+                end
+                ## Note that this implies a 1D plot, for multidimensional plots, you may work with
+                ## GridVisualize.jl or write your own code.
+                Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q), label = label1, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
+
+                Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* solcc, label = label2, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
+
+                count = count + 1
+            end
+        end
+    end
+
     Plotter.grid()
     Plotter.xlabel("space [\$m\$]")
     Plotter.ylabel("energies [\$eV\$]")
@@ -461,6 +491,23 @@ function plot_solution(Plotter, ctsys, solution, title, label_solution, ; plotGr
         subgrid = coord[subregions]
 
         icc = icc.ionicCarrier
+
+        Plotter.plot(subgrid ./ 1, solution[icc, subregions], label = label_solution[icc], marker = marker, color = colors[icc], linestyle = linestyles[1], linewidth = 3)
+    end
+    for icc in data.trapCarrierList
+        # DA: could be modified by using subgrids from ExtendableGrids.
+        # this is needed to only plot present ionic charge carrier in respective defined regions
+        regions = grid[CellRegions]
+
+        subregions = zeros(Int64, 0)
+        for it in 1:length(icc.regions)
+            subreg = findall(x -> x == icc.regions[it], regions)
+            append!(subregions, subreg)
+            push!(subregions, subregions[end] + 1)
+        end
+        subgrid = coord[subregions]
+
+        icc = icc.trapCarrier
 
         Plotter.plot(subgrid ./ 1, solution[icc, subregions], label = label_solution[icc], marker = marker, color = colors[icc], linestyle = linestyles[1], linewidth = 3)
     end
