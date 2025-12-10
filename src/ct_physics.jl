@@ -601,7 +601,7 @@ Generic operator to save the projected gradient of electric potential
 only working in one dimension!
 
 """
-function generic_operator!(f, u, fvmsys)
+function generic_operator!(f, u, fvmsys, data)
 
     f .= 0
 
