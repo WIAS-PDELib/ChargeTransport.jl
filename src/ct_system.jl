@@ -1408,15 +1408,15 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         ireg = grid[CellRegions][icell] # region number to which the cell belongs
 
         for icc in data.chargeCarrierList # do it for each charge carrier
-            if iszero(data.paramsnodal.densityOfStates[icc, :]) # only fill in boundary values, if user did not implement nodal variant
+            if iszero(data.paramsnodal.densityOfStates[icc, :]) && isone(data.params.bDensityOfStates[icc, ibreg]) # only fill in boundary values, if user did not implement nodal variant
                 data.params.bDensityOfStates[icc, ibreg] = data.params.densityOfStates[icc, ireg]
             end
 
-            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :])
+            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :]) && iszero(data.params.bBandEdgeEnergy[icc, ibreg])
                 data.params.bBandEdgeEnergy[icc, ibreg] = data.params.bandEdgeEnergy[icc, ireg]
             end
 
-            if iszero(data.paramsnodal.doping)
+            if iszero(data.paramsnodal.doping) && iszero(data.params.bDoping[icc, ibreg])
                 data.params.bDoping[icc, ibreg] = data.params.doping[icc, ireg]
             end
         end
@@ -1517,16 +1517,16 @@ function build_system(grid, data, ::Type{DiscontQF}; kwargs...)
 
         ireg = grid[CellRegions][icell] # region number to which the cell belongs
 
-        for icc in data.chargeCarrierList # do it for each charge carrier
-            if iszero(data.paramsnodal.densityOfStates[icc, :]) # only fill in boundary values, if user did not implement nodal variant
+         for icc in data.chargeCarrierList # do it for each charge carrier
+            if iszero(data.paramsnodal.densityOfStates[icc, :]) && isone(data.params.bDensityOfStates[icc, ibreg]) # only fill in boundary values, if user did not implement nodal variant
                 data.params.bDensityOfStates[icc, ibreg] = data.params.densityOfStates[icc, ireg]
             end
 
-            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :])
+            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :]) && iszero(data.params.bBandEdgeEnergy[icc, ibreg])
                 data.params.bBandEdgeEnergy[icc, ibreg] = data.params.bandEdgeEnergy[icc, ireg]
             end
 
-            if iszero(data.paramsnodal.doping)
+            if iszero(data.paramsnodal.doping) && iszero(data.params.bDoping[icc, ibreg])
                 data.params.bDoping[icc, ibreg] = data.params.doping[icc, ireg]
             end
         end
