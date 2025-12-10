@@ -80,20 +80,21 @@
     Np = [1.0e26, 2.2e24, 1.0e26] ./ (m^3)
     Na = [0.0, 1.0e27, 0.0] ./ (m^3)
 
+    Da = 5.0e-14
     ## mobilities
     μn = [1.0e-6, 1.0e-4, 1.0e-8] .* (m^2) / (V * s)
     μp = [1.0e-6, 1.0e-4, 1.0e-8] .* (m^2) / (V * s)
-    μa = [0.0, 1.9e-12, 0.0] .* (m^2) / (V * s)
+    μa = [0.0, Da / (k_B * T / q), 0.0] .* (m^2) / (V * s) # 1.9e-12
 
     ## relative dielectric permittivity
     ε = [5.0, 22.0, 3.5] .* 1.0
 
     ## radiative recombination
-    r0 = [0.0, 3.0e-17, 0.0] .* cm^3 / s
+    r0 = [0.0, 3.0e-17, 0.0] .* m^3 / s
 
     ## SRH life times
-    τn = [1.0e-100, 2.0e-7, 1.0e100] .* s
-    τp = [1.0e-100, 2.0e-7, 1.0e100] .* s
+    τn = [1.0e100, 2.0e-7, 1.0e100] .* s
+    τp = [1.0e100, 2.0e-7, 1.0e100] .* s
 
     ## SRH trap densities
     ni1 = sqrt(Nn[1] * Np[1] * exp(- (En[1] - Ep[1]) / (k_B * T)))
@@ -125,11 +126,9 @@ end
 """
 $(SIGNATURES)
 
-Create a `ChargeTransport.Params` object directly from `Params_PSC_PCBM_MAPI_Pedot`
+Create a `ChargeTransport.Params` object directly from `Params_PSC_C60_TripleCation_PTAA`
 """
 function Params(p::Params_PSC_C60_TripleCation_PTAA)
-
-    @local_unitfactors cm s
 
     params = Params(
         p.numberOfRegions,
@@ -183,7 +182,7 @@ function Params(p::Params_PSC_C60_TripleCation_PTAA)
     ############# DA:: AB HIER WEITER SCHAUEN!!!!
     ## for surface recombination
 
-    params.bRecombinationSRHTrapDensity[p.iphin, p.bregionJ1] = params.recombinationSRHTrapDensity[iphin, regionETL]
+    params.bRecombinationSRHTrapDensity[p.iphin, p.bregionJ1] = params.recombinationSRHTrapDensity[p.iphin, p.regionETL]
     params.bRecombinationSRHTrapDensity[p.iphip, p.bregionJ1] = params.recombinationSRHTrapDensity[p.iphip, p.regionPero]
 
     params.bRecombinationSRHTrapDensity[p.iphin, p.bregionJ2] = params.recombinationSRHTrapDensity[p.iphin, p.regionPero]
