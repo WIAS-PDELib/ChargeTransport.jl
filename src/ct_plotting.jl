@@ -5,9 +5,6 @@ The description for electrons and holes are predefined. If one wishes to extend 
 e.g. mobile ionic carriers or traps, this can be done within the main file.
 
 """
-# Problems when Plotter = PyPlot
-# Wo? Mariekes Windows Computer
-# Was? sys:1: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
 
 function set_plotting_labels(data, Plotter)
 
@@ -28,24 +25,7 @@ function set_plotting_labels(data, Plotter)
     label_energy[1, iphip] = L"E_v-q\psi"; label_energy[2, iphip] = L"- q \varphi_p"; label_BEE[iphip] = L"E_v"
     label_density[iphip] = L"n_p";              label_solution[iphip] = L"\varphi_p"
 
-    if nameof(Plotter) == :PlutoVista
-        @warn "remove PlutoVista hack and function hack"
-
-        label_solution = String.(label_solution)
-        label_density = String.(label_density)
-        label_energy = String.(label_energy)
-        label_BEE = String.(label_BEE)
-    end
-
     return label_solution, label_density, label_energy, label_BEE
-end
-
-function PlutoVista_hack(Plotter, latexstring)
-    if nameof(Plotter) == :PlutoVista
-        return String(latexstring)
-    else
-        return latexstring
-    end
 end
 
 """
@@ -101,8 +81,8 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{density [$\frac{1}{\text{cm}^3}$]}"),
+                xlabel = L"\text{space [m]}",
+                ylabel = L"density [$\frac{1}{\text{cm}^3}$]",
                 yscale = :log
             )
             label_is_plotted = true
@@ -170,8 +150,8 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 Ecc ./ q .- solpsi;
                 markershape = marker,
                 title = title,
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy [eV]}"),
+                xlabel = L"\text{space [m]}",
+                ylabel = L"\text{energy [eV]}",
                 label = label_is_plotted ? nothing : label_energy[1, icc],
                 legend = :cc,
                 markersize = 8,
@@ -288,8 +268,8 @@ function plot_energies!(visualizer, ctsys, label_BEE)
                 coord[cellnodes[:, i]][:], # hier soll eigentlich ein @views vor, dann klappt aber der Input nicht mehr
                 fill(cellValue, numberLocalCellNodes);
                 title = "Band-edge energies",
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{energy [eV]}"),
+                xlabel = L"\text{space [m]}",
+                ylabel = L"\text{energy [eV]}",
                 label = label_is_plotted ? nothing : label_BEE[icc],
                 legend = :rc,
                 clear = false,
@@ -374,8 +354,8 @@ function plot_doping!(visualizer, ctsys, label_density)
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = "Doping values for charge carriers",
-                xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-                ylabel = PlutoVista_hack(visualizer[:Plotter], L"doping [$\frac{1}{\text{cm}^3}$]"),
+                xlabel = L"\text{space [m]}",
+                ylabel = L"doping [$\frac{1}{\text{cm}^3}$]",
                 yscale = :log
             )
         end
@@ -413,18 +393,23 @@ end
 """
 Plot doping for nodal dependent doping.
 """
-# Wo wird diese Funktion genutzt?, andere Beispiele durchgehen
+
 function plot_doping!(visualizer, g::ExtendableGrid, paramsnodal::ParamsNodal)
 
     coord = g[Coordinates]
 
+    doping = 1.0e-6 .* paramsnodal.doping[:]
+
+    # Alle Werte <= 0 als NaN setzen
+    doping[doping .<= 0] .= NaN
+
     scalarplot!(
         visualizer,
         coord[:],
-        1.0e-6 .* paramsnodal.doping[:],
+        doping,
         title = "Doping values for charge carriers",
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{doping [$\frac{1}{\text{cm}^3}$]"),
+        xlabel = L"\text{space [m]}",
+        ylabel = L"doping [$\frac{1}{\text{cm}^3}$]",
         yscale = :log,
         color = :green,
         markershape = :cross,
@@ -432,7 +417,6 @@ function plot_doping!(visualizer, g::ExtendableGrid, paramsnodal::ParamsNodal)
     )
 
     return nothing
-
 
 end
 
@@ -457,8 +441,8 @@ function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridp
         coord[:],
         psi0,
         title = "Electroneutral potential",
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential [V]}"),
+        xlabel = L"\text{space [m]}",
+        ylabel = L"\text{potential [V]}",
         color = :blue,
         markershape = marker,
         markersize = 8
@@ -509,8 +493,8 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
         markershape = marker,
         markersize = 8,
         title = title,
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{space [m]}"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{potential [V]}")
+        xlabel = L"\text{space [m]}",
+        ylabel = L"\text{potential [V]}"
     )
 
     if data.barrierLoweringInfo.BarrierLoweringOn == BarrierLoweringOn
@@ -638,8 +622,8 @@ function plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints = false)
         markershape = marker,
         markersize = 8,
         title = title,
-        xlabel = PlutoVista_hack(visualizer[:Plotter], L"\text{bias [V]}"),
-        ylabel = PlutoVista_hack(visualizer[:Plotter], L"\text{total current [A]}")
+        xlabel = L"\text{bias [V]}",
+        ylabel = L"\text{total current [A]}"
     )
 
     return nothing

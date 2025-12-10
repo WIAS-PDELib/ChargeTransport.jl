@@ -30,21 +30,18 @@ end
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
 
-    ################################################################################
-    if test == false
-        println("Set up grid and regions")
-    end
-    ################################################################################
-
-    # unit factors
+    # unit factors and constants
     @local_unitfactors μm cm s ns V K
-
-    # constants
     constants = ChargeTransport.constants
     (; q, k_B, ε_0) = constants
 
     eV = q * V
 
+    ################################################################################
+    if test == false
+        println("Set up grid and regions")
+    end
+    ################################################################################
 
     ## region numbers
     regionAcceptor = 1           # p doped region
@@ -92,7 +89,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
     if plotting
-        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800)) # auf Mariekes Computer angepasst
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
         gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\rm space[m]", show = true)
     end
 
