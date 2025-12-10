@@ -8,7 +8,7 @@ The simulation will solve the charge transport equations across the layers,
 taking into account the stimulated recombination in the active region of the laser structure.
 =#
 
-module Ex202_Laser_simple
+module Ex204_Laser_simple
 
 using ChargeTransport
 using ExtendableGrids
