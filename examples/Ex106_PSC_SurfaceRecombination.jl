@@ -237,6 +237,8 @@ function main(;
 
     end # time loop
 
+    solution = sol.u[end]
+
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
     if plotting
@@ -287,8 +289,8 @@ function main(;
 end # main
 
 function test()
-    testval = -0.5968266458974157
-    return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testval
+    testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
 end
 
 
