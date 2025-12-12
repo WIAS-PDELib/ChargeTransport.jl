@@ -526,17 +526,31 @@ module Ex201_PSC_Textured
         inv = p.invertedIllumination
         genPeak = p.generationPeak
 
+
+        # include("examples/Ex201_PSC_Textured.jl"); Ex201_PSC_Textured.main(plotting=true, amplitude = 2.e-7)
+        # fCos(x, heightLayer) = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ heightLayer
         function BeerLamb(x, y)
 
             ampl = 0.5 * amplitude
             phase = pi
             period = 7.5e-7
-            genPeak = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ p.heightLayersPL[2]
-
-            if p.heightLayersPL[1] <= y <= p.heightLayersPL[1] + genPeak
+            ## Das Problem schien zu sein, dass in genPeak noch "ampl" hinzuaddiert wird. 
+            # Auf der anderen Seite steht im Paramter-File
+            #
+            #       heightLayersPL = [h_ETL, h_ETL + h_activePL, h_ETL + h_activePL + h_HTL]
+            # 
+            # Wenn man "ampl" aus der if-Abfrage nimmt, sehen die Bilder schon besser aus.
+            # Jetzt ist mir allerdings nicht ganz klar, ob wir es nicht auch aus der folgenden Zeile
+            # auch herausnehmen sollten? Wahrscheinlich, schon?
+            # Ich habe es schon einmal getan. 
+            #
+            # genPeak = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ p.heightLayersPL[2]
+            genPeak = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ p.heightLayersPL[2]
+            
+            if p.heightLayersPL[1] <= y <= ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ p.heightLayersPL[2]
                  G = Fph .* ag .* exp.(- inv .* ag .* (y .- genPeak))
             else
-               G =  0.0
+               G =  0
             end
 
             return G
