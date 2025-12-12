@@ -14,6 +14,9 @@ using VoronoiFVM # for IV Curve
 using ExtendableGrids
 using PythonPlot
 
+#import AMGCLWrap  # Algebraic multigrid solver
+#using AlgebraicMultigrid  # Native Julia AMG
+
 function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     if plotting
@@ -72,7 +75,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     # Doping (Vereinfacht, nur eine Dotierung pro Region)
     Na_gate = 1.0e16 / cm^3
-    Nd_drain = 1.0e19 / cm^3
+    Nd_drain = 1.0e19 / cm^3 # eventuell 19
     Nd_source = 1.0e19 / cm^3
     Na_bulk = 1.0e15 / cm^3
 
@@ -91,40 +94,41 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     # Gridpoints x-direction
     x0 = -1.5 * μm              # beginning left contact (drain)
     x1 = -1.0 * μm              # end left contact (drain)
-    x2 = -0.9 * μm              # beginning gate contact
-    x3 = 0.9 * μm               # end gate contact
+    x2 = -0.8 * μm              # beginning gate contact
+    x3 = 0.8 * μm               # end gate contact
     x4 = 1.0 * μm               # beginning right contact (source)
     x5 = 1.5 * μm               # end right contact (source)
 
     # Gridpoints y-direction
     y0 = -2.4 * μm              # bottom of the device (bulk)
+    y_test = -1.2 * μm
     y1 = -0.2 * μm              # beginning n-channel (gate region)
     y2 = 0.0 * μm               # top of the device
 
     # Refinement x-direction
-    X1 = geomspace(x0, x1, 2.0e-7, 5.0e-8)
-    X2 = collect(range(x1, x2, length = 3))
-    X3 = collect(x2:(0.2 * μm):x3)
-    X4 = collect(range(x3, x4, length = 3))
-    X5 = geomspace(x4, x5, 5.0e-8, 2.0e-7)
+    X1 = geomspace(x0, x1, 2.0e-7, 3.0e-8)
+    X2 = collect(range(x1, x2, length = 5))
+    X3 = collect(range(x2, x3, length = 25))
+    X4 = collect(range(x3, x4, length = 5))
+    X5 = geomspace(x4, x5, 3.0e-8, 2.0e-7)
     X_temp = glue(X1, X2)
     X_temp = glue(X_temp, X3)
     X_temp = glue(X_temp, X4)
     X = glue(X_temp, X5)
 
     # Refinement y-direction
-    Y1 = collect(-2.4:0.2:-1.2) .* μm
-    Y2 = collect(-1.2:0.1:-0.1) .* μm
-    Y3 = geomspace(-0.1 * μm, 0.0 * μm, 4.0e-8, 4.0e-8)
+    Y1 = collect(y0:(0.2 * μm):y_test)
+    Y2 = collect(y_test:(0.1 * μm):y1)
+    Y3 = geomspace(y1, y2, 4.0e-8, 1.0e-8)
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
     grid = simplexgrid(X, Y)
 
     # cell regions
-    cellmask!(grid, [x1, y1], [x4, y2], region_gate)
-    cellmask!(grid, [x0, y1], [x1, y2], region_drain)
-    cellmask!(grid, [x4, y1], [x5, y2], region_source)
+    cellmask!(grid, [x2, y1], [x3, y2], region_gate)
+    cellmask!(grid, [x0, y1], [-0.8 * μm, y2], region_drain)
+    cellmask!(grid, [0.8 * μm, y1], [x5, y2], region_source)
     cellmask!(grid, [x0, y0], [x5, y1], region_bulk)
 
     # boundary regions
@@ -207,7 +211,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     )
 
     # boundary model
-    data.boundaryType[bregion_gate] = GateContact
+    data.boundaryType[bregion_gate] = GateContact # OhmicContact
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
@@ -246,13 +250,14 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     control = ChargeTransport.SolverControl()
     control.verbose = true
-    control.maxiters = 70
+    control.maxiters = 70 # bei 69 Convergence Error im 5ten Schritt Equilibrium, ohne den damp_growth
     control.abstol = 1.0e-7
     control.reltol = 1.0e-7
     control.tol_round = 1.0e-7
     control.damp_initial = 0.5
     control.max_round = 3
-    #control.damp_growth = 1.21 # >= 1
+    #control.damp_growth = 1.05 # >= 1 # wenn das 1.21 auch Convergence error beim selben Schritt, wenn kleiner dann weniger iterations (bei 1.05: 64 Iterations)
+    #control.method_linear = AMGCLWrap.AMGSolverAlgorithm(blocksize = 2)
 
     if test == false
         println("*** done\n")
@@ -272,7 +277,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     end
 
     if plotting
-        pygui(false) # das öffnet nachfolgende Plots in einem extra Fenster wenn true
+        pygui(true) # this opens plots in a different window (at least on my computer, windows ;))
 
         ################################################################################
         # Surface plot equlibrium with PythonPlot
@@ -286,7 +291,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         Plotter.xlabel("length [m]")
         Plotter.ylabel("height [m]")
         Plotter.zlabel("potential [V]")
-        display(gcf()) # das öffnet Plot in neuem Tap (nur wenn pygui(false))
+        display(gcf()) # I need this to open the plots (might also be an windows problem)
 
         ################################################################################
         # Density plots equilibrium with PythonPlot
@@ -310,6 +315,8 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
         Plotter.title("electron density")
         Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        ax = Plotter.gca()
+        ax.set_aspect("auto")
         Plotter.tight_layout()
         display(gcf())
 
@@ -322,7 +329,6 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         Plotter.tight_layout()
         display(gcf())
     end
-
 
     ################################################################################
     if test == false
@@ -355,7 +361,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
         println("bias value at drain: Δu = ", Δu_drain, " V")
 
-        set_contact!(ctsys, bregion_gate, Δu = 5.0)
+        #set_contact!(ctsys, bregion_gate, Δu = 5.0)
         set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
 
         solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
@@ -375,8 +381,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
             current = current + IEdge[ii]
         end
 
-        push!(IV_drain, zaus * current) # zaus=wide of device, total current
-        #push!(IV_drain, current)
+        push!(IV_drain, abs.(zaus * current)) # zaus=wide of device, total current
 
     end
 
@@ -387,9 +392,8 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     if plotting
 
         ################################################################################
-        # Electrostatic Potential with PythonPlot
+        # Solution with PythonPlot
         ################################################################################
-
         XX = grid[Coordinates][1, :]; YY = grid[Coordinates][2, :]
 
         Plotter.figure()
@@ -401,17 +405,34 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         display(gcf())
 
         ################################################################################
+        Plotter.figure()
+        Plotter.surf(XX[:], YY[:], solution[iphin, :])
+        Plotter.title("Quasi Fermi potential for electrons")
+        Plotter.xlabel("length [m]")
+        Plotter.ylabel("height [m]")
+        Plotter.zlabel("potential [V]")
+        display(gcf())
+
+        ################################################################################
+        Plotter.figure()
+        Plotter.surf(XX[:], YY[:], solution[iphip, :])
+        Plotter.title("Quasi Fermi potential for holes")
+        Plotter.xlabel("length [m]")
+        Plotter.ylabel("height [m]")
+        Plotter.zlabel("potential [V]")
+        display(gcf())
+
+        ################################################################################
         # Density plots with PythonPlot
         ################################################################################
-
         function tridata(grid::ExtendableGrid)
             coord = grid[Coordinates]
             cellnodes = Matrix(grid[CellNodes])
             return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
         end
 
-        vmin = 1.0e15
-        vmax = 1.0e25
+        vmin = 1.0e9
+        vmax = 1.0e28
 
         nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution[iphin, :] .- solution[ipsi, :]) .+ Ec) ./ (k_B * T))
         np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution[iphip, :] .- solution[ipsi, :]) .+ Ev) ./ (k_B * T))
@@ -437,9 +458,8 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         ################################################################################
         # IV Curve with PythonPlot
         ################################################################################
-
         Plotter.figure()
-        Plotter.plot(biasValues_drain, IV_drain)
+        Plotter.semilogy(biasValues_drain, IV_drain, marker = "o", markersize = 3)
         Plotter.grid()
         Plotter.title("IV Curve")
         Plotter.xlabel("bias [V]")
