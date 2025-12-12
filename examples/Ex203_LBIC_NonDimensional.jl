@@ -247,9 +247,9 @@ function main(;
     ## Following variable declares, if we want to solve stationary or transient problem
     data.modelType = Stationary
 
-    ## Following choices are possible for F: Boltzmann, FermiDiracOneHalfBednarczyk,
-    ## FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-    data.F .= FermiDiracOneHalfTeSCA
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[iphin] = FermiDiracOneHalfTeSCA
+    data.F[iphip] = FermiDiracOneHalfTeSCA
 
     ## The desired recombination processes can be chosen here.
     data.bulkRecombination = set_bulk_recombination(;
@@ -262,11 +262,7 @@ function main(;
     # generation model
     data.generationModel = GenerationUserDefined
 
-    ## flux discretization scheme
-    data.fluxApproximation .= ExcessChemicalPotential
-
-    ## Define the unity constants also in the discrete counterpart of the model
-    data.constants = constants
+    ## flux discretization scheme is by default excess chemical potential flux scheme
 
     if test == false
         println("*** done\n")

@@ -123,6 +123,8 @@ which need to be taken into account by the initialization of the grid.
 Second, since we allow varying parameters within the thin interface layers, the flux discretization scheme needs to be chosen accordingly and we need to construct a nodally dependent parameter struct
 
 ```julia
+# The flux approximation is by default the excess chemical potential scheme.
+# In this example, we need a graded scheme.
 data.fluxApproximation = ScharfetterGummelGraded
 
 paramsnodal = ParamsNodal(grid, numberOfCarriers)

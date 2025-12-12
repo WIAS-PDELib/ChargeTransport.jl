@@ -123,10 +123,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ## Possible choices: Stationary, Transient
     data.modelType = Stationary
 
-    ## Possible choices for F: Boltzmann, FermiDiracOneHalfBednarczyk,
-    ## FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-    data.F .= Boltzmann
-
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
         bulk_recomb_Auger = false,
@@ -138,10 +134,6 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ## InterfaceRecombination (inner boundary).
     data.boundaryType[bregionAcceptor] = OhmicContact
     data.boundaryType[bregionDonor] = OhmicContact
-
-    ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
-    ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ScharfetterGummel
 
     if test == false
         println("*** done\n")
@@ -284,6 +276,9 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     end # bias loop
 
+    if test == false
+        println("*** done\n")
+    end
 
     if plotting # plot solution and IV curve
         Plotter.figure()

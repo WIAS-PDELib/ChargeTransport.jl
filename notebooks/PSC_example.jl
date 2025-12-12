@@ -321,7 +321,7 @@ begin
     ## Initialize Data instance and fill in predefined data
     data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
     data.modelType = Transient
-    data.F = [Boltzmann, Boltzmann, FermiDiracMinusOne]
+    # As default, we have for electrons and holes the Boltzmann statistics and for the ions the Fermi Dirac integral of order -1
     if isBulkRecoOn == "true"
         data.bulkRecombination = set_bulk_recombination(;
             iphin = p.iphin, iphip = p.iphip,
@@ -341,7 +341,6 @@ begin
     data.boundaryType[p.bregionAcceptor] = OhmicContact
     data.boundaryType[p.bregionDonor] = OhmicContact
     data.generationModel = GenerationBeerLambert
-    data.fluxApproximation .= ExcessChemicalPotential
 
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 

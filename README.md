@@ -58,3 +58,5 @@ https://doi.org/10.48550/arXiv.2412.15065
 [8.] B. Spetzler, E. Spetzler, S. Zamankhani, D. Abdel, P. Farrell, K.-U. Sattler, M. Ziegler. [Physics-Guided Sequence Modeling for Fast Simulation and Design Exploration of 2D Memristive Devices.](https://doi.org/10.48550/arXiv.2505.13882) submitted (2025).
 
 [9.] D. Abdel, J. Relle, T. Kirchartz, P. Jaap, J. Fuhrmann, S. Burger, C. Becker, K. Jäger, P. Farrell. [Unravelling the mystery of enhanced open-circuit voltages in nanotextured perovskite solar cells.](https://doi.org/10.48550/arXiv.2506.10691) submitted (2025).
+
+[10.] D. Abdel, A. Blaustein, C. Chainais-Hillairet, M. Herda, J. Moatti. [Existence of solutions and uniform bounds for the stationary semiconductor equations with generation and ionic carriers.](https://doi.org/10.48550/arXiv.2511.23250) submitted (2025).

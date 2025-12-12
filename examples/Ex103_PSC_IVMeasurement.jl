@@ -159,9 +159,9 @@ function main(;
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
 
-    ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
-    ## FermiDiracMinusOne, Blakemore
-    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data.F[p.iphip] = FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
@@ -178,11 +178,8 @@ function main(;
     ## With this method, the user enable the ionic carrier parsed to ionicCarrier and gives
     ## gives the information on which regions this ionic carrier is defined.
     ## In this application ion vacancies only live in active perovskite layer.
+    ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
-
-    ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
-    ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
@@ -265,9 +262,9 @@ function main(;
     control.Δt_grow = 1.0
 
     if otherScanProtocol
-        control.Δt_min = 1.0e-3
-        control.Δt = 1.0e-3
-        control.Δt_grow = 1.3
+        control.Δt_min = 1.0e-4
+        control.Δt = 1.0e-4
+        control.Δt_grow = 1.2
     end
 
     ## calculation of solution
@@ -365,13 +362,19 @@ function main(;
         end
     end
 
-    return IV[end]
+    if otherScanProtocol
+        return IV[1]
+    else
+        return sum(IV)
+    end
 
 end #  main
 
 function test()
-    testval = 115.51652159878219; testvalOther = 0.004882940885734888
-    return main(test = true, otherScanProtocol = false) ≈ testval && main(test = true, otherScanProtocol = false, vacancyEnergyCalculation = false) ≈ testval && main(test = true, otherScanProtocol = true) ≈ testvalOther
+    testval = 313.58311884281136; testvalOther = 0.004948787599489832
+    @show main(test = true, otherScanProtocol = false)
+    @show main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false)
+    return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
 end
 
 if test == false

@@ -37,7 +37,7 @@ function run_tests_from_directory(testdir, prefix)
             path = joinpath(testdir, "$(example).jl")
             @eval begin
                 include($path)
-                eval(Meta.parse("$($example).test()"))
+                @test eval(Meta.parse("$($example).test()"))
             end
         end
     end

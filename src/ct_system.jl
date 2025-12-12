@@ -43,6 +43,11 @@ mutable struct BulkRecombination
     """
     bulk_recomb_SRH::SRHModelType
 
+    """
+    DataType for present trap state in bulk.
+    """
+    bulk_recomb_trap::TrapModelType
+
     BulkRecombination() = new()
 
 end
@@ -57,7 +62,8 @@ function set_bulk_recombination(;
         iphin = 1, iphip = 2,
         bulk_recomb_Auger = true,
         bulk_recomb_radiative = true,
-        bulk_recomb_SRH = true
+        bulk_recomb_SRH = true,
+        bulk_recomb_trap = NoTrap
     )
 
     bulkRecombination = BulkRecombination()
@@ -75,6 +81,7 @@ function set_bulk_recombination(;
     else
         bulkRecombination.bulk_recomb_SRH = SRHOff
     end
+    bulkRecombination.bulk_recomb_trap = bulk_recomb_trap
 
     return bulkRecombination
 
@@ -114,6 +121,33 @@ end
 
 
 """
+$(TYPEDEF)
+
+A struct holding all information necessary on the trap charge carriers which are
+the index of the charge carrier and the respective region in which they are defined.
+This struct along with all information necessary will be stored in an Array trapCarrierList.
+
+$(TYPEDFIELDS)
+
+"""
+
+mutable struct TrapCarrier
+
+    """
+    Index for data construction of trap charge carrier
+    """
+    trapCarrier::Int64
+
+    """
+    Corresponding regions where the trap charge carrier is assumed to be present.
+    """
+    regions::Array{Int64, 1}
+
+    TrapCarrier() = new()
+
+end
+
+"""
 $(SIGNATURES)
 
 This method takes the user information concerning present ionic charge carriers,
@@ -126,7 +160,34 @@ function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
 
+    # set by default for the ionic carrier the Fermi Dirac integral of order -1 as statistics function
+    data.F[ionicCarrier] = FermiDiracMinusOne
+
     push!(data.ionicCarrierList, enableIons)
+
+    return
+
+end
+
+
+"""
+$(SIGNATURES)
+
+This method takes the user information concerning present trap charge carriers,
+builds a struct of Type TrapCarrier and add this struct to the trapCarrierList.
+"""
+function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1})
+
+    enableTraps = TrapCarrier()
+
+    enableTraps.trapCarrier = trapCarrier
+    enableTraps.regions = regions
+
+    push!(data.trapCarrierList, enableTraps)
+
+    if (data.F[trapCarrier] !== FermiDiracMinusOne)
+        @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
+    end
 
     return
 
@@ -421,7 +482,13 @@ mutable struct Params
     """
     recombinationAuger::Array{Float64, 2}
 
-
+    ###############################################################
+    #### (number of regions)^2 x number of carriers            ####
+    ###############################################################
+    """
+    A 2D array with the trap capture rates
+    """
+    recombinationTrapCaptureRates::Array{Float64, 3}
     ###############################################################
     ####                   number of regions                   ####
     ###############################################################
@@ -537,6 +604,12 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.recombinationSRHLifetime = zeros(Float64, numberOfCarriers, numberOfRegions)
     params.recombinationSRHTrapDensity = zeros(Float64, numberOfCarriers, numberOfRegions)
     params.recombinationAuger = zeros(Float64, numberOfCarriers, numberOfRegions)
+
+    ###############################################################
+    #### (Number of carriers)^2 x number of regions            ####
+    ###############################################################
+
+    params.recombinationTrapCaptureRates = zeros(Float64, numberOfCarriers, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     ####                   number of regions                   ####
@@ -891,6 +964,13 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     ionicCarrierList::Array{IonicCarrier, 1}
 
     """
+    This list stores all defined trap carriers as a struct of Type TrapCarrier with
+    all needed information on the trap carriers.
+    """
+    trapCarrierList::Array{TrapCarrier, 1}
+
+
+    """
     This variable stores the index of the electric potential. Based on the user choice we have
     with this new type the opportunity to simulate discontinuous unknowns.
     """
@@ -1043,6 +1123,9 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ####                   model information                   ####
     ###############################################################
 
+    # Choose statistical relation between density and qF potential
+    # options: Boltzmann, FermiDiracOneHalfBednarczyk,
+    #          FermiDiracOneHalfTeSCA FermiDiracMinusOne, Blakemore
     data.F = TFuncs[ Boltzmann for i in 1:numberOfCarriers]
     data.qFModel = ContQF
 
@@ -1075,6 +1158,7 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.chargeCarrierList = QType[ii  for ii in 1:numberOfCarriers]
     data.electricCarrierList = Int64[ii for ii in 1:2]                       # electrons and holes
     data.ionicCarrierList = IonicCarrier[]
+    data.trapCarrierList = TrapCarrier[]
     data.index_psi = numberOfCarriers + 1
     data.barrierLoweringInfo = BarrierLoweringSpecies()
     data.barrierLoweringInfo.BarrierLoweringOn = BarrierLoweringOff # set in general case barrier lowering off
@@ -1082,9 +1166,12 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     ###############################################################
     ####                 Numerics information                  ####
     ###############################################################
-    data.fluxApproximation = FluxApproximationType[ScharfetterGummel for i in 1:numberOfCarriers]
+    ## Following choices are possible for the flux discretization scheme: ScharfetterGummel,
+    ## ScharfetterGummelGraded, ExcessChemicalPotential, ExcessChemicalPotentialGraded,
+    ## DiffusionEnhanced, GeneralizedSG
+    data.fluxApproximation = FluxApproximationType[ExcessChemicalPotential for i in 1:numberOfCarriers]
     data.calculationType = OutOfEquilibrium      # do performances InEquilibrium or OutOfEquilibrium
-    data.modelType = Stationary            # indicates if we need additional time dependent part
+    data.modelType = Stationary                  # indicates if we need additional time dependent part
     data.generationModel = GenerationNone        # generation model
     data.λ1 = 1.0                   # λ1: embedding parameter for NLP
     data.λ2 = 1.0                   # λ2: embedding parameter for G
@@ -1260,14 +1347,18 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     data.index_psi = num_species_sys
 
     ionicCarrierListHelp = Int64[]
+    trapCarrierListHelp = Int64[]
     # store indices of ionic carriers
     for iicc in data.ionicCarrierList
         push!(ionicCarrierListHelp, iicc.ionicCarrier)
     end
+    for iicc in data.trapCarrierList
+        push!(trapCarrierListHelp, iicc.trapCarrier)
+    end
 
-    # put all non-ionic carriers present everywhere
+    # put all non-ionic and non-trap carriers present everywhere
     for icc in data.chargeCarrierList
-        if icc ∉ ionicCarrierListHelp
+        if (icc ∉ ionicCarrierListHelp) && (icc ∉ trapCarrierListHelp)
             enable_species!(ctsys, icc, 1:data.params.numberOfRegions)
         end
     end
@@ -1322,33 +1413,40 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
 
     end
 
+    # if traps are present
+    for iicc in data.trapCarrierList
+        enable_species!(ctsys, iicc.trapCarrier, iicc.regions)
+    end
+
     # we need no loop for interface carriers, since in this case there are not present.
 
     # enable lastly the electric potential on whole domain
     enable_species!(ctsys, data.index_psi, 1:data.params.numberOfRegions)
 
     ######################################
-    # Fill in boundary parameters. Note the convention that left boundary = 1, right boundary = 2
-    # and that first region = 1, second region = 2
-    bregionLeft = 1
-    bregionRight = 2
-    regionLeft = 1
-    regionRight = data.params.numberOfRegions
+    # Fill in boundary parameters. By default, we set the boundary values the same as the adjacent inner cell.
+    for ibreg in 1:data.params.numberOfBoundaryRegions
+        ibregIndex = findfirst(==(ibreg), grid[BFaceRegions]) # index of first b face with boundary region ibreg
 
-    for icc in data.chargeCarrierList
-        if iszero(data.paramsnodal.densityOfStates[icc, :])
-            data.params.bDensityOfStates[icc, bregionLeft] = data.params.densityOfStates[icc, regionLeft]
-            data.params.bDensityOfStates[icc, bregionRight] = data.params.densityOfStates[icc, regionRight]
-        end
+        # as alternative, one could have:
+        # ibface = grid[BFaceFaces][ibregIndex] # general face number of boundary face
+        # icell = grid[FaceCells][1, ibface] # adjacent cell, by default the first entry is non-zero
+        icell = grid[ExtendableGrids.BFaceCells][1, ibregIndex] # adjacent cell, by default the first entry is non-zero
 
-        if iszero(data.paramsnodal.bandEdgeEnergy[icc, :])
-            data.params.bBandEdgeEnergy[icc, bregionLeft] = data.params.bandEdgeEnergy[icc, regionLeft]
-            data.params.bBandEdgeEnergy[icc, bregionRight] = data.params.bandEdgeEnergy[icc, regionRight]
-        end
+        ireg = grid[CellRegions][icell] # region number to which the cell belongs
 
-        if iszero(data.paramsnodal.doping)
-            data.params.bDoping[icc, bregionLeft] = data.params.doping[icc, regionLeft]
-            data.params.bDoping[icc, bregionRight] = data.params.doping[icc, regionRight]
+        for icc in data.chargeCarrierList # do it for each charge carrier
+            if iszero(data.paramsnodal.densityOfStates[icc, :]) && isone(data.params.bDensityOfStates[icc, ibreg]) # only fill in boundary values, if user did not implement nodal variant
+                data.params.bDensityOfStates[icc, ibreg] = data.params.densityOfStates[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :]) && iszero(data.params.bBandEdgeEnergy[icc, ibreg])
+                data.params.bBandEdgeEnergy[icc, ibreg] = data.params.bandEdgeEnergy[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.doping) && iszero(data.params.bDoping[icc, ibreg])
+                data.params.bDoping[icc, ibreg] = data.params.doping[icc, ireg]
+            end
         end
 
     end
@@ -1428,21 +1526,38 @@ function build_system(grid, data, ::Type{DiscontQF}; kwargs...)
         enable_species!(ctsys, icc.ionicCarrier, icc.regions)
     end
     #########################################
+    # if traps are present
+    for icc in data.trapCarrierList
+        enable_species!(ctsys, icc.trapCarrier, icc.regions)
+    end
+    #########################################
     data.index_psi = ContinuousQuantity(fvmsys, 1:data.params.numberOfRegions)
 
     #########################################
-    # Fill in boundary parameters. Note the convention that left boundary = 1, right boundary = 2
-    # and that first region = 1, second region = 2
-    bregionLeft = 1
-    bregionRight = 2
-    regionLeft = 1
-    regionRight = data.params.numberOfRegions
-    for icc in data.chargeCarrierList
-        data.params.bDensityOfStates[icc, bregionLeft] = data.params.densityOfStates[icc, regionLeft]
-        data.params.bBandEdgeEnergy[icc, bregionLeft] = data.params.bandEdgeEnergy[icc, regionLeft]
+    # Fill in boundary parameters. By default, we set the boundary values the same as the adjacent inner cell.
+    for ibreg in 1:data.params.numberOfBoundaryRegions
+        ibregIndex = findfirst(==(ibreg), grid[BFaceRegions]) # index of first b face with boundary region ibreg
 
-        data.params.bDensityOfStates[icc, bregionRight] = data.params.densityOfStates[icc, regionRight]
-        data.params.bBandEdgeEnergy[icc, bregionRight] = data.params.bandEdgeEnergy[icc, regionRight]
+        # as alternative, one could have:
+        # ibface = grid[BFaceFaces][ibregIndex] # general face number of boundary face
+        # icell = grid[FaceCells][1, ibface] # adjacent cell, by default the first entry is non-zero
+        icell = grid[ExtendableGrids.BFaceCells][1, ibregIndex] # adjacent cell, by default the first entry is non-zero
+
+        ireg = grid[CellRegions][icell] # region number to which the cell belongs
+
+        for icc in data.chargeCarrierList # do it for each charge carrier
+            if iszero(data.paramsnodal.densityOfStates[icc, :]) && isone(data.params.bDensityOfStates[icc, ibreg]) # only fill in boundary values, if user did not implement nodal variant
+                data.params.bDensityOfStates[icc, ibreg] = data.params.densityOfStates[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.bandEdgeEnergy[icc, :]) && iszero(data.params.bBandEdgeEnergy[icc, ibreg])
+                data.params.bBandEdgeEnergy[icc, ibreg] = data.params.bandEdgeEnergy[icc, ireg]
+            end
+
+            if iszero(data.paramsnodal.doping) && iszero(data.params.bDoping[icc, ibreg])
+                data.params.bDoping[icc, ibreg] = data.params.doping[icc, ireg]
+            end
+        end
 
     end
 
@@ -1714,6 +1829,16 @@ function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonli
             end
 
         end
+        for iicc in data.trapCarrierList
+
+            icc = iicc.trapCarrier # species number chosen by user
+
+            for ibreg in 1:grid[NumBFaceRegions]
+                ctsys.fvmsys.boundary_factors[icc, ibreg] = 1.0e30
+                ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+            end
+
+        end
 
         # these values are needed for putting the generation slightly on
         I = collect(20:-1:0.0)
@@ -1739,6 +1864,16 @@ function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonli
     for iicc in data.ionicCarrierList
 
         icc = iicc.ionicCarrier # species number chosen by user
+
+        for ibreg in 1:grid[NumBFaceRegions]
+            ctsys.fvmsys.boundary_factors[icc, ibreg] = 0.0
+            ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+        end
+
+    end
+    for iicc in data.trapCarrierList
+
+        icc = iicc.trapCarrier # species number chosen by user
 
         for ibreg in 1:grid[NumBFaceRegions]
             ctsys.fvmsys.boundary_factors[icc, ibreg] = 0.0

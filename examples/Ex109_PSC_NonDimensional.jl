@@ -163,15 +163,14 @@ function main(;
     ## Following variable declares, if we want to solve stationary or transient problem
     data.modelType = Stationary
 
-    ## Following choices are possible for F: Boltzmann, FermiDiracOneHalfBednarczyk,
-    ## FermiDiracOneHalfTeSCA, FermiDiracMinusOne, Blakemore
-    data.F .= FermiDiracOneHalfTeSCA
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[iphin] = FermiDiracOneHalfTeSCA
+    data.F[iphip] = FermiDiracOneHalfTeSCA
 
-    data.boundaryType[1] = OhmicContact
-    data.boundaryType[2] = OhmicContact
+    data.boundaryType[bregion1] = OhmicContact
+    data.boundaryType[bregion2] = OhmicContact
 
     if enableIons
-        data.F[iphia] = FermiDiracMinusOne
         enable_ionic_carrier!(data, ionicCarrier = iphia, regions = [region2])
     end
 
@@ -185,10 +184,6 @@ function main(;
 
     # generation model
     data.generationModel = GenerationUserDefined
-
-    ## flux discretization scheme
-    data.fluxApproximation .= ExcessChemicalPotential
-
 
     if test == false
         println("*** done\n")

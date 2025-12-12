@@ -33,7 +33,6 @@ function main(;
     # parameter
     p = parameter_set()
 
-    bregionNoFlux = 3
     height = 5.0e-6 * cm
 
     ## contact voltage
@@ -108,17 +107,19 @@ function main(;
 
     ## specify inner regions
     cellmask!(grid, [0.0, 0.0], [p.h_ndoping, height], p.regionDonor, tol = 1.0e-18)
-    cellmask!(grid, [p.h_pdoping, 0.0], [p.h_ndoping + p.h_intrinsic, height], p.regionIntrinsic, tol = 1.0e-18)
+    cellmask!(grid, [p.h_ndoping, 0.0], [p.h_ndoping + p.h_intrinsic, height], p.regionIntrinsic, tol = 1.0e-18)
     cellmask!(grid, [p.h_ndoping + p.h_intrinsic, 0.0], [p.h_total, height], p.regionAcceptor, tol = 1.0e-18)
 
     ## specify outer regions
-    ## metal interfaces
-    bfacemask!(grid, [0.0, 0.0], [0.0, height], p.bregionDonor)            # BregionNumber = 1
-    bfacemask!(grid, [p.h_total, 0.0], [p.h_total, height], p.bregionAcceptor) # BregionNumber = 2
+    ## metal interfaces [xmin, ymin], [xmax, ymax]
+    bfacemask!(grid, [0.0, 0.0], [0.0, height], p.bregionDonor)                           # BregionNumber = 1
+    bfacemask!(grid, [p.h_total, 0.0], [p.h_total, height], p.bregionAcceptor)            # BregionNumber = 2
+    bfacemask!(grid, [p.heightLayers[1], 0.0], [p.heightLayers[1], height], p.bregionJ1)  # BregionNumber = 3
+    bfacemask!(grid, [p.heightLayers[2], 0.0], [p.heightLayers[2], height], p.bregionJ2)  # BregionNumber = 4
 
-    ## no flux interfaces [xmin, ymin], [xmax, ymax]
-    bfacemask!(grid, [0.0, 0.0], [p.h_total, 0.0], bregionNoFlux)          # BregionNumber = 3
-    bfacemask!(grid, [0.0, height], [p.h_total, height], bregionNoFlux)    # BregionNumber = 3
+    ## no flux interfaces
+    bfacemask!(grid, [0.0, 0.0], [p.h_total, 0.0], 0)
+    bfacemask!(grid, [0.0, height], [p.h_total, height], 0)
 
     if plotting
         gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
@@ -141,9 +142,9 @@ function main(;
     ## Possible choices: Stationary, Transient
     data.modelType = Transient
 
-    ## Possible choices: Boltzmann, FermiDiracOneHalfBednarczyk, FermiDiracOneHalfTeSCA,
-    ## FermiDiracMinusOne, Blakemore
-    data.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    ## The default for electrons and holes is Boltzmann. Here, we set it to a more general statistics function
+    data.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data.F[p.iphip] = FermiDiracOneHalfTeSCA
 
     data.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
@@ -158,11 +159,8 @@ function main(;
     data.boundaryType[p.bregionDonor] = OhmicContact
 
     ## Present ionic vacancies in perovskite layer
+    ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
-
-    ## Choose flux discretization scheme: ScharfetterGummel, ScharfetterGummelGraded,
-    ## ExcessChemicalPotential, ExcessChemicalPotentialGraded, DiffusionEnhanced, GeneralizedSG
-    data.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
@@ -318,7 +316,7 @@ function main(;
 end #  main
 
 function test()
-    testval = -0.5816008029666527; testvalvacancyEnergyCalculation = -0.582313421829256
+    testval = -0.5862627265480347; testvalvacancyEnergyCalculation = -0.5871876928952634
     return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
 end
 

@@ -16,7 +16,6 @@ module PSC_3D
 using ChargeTransport
 using ExtendableGrids
 using GridVisualize
-
 using PyPlot
 
 # We strongly emphasize to use Plotter = GLMakie for the visualization here.
@@ -25,7 +24,9 @@ function main(;
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
-    PyPlot.close("all")
+    if nameof(Plotter) == :PyPlot
+        PyPlot.close("all")
+    end
 
     ################################################################################
     if test == false
@@ -36,8 +37,7 @@ function main(;
     @local_unitfactors μm cm s ns V K ps Hz W
 
     # parameter with variation
-    p = parameter_set(numberOfBoundaryRegions = 5)
-    bregionNoFlux = 5
+    p = parameter_set()
 
     height = 2.0e-5 * cm
     width = 3.0e-5 * cm
@@ -86,10 +86,10 @@ function main(;
     bfacemask!(grid3D, [p.heightLayers[2], 0.0, 0.0], [p.heightLayers[2], height, width], p.bregionJ2) # second inner interface
 
     ## outer no flux interfaces
-    bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, 0.0, width], bregionNoFlux)
-    bfacemask!(grid3D, [0.0, height, 0.0], [p.h_total, height, width], bregionNoFlux)
-    bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, height, 0.0], bregionNoFlux)
-    bfacemask!(grid3D, [0.0, 0.0, width], [p.h_total, height, width], bregionNoFlux)
+    bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, 0.0, width], 0)
+    bfacemask!(grid3D, [0.0, height, 0.0], [p.h_total, height, width], 0)
+    bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, height, 0.0], 0)
+    bfacemask!(grid3D, [0.0, 0.0, width], [p.h_total, height, width], 0)
 
     vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
 
@@ -116,7 +116,8 @@ function main(;
     ## Note that we define the data struct with respect to the three-dimensional grid, since we also defined there the outer no flux boundary conditions.
     data1D = Data(grid1D, p.numberOfCarriers)
     data1D.modelType = Transient
-    data1D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data1D.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data1D.F[p.iphip] = FermiDiracOneHalfTeSCA
     data1D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
@@ -128,12 +129,11 @@ function main(;
 
     enable_ionic_carrier!(data1D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
-    data1D.fluxApproximation .= ExcessChemicalPotential
-
     ########################
     data3D = Data(grid3D, p.numberOfCarriers)
     data3D.modelType = Transient
-    data3D.F = [FermiDiracOneHalfTeSCA, FermiDiracOneHalfTeSCA, FermiDiracMinusOne]
+    data3D.F[p.iphin] = FermiDiracOneHalfTeSCA
+    data3D.F[p.iphip] = FermiDiracOneHalfTeSCA
     data3D.bulkRecombination = set_bulk_recombination(;
         iphin = p.iphin, iphip = p.iphip,
         bulk_recomb_Auger = false,
@@ -144,8 +144,6 @@ function main(;
     data3D.boundaryType[p.bregionAcceptor] = OhmicContact
 
     enable_ionic_carrier!(data3D, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
-
-    data3D.fluxApproximation .= ExcessChemicalPotential
 
     if test == false
         println("*** done\n")
@@ -254,7 +252,7 @@ end # main
 
 
 function test()
-    testval = -2.224244519821803
+    testval = -2.250366860582136
     return main(test = true) ≈ testval
 end
 

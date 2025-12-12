@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -----------------------------------------------------------------------------------------------
 
+## v1.3.1
+
+### Fixed
+
+  - default for the boundary values of the parameters `doping`, `densityOfStates`, and `bandEdgeEnergy` should only be set, if user did not declare them
+
+## v1.3.0
+
+### Added
+
+  - Implemented single state traps as a carrier spiecies with no flux
+  - Added addTrapCaptureEscape! function to compute reaction between traps and mobile electrical species.
+  - Added example Ex110_MoS2_withIons_withTraps.jl to test traps
+
+## v1.2.7
+
+### Changed
+  - we rely now more on default values and deleted the definition of the `fluxApproximation` and the statistics function `F` (if Boltzmann) from the examples
+
+### Fixed
+  - The default for the boundary values of the parameters `doping`, `densityOfStates`, and `bandEdgeEnergy` can be set as in the neighboring region. This was not done correctly.
+
 ## v1.2.6
 
 ### Changed
