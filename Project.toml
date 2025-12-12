@@ -4,6 +4,8 @@ version = "1.5.0"
 authors = ["Dilara Abdel <dilara.abdel@wias-berlin.de>, Patricio Farrell <patricio.farrell@wias-berlin.de>", "Patrick Jaap <patrick.jaap@wias-berlin.de>"]
 
 [deps]
+AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
+AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
@@ -17,6 +19,8 @@ Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
 
 [compat]
+AMGCLWrap = "2.1.0"
+AlgebraicMultigrid = "1.1.0"
 Aqua = "0.8.14"
 Compat = "4.18.0"
 DocStringExtensions = "0.9"
