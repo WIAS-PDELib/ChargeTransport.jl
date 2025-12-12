@@ -446,6 +446,7 @@ module Ex201_PSC_Textured
     # you can set verbose also to true to display some solver information
     function main(;
             Plotter = PyPlot, plotting = false, verbose = false, test = false,
+            amplitude = 0.5e-7,
             parameter_set = Params_PSC_C60_TripleCation_PTAA, # choose the parameter set
             vacancyEnergyCalculation = true,             # assume the vacancy energy level is either given or not
             vETL = 2000 * ufac"cm" / ufac"s", # surface reco velocity at ETL
@@ -462,7 +463,7 @@ module Ex201_PSC_Textured
         end
         ################################################################################
 
-        @local_unitfactors V cm m s W
+        @local_unitfactors V cm m s W nm
 
         (; q, ε_0) = ChargeTransport.constants
         eV = q * V
@@ -509,7 +510,7 @@ module Ex201_PSC_Textured
         end
         ################################################################################
 
-        grid = generate_grid(parameter_set = parameter_set, amplitude = 0.5e-7)
+        grid = generate_grid(parameter_set = parameter_set, amplitude = amplitude)
 
         if plotting
             gridplot(grid, Plotter = PyPlot, resolution = (600, 400), linewidth = 0.5, legend = :rc)
@@ -519,6 +520,51 @@ module Ex201_PSC_Textured
             println("*** done\n")
         end
 
+
+        Fph = p.incidentPhotonFlux[p.regionPero]
+        ag = p.absorption[p.regionPero]
+        inv = p.invertedIllumination
+        genPeak = p.generationPeak
+
+        function BeerLamb(x, y)
+
+            ampl = 0.5 * amplitude
+            phase = pi
+            period = 7.5e-7
+            genPeak = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ p.heightLayersPL[2]
+
+            if p.heightLayersPL[1] <= y <= p.heightLayersPL[1] + genPeak
+                 G = Fph .* ag .* exp.(- inv .* ag .* (y .- genPeak))
+            else
+               G =  0.0
+            end
+
+            return G
+        end
+
+        generationData = zeros(length(grid[Coordinates][1,:]))
+
+        i = 0
+        for  coord in eachcol(grid[Coordinates])
+            i = i +1
+            x0 = coord[1]
+            y0 = coord[2]
+
+            generationData[i] = BeerLamb(x0, y0)
+
+        end
+
+
+        XX = grid[Coordinates][1, :]
+        YY = grid[Coordinates][2, :]
+
+        figure()
+        tricontourf(XX ./ nm, YY ./ nm, generationData, levels = 40)
+
+        colorbar()
+
+        return
+
         ################################################################################
         if test == false
             println("Define System and fill in information about model")
@@ -526,7 +572,7 @@ module Ex201_PSC_Textured
         ################################################################################
 
         ## Initialize Data instance and fill in data
-        data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction)
+        data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction, generationData = generationData)
 
         ## Possible choices: Stationary, Transient
         data.modelType = Transient
@@ -544,7 +590,8 @@ module Ex201_PSC_Textured
         data.boundaryType[p.bregionJ1] = InterfaceRecombination
         data.boundaryType[p.bregionJ2] = InterfaceRecombination
 
-        data.generationModel = GenerationBeerLambert
+        ## currently Beer-Lambert not working for textured devices
+        data.generationModel = GenerationUserDefined
 
         ## Present ionic vacancies in perovskite layer
         ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
