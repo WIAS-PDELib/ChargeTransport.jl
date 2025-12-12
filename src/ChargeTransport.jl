@@ -125,6 +125,7 @@ for parameter_set in [
         :Params_Laser_simple,
         :Params_PSC_PCBM_MAPI_Pedot,
         :Params_PSC_TiO2_MAPI_spiro,
+        :Params_PSC_C60_TripleCation_PTAA,
     ]
     include(parametersdir("$(parameter_set).jl"))
     @eval export $parameter_set
