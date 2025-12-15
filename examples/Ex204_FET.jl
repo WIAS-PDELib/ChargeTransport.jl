@@ -58,7 +58,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     Ec = 0.562 * eV                                     # conduction band-edge energy
     Ev = -0.562 * eV                                    # valence band-edge energy
-    Nc = 2.86e19 / (cm^3)                                # conduction band density of states
+    Nc = 2.86e19 / (cm^3)                               # conduction band density of states
     Nv = 3.1e19 / (cm^3)                                # valence band densitiy of states
 
     mun = 1200.0 * (cm^2) / (V * s)                     # electron mobility
@@ -67,22 +67,20 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     εr_ox = 3.9 * 1.0                                   # relative dielectric permittivity of SiO2
     T = 300.0 * K                                       # room temperature
 
-    # Recombination parameters
-    Auger = 1.0e-29 * cm^6 / s
-    SRH_TrapDensity = 1.0e10 / cm^3
-    SRH_LifeTime = 1.0 * ns
-    Radiative = 1.0e-10 * cm^3 / s
+    # Recombination parameters (from Tesca)
+    Auger_n = 2.8e-31 * cm^6 / s
+    Auger_p = 9.91e-32 * cm^6 / s
+    SRH_TrapDensity = 1.09e10 / cm^3
+    SRH_LifeTime = 1.0 * ns # das ist in Tesca über mehrere Variablen definiert, habe ich deshalb erstmal so gelassen
 
     # Doping (Vereinfacht, nur eine Dotierung pro Region)
     Na_gate = 1.0e16 / cm^3
-    Nd_drain = 1.0e19 / cm^3 # eventuell 19
-    Nd_source = 1.0e19 / cm^3
+    Nd_drain = 1.0e20 / cm^3
+    Nd_source = 1.0e20 / cm^3
     Na_bulk = 1.0e15 / cm^3
 
     # Voltage information
-    U_add_gate = 0.55 * V                   # contact voltage on gate [V], siehe unten
-
-    # DA: As these are some surface charges, I think, we need to put either here or in the implementation of the Gate BC the elementary charge.
+    U_add_gate = 0.55 * V                   # contact voltage on gate
     qss = 6.0e10 / (cm^2)
 
     ################################################################################
@@ -94,52 +92,62 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     # Gridpoints x-direction
     x0 = -1.5 * μm              # beginning left contact (drain)
     x1 = -1.0 * μm              # end left contact (drain)
-    x2 = -0.8 * μm              # beginning gate contact
-    x3 = 0.8 * μm               # end gate contact
-    x4 = 1.0 * μm               # beginning right contact (source)
-    x5 = 1.5 * μm               # end right contact (source)
+    x2 = -0.9 * μm              # beginning gate contact
+    x3 = -0.8 * μm              # end n-doped zone drain
+    x4 = 0.8 * μm               # beginning n-doped zone source
+    x5 = 0.9 * μm               # end gate contact
+    x6 = 1.0 * μm               # beginning right contact (source)
+    x7 = 1.5 * μm               # end right contact (source)
 
     # Gridpoints y-direction
     y0 = -2.4 * μm              # bottom of the device (bulk)
-    y_test = -1.2 * μm
-    y1 = -0.2 * μm              # beginning n-channel (gate region)
-    y2 = 0.0 * μm               # top of the device
+    y1 = -1.0 * μm              # middle of the device (bulk)
+    y2 = -0.2 * μm              # beginning n-channel (gate region)
+    y3 = 0.0 * μm               # top of the device
 
     # Refinement x-direction
-    X1 = geomspace(x0, x1, 2.0e-7, 3.0e-8)
-    X2 = collect(range(x1, x2, length = 5))
-    X3 = collect(range(x2, x3, length = 25))
-    X4 = collect(range(x3, x4, length = 5))
-    X5 = geomspace(x4, x5, 3.0e-8, 2.0e-7)
-    X_temp = glue(X1, X2)
-    X_temp = glue(X_temp, X3)
-    X_temp = glue(X_temp, X4)
-    X = glue(X_temp, X5)
+    # X1 = geomspace(x0, x1, 2.0e-7, 3.0e-8)
+    # X2 = collect(range(x1, x2, length = 4))
+    # X3 = collect(range(x2, x3, length = 4))
+    # X4 = collect(range(x3, x4, length = 20))
+    # X5 = collect(range(x4, x5, length = 4))
+    # X6 = collect(range(x5, x6, length = 4))
+    # X7 = geomspace(x6, x7, 3.0e-8, 2.0e-7)
+    # X_temp = glue(X1, X2)
+    # X_temp = glue(X_temp, X3)
+    # X_temp = glue(X_temp, X4)
+    # X_temp = glue(X_temp, X5)
+    # X_temp = glue(X_temp, X6)
+    # X = glue(X_temp, X7)
+
+    # oder vereinfacht, IV Curve bleibt gleich
+    X = collect(range(x0, x7, length = 31))
 
     # Refinement y-direction
-    Y1 = collect(y0:(0.2 * μm):y_test)
-    Y2 = collect(y_test:(0.1 * μm):y1)
-    Y3 = geomspace(y1, y2, 4.0e-8, 1.0e-8)
+    Y1 = collect(range(y0, y1, length = 8))
+    Y2 = collect(range(y1, y2, length = 11))
+    #Y3 = geomspace(y2, y3, 4.0e-8, 1.0e-8)
+    Y3 = geomspace(y2, y3, 3.0e-8, 1.0e-8)
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
     grid = simplexgrid(X, Y)
 
     # cell regions
-    cellmask!(grid, [x2, y1], [x3, y2], region_gate)
-    cellmask!(grid, [x0, y1], [-0.8 * μm, y2], region_drain)
-    cellmask!(grid, [0.8 * μm, y1], [x5, y2], region_source)
-    cellmask!(grid, [x0, y0], [x5, y1], region_bulk)
+    cellmask!(grid, [x3, y2], [x4, y3], region_gate)
+    cellmask!(grid, [x0, y2], [x3, y3], region_drain)
+    cellmask!(grid, [x4, y2], [x7, y3], region_source)
+    cellmask!(grid, [x0, y0], [x7, y2], region_bulk)
 
     # boundary regions
-    bfacemask!(grid, [x2, y2], [x3, y2], bregion_gate)
-    bfacemask!(grid, [x0, y2], [x1, y2], bregion_drain)
-    bfacemask!(grid, [x4, y2], [x5, y2], bregion_source)
-    bfacemask!(grid, [x0, y0], [x5, y0], bregion_bulk)
-    bfacemask!(grid, [x0, y0], [x0, y2], 0)
-    bfacemask!(grid, [x5, y0], [x5, y2], 0)
-    bfacemask!(grid, [x1, y2], [x2, y2], 0)
-    bfacemask!(grid, [x3, y2], [x4, y2], 0)
+    bfacemask!(grid, [x2, y3], [x5, y3], bregion_gate)
+    bfacemask!(grid, [x0, y3], [x1, y3], bregion_drain)
+    bfacemask!(grid, [x6, y3], [x7, y3], bregion_source)
+    bfacemask!(grid, [x0, y0], [x7, y0], bregion_bulk)
+    bfacemask!(grid, [x0, y0], [x0, y3], 0)
+    bfacemask!(grid, [x7, y0], [x7, y3], 0)
+    bfacemask!(grid, [x1, y3], [x2, y3], 0)
+    bfacemask!(grid, [x5, y3], [x6, y3], 0)
 
     if plotting
         gridplot(grid, Plotter = Plotter, title = "Grid")
@@ -172,13 +180,12 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         params.mobility[iphin, ireg] = mun
         params.mobility[iphip, ireg] = mup
 
-        params.recombinationRadiative[ireg] = Radiative
         params.recombinationSRHLifetime[iphin, ireg] = SRH_LifeTime
         params.recombinationSRHLifetime[iphip, ireg] = SRH_LifeTime
         params.recombinationSRHTrapDensity[iphin, ireg] = SRH_TrapDensity
         params.recombinationSRHTrapDensity[iphip, ireg] = SRH_TrapDensity
-        params.recombinationAuger[iphin, ireg] = Auger
-        params.recombinationAuger[iphip, ireg] = Auger
+        params.recombinationAuger[iphin, ireg] = Auger_n
+        params.recombinationAuger[iphip, ireg] = Auger_p
     end
 
     for ibreg in 1:grid[NumBFaceRegions] #boundary region data
@@ -205,13 +212,13 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     # recombination
     data.bulkRecombination = set_bulk_recombination(;
         iphin = iphin, iphip = iphip,
-        bulk_recomb_Auger = false,
+        bulk_recomb_Auger = true,
         bulk_recomb_radiative = false,
-        bulk_recomb_SRH = false
+        bulk_recomb_SRH = true,
     )
 
     # boundary model
-    data.boundaryType[bregion_gate] = GateContact # OhmicContact
+    data.boundaryType[bregion_gate] = GateContact
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
@@ -223,19 +230,6 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     # Definition ChargeTransport System
     ctsys = System(grid, data, unknown_storage = :sparse)
-
-    # Add doping on boundary (if not added 0 on boundary)
-    params.bDoping[:, :] .= 0.0
-    params.bDoping[iphin, bregion_drain] = Nd_drain                  #   [Nd  0.0;
-    params.bDoping[iphin, bregion_source] = Nd_source                #    Nd  0.0;
-    params.bDoping[iphip, bregion_gate] = Na_gate                    #    0.0  Na;
-    params.bDoping[iphip, bregion_bulk] = Na_bulk                    #    0.0  Na]
-
-    params.bDensityOfStates[iphin, :] .= Nc
-    params.bDensityOfStates[iphip, :] .= Nv
-
-    params.bBandEdgeEnergy[iphin, :] .= Ec
-    params.bBandEdgeEnergy[iphip, :] .= Ev
 
     if test == false
         show_params(ctsys)
@@ -337,7 +331,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     ################################################################################
 
     biasValues_gate = range(0.0, stop = 5.0, length = 4) # 4 Steps in Tesca
-    biasValues_drain = range(0.0, stop = 5.0, length = 43) # 12 steps in Tesca, bis length = 42 bricht es nach zwei Schritten ab
+    biasValues_drain = range(0.0, stop = 5.0, length = 43) # 12 steps in Tesca, bis length = 42 bricht es nach zwei Schritten ab, war 43
 
     IV_drain = zeros(0)
 
@@ -361,7 +355,6 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
         println("bias value at drain: Δu = ", Δu_drain, " V")
 
-        #set_contact!(ctsys, bregion_gate, Δu = 5.0)
         set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
 
         solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
@@ -405,22 +398,22 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         display(gcf())
 
         ################################################################################
-        Plotter.figure()
-        Plotter.surf(XX[:], YY[:], solution[iphin, :])
-        Plotter.title("Quasi Fermi potential for electrons")
-        Plotter.xlabel("length [m]")
-        Plotter.ylabel("height [m]")
-        Plotter.zlabel("potential [V]")
-        display(gcf())
+        # Plotter.figure()
+        # Plotter.surf(XX[:], YY[:], solution[iphin, :])
+        # Plotter.title("Quasi Fermi potential for electrons")
+        # Plotter.xlabel("length [m]")
+        # Plotter.ylabel("height [m]")
+        # Plotter.zlabel("potential [V]")
+        # display(gcf())
 
         ################################################################################
-        Plotter.figure()
-        Plotter.surf(XX[:], YY[:], solution[iphip, :])
-        Plotter.title("Quasi Fermi potential for holes")
-        Plotter.xlabel("length [m]")
-        Plotter.ylabel("height [m]")
-        Plotter.zlabel("potential [V]")
-        display(gcf())
+        # Plotter.figure()
+        # Plotter.surf(XX[:], YY[:], solution[iphip, :])
+        # Plotter.title("Quasi Fermi potential for holes")
+        # Plotter.xlabel("length [m]")
+        # Plotter.ylabel("height [m]")
+        # Plotter.zlabel("potential [V]")
+        # display(gcf())
 
         ################################################################################
         # Density plots with PythonPlot
@@ -459,7 +452,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         # IV Curve with PythonPlot
         ################################################################################
         Plotter.figure()
-        Plotter.semilogy(biasValues_drain, IV_drain, marker = "o", markersize = 3)
+        Plotter.plot(biasValues_drain, IV_drain, marker = "o", markersize = 3) # für Logarithmische Skala: semilogy
         Plotter.grid()
         Plotter.title("IV Curve")
         Plotter.xlabel("bias [V]")
