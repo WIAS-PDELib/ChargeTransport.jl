@@ -248,21 +248,43 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 end
                 ## Note that this implies a 1D plot, for multidimensional plots, you may work with
                 ## GridVisualize.jl or write your own code.
-                Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q), label = label1, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
+                scalarplot!(
+                    visualizer,
+                    subg,
+                    data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q);
+                    label = label1,
+                    legend = :best,
+                    markershape = marker,
+                    linewidth = 2,
+                    color = colors[icc],
+                    linestyle = linestyles[1]
+                )
+                #Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q), label = label1, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
 
-                Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* solcc, label = label2, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
+                scalarplot!(
+                    visualizer,
+                    subg,
+                    data.params.chargeNumbers[icc] .* solcc;
+                    label = label2,
+                    legend = :best,
+                    markershape = marker,
+                    linewidth = 2,
+                    color = colors[icc],
+                    linestyle = linestyles[2]
+                )
+                #Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* solcc, label = label2, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
 
                 count = count + 1
             end
         end
     end
 
-    Plotter.grid()
-    Plotter.xlabel("space [\$m\$]")
-    Plotter.ylabel("energies [\$eV\$]")
-    Plotter.legend(fancybox = true, loc = "best")
-    Plotter.title(title)
-    Plotter.tight_layout()
+    # Plotter.grid()
+    # Plotter.xlabel("space [\$m\$]")
+    # Plotter.ylabel("energies [\$eV\$]")
+    # Plotter.legend(fancybox = true, loc = "best")
+    # Plotter.title(title)
+    # Plotter.tight_layout()
 
     return nothing
 end

@@ -238,29 +238,44 @@ function main(;
 
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
-    if plotting
-        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
+    # TODO MO: Ergibt das Sinn? Habe ich für die Title gemacht.
+    maxBias = biasValues[end]
+
+    if Plotter !== nothing
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data, Plotter)
         ## add labels for anion vacancy
         label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"
         label_density[p.iphia] = "\$ n_a \$";      label_solution[p.iphia] = "\$ \\varphi_a\$"
 
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "bias \$\\Delta u\$ ", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$", label_solution)
+        plot_densities!(vis[1, 2], ctsys, solution, "Applied voltage Δu = $maxBias", label_density)
+        plot_solution!(vis[2, 1], ctsys, solution, "Applied voltage Δu = $maxBias", label_solution)
 
-        Plotter.figure()
-        Plotter.plot(tvalues, biasValues, marker = "o")
-        Plotter.xlabel("time [s]")
-        Plotter.ylabel("bias [V]")
-        Plotter.tight_layout()
-        Plotter.figure()
         ###########
-        Plotter.plot(biasValues[2:end], IV .* (cm^2) .* 1.0e3, linewidth = 5, color = "darkblue")
-        Plotter.grid()
-        Plotter.xlabel("bias [V]")
-        Plotter.ylabel("current density [mAcm\$^{-2} \$]")
-        Plotter.tight_layout()
+        #TODO MO: Im Referenceplot mit PyPlot sind mehr Schritte, wieso?
+        scalarplot!(
+            vis[2, 2],
+            tvalues,
+            biasValues;
+            markershape = :circle,
+            markersize = 8,
+            color = :blue,
+            xlabel = L"\text{time [s]}",
+            ylabel = L"\text{bias [V]}",
+            title = "Applied bias over time"
+        )
+        ###########
+        scalarplot!(
+            vis[3, 1],
+            biasValues[2:end],
+            IV .* (cm^2) .* 1.0e3,
+            linewidth = 2,
+            color = "darkblue",
+            xlabel = L"\text{bias [V]}",
+            ylabel = L"current density [$\text{mAcm}^{-2}$]",
+            title = "Total current"
+        )
+
+        reveal(vis)
     end
 
     if test == false
