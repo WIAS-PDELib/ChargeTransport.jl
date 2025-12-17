@@ -15,9 +15,8 @@ using ExtendableGrids
 using GridVisualize
 using LaTeXStrings
 
-# supported Plotters are GLMakie, PythonPlot, PlutoVista
 function main(;
-        n = 6, Plotter = nothing,
+        n = 6, Plotter = nothing,                   # supported Plotters are GLMakie and PythonPlot
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
         vacancyEnergyCalculation = false,           # assume the vacancy energy level is either given or not
@@ -242,7 +241,7 @@ function main(;
     maxBias = biasValues[end]
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
         ## add labels for anion vacancy
         label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"
         label_density[p.iphia] = "\$ n_a \$";      label_solution[p.iphia] = "\$ \\varphi_a\$"

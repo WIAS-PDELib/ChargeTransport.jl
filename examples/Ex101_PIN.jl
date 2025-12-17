@@ -27,7 +27,7 @@ function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping
     return coord
 end
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
@@ -238,7 +238,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown
         println("Plot electroneutral potential, band-edge energies and doping")
         ################################################################################
         ## set legend for plotting routines. Either you can use the predefined labels or write your own.
-        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         psi0 = electroNeutralSolution(ctsys)
 

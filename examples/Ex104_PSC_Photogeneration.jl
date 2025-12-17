@@ -18,7 +18,7 @@ using LaTeXStrings # sonst funktioniert includet() nicht
 # for convenience
 parametersdir = ChargeTransport.parametersdir
 
-# supported Plotters are GLMakie, PythonPlot, PlutoVista
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(;
         n = 5,
@@ -258,7 +258,7 @@ function main(;
     solutionEQ = inival
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         ## add labels for anion vacancy
         label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"

@@ -14,7 +14,7 @@ using ExtendableGrids
 using GridVisualize
 using LaTeXStrings
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(; Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
@@ -227,7 +227,7 @@ function main(; Plotter = nothing, verbose = false, test = false, unknown_storag
 
     if Plotter !== nothing
         ## set legend for plotting routines. Either you can use the predefined labels or write your own.
-        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy = set_plotting_labels(data)
 
         plot_energies!(vis[1, 3], ctsys, solution, "Equilibrium", label_energy)
         plot_densities!(vis[2, 1], ctsys, solution, "Equilibrium", label_density)

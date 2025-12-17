@@ -13,7 +13,7 @@ using ExtendableGrids
 using GridVisualize
 using LaTeXStrings
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(; Plotter = nothing, verbose = false, test = false, barrierLowering = true)
 
@@ -284,7 +284,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
 
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphit] = "\$E_t-q\\psi\$"; label_energy[2, iphit] = "\$ - q \\varphi_t\$"
         label_density[iphit] = "\$ n_t\$";       label_solution[iphit] = "\$ \\varphi_t\$"
         label_energy[1, iphix] = "\$E_x-q\\psi\$"; label_energy[2, iphix] = "\$ - q \\varphi_x\$"
@@ -370,7 +370,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
     end
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphit] = "\$E_t-q\\psi\$"; label_energy[2, iphit] = "\$ - q \\varphi_t\$"
         label_density[iphit] = "\$ n_t\$";       label_solution[iphit] = "\$ \\varphi_t\$"
         label_energy[1, iphix] = "\$E_x-q\\psi\$"; label_energy[2, iphix] = "\$ - q \\varphi_x\$"

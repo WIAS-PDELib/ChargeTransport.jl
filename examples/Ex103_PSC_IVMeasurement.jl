@@ -17,7 +17,7 @@ using ExtendableGrids
 using GridVisualize
 using LaTeXStrings
 
-# # you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(;
         n = 3, Plotter = nothing, verbose = false, test = false,
@@ -204,7 +204,7 @@ function main(;
         ################################################################################
         println("Plot electroneutral potential, band-edge energies and doping")
         ################################################################################
-        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         ## add labels for anion vacancy
         label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"

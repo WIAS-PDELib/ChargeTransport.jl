@@ -14,7 +14,7 @@ using ExtendableGrids
 using GridVisualize
 using LaTeXStrings
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(; Plotter = nothing, verbose = false, test = false, barrierLowering = true)
 
@@ -248,7 +248,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
     inival = solEQ
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphix] = "\$E_x-q\\psi\$"; label_energy[2, iphix] = "\$ - q \\varphi_x\$"
         label_density[iphix] = "\$ n_x\$";       label_solution[iphix] = "\$ \\varphi_x\$"
 

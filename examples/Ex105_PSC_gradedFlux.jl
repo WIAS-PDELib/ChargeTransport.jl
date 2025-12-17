@@ -47,7 +47,7 @@ function grading_parameter!(physicalParameter, coord, regionTransportLayers, reg
     return physicalParameter
 end
 
-# supported Plotters are GLMakie, PythonPlot, PlutoVista
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
@@ -429,7 +429,7 @@ function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown
     inival = solution
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy = set_plotting_labels(data)
 
         plot_energies!(vis[1, 2], ctsys, solution, "Equilibrium", label_energy)
         plot_densities!(vis[2, 1], ctsys, solution, "Equilibrium", label_density)

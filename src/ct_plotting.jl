@@ -6,11 +6,7 @@ e.g. mobile ionic carriers or traps, this can be done within the main file.
 
 """
 
-function set_plotting_labels(data, Plotter)
-
-    if nameof(Plotter) == :PlutoVista
-        error("ChargeTransport Plotting with PlutoVista is currently broken, see: https://github.com/j-fu/PlutoVista.jl/issues/20. Please use another Plotter.")
-    end
+function set_plotting_labels(data)
 
     label_energy = Matrix{LaTeXString}(undef, 2, data.params.numberOfCarriers) # band-edge energies and potential
     label_BEE = Vector{LaTeXString}(undef, data.params.numberOfCarriers)    # band-edge energie parameters
@@ -94,6 +90,16 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
         end
     end
 
+    return nothing
+end
+
+function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGridpoints = false)
+    @warn "plot_densities() is deprecated, please use plot_densities!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_densities!(vis, ctsys, solution, title, label_density, ; plotGridpoints)
+
+    reveal(vis)
     return nothing
 end
 
@@ -279,6 +285,16 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
     return nothing
 end
 
+function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGridpoints = false)
+    @warn "plot_energies() is deprecated, please use plot_energies!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_energies!(vis, ctsys, solution, title, label_energy, ; plotGridpoints)
+
+    reveal(vis)
+    return nothing
+end
+
 """
 $(SIGNATURES)
 With this method it is possible to depict the band-edge energies ``E_\\alpha ``.
@@ -363,6 +379,15 @@ function plot_energies!(visualizer, ctsys, label_BEE)
     return nothing
 end
 
+function plot_energies(Plotter, ctsys, label_BEE)
+    @warn "plot_energies() is deprecated, please use plot_energies!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_energies!(vis, ctsys, label_BEE)
+
+    reveal(vis)
+    return nothing
+end
 
 """
 $(TYPEDSIGNATURES)
@@ -443,6 +468,16 @@ function plot_doping!(visualizer, ctsys, label_density)
     return nothing
 end
 
+function plot_doping(Plotter, ctsys, label_density)
+    @warn "plot_doping() is deprecated, please use plot_doping!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_doping!(vis, ctsys, label_density)
+
+    reveal(vis)
+    return nothing
+end
+
 """
 Plot doping for nodal dependent doping.
 """
@@ -473,6 +508,16 @@ function plot_doping!(visualizer, g::ExtendableGrid, paramsnodal::ParamsNodal)
 
 end
 
+function plot_doping(Plotter, g::ExtendableGrid, paramsnodal::ParamsNodal)
+    @warn "plot_doping() is deprecated, please use plot_doping!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_doping!(vis, g::ExtendableGrid, paramsnodal::ParamsNodal)
+
+    reveal(vis)
+    return nothing
+end
+
 """
 $(TYPEDSIGNATURES)
 Plotting routine for depicting the electroneutral potential.
@@ -501,6 +546,16 @@ function plot_electroNeutralSolutionBoltzmann!(visualizer, grid, psi0; plotGridp
         markersize = 8
     )
 
+    return nothing
+end
+
+function plot_electroNeutralSolutionBoltzmann(Plotter, grid, psi0; plotGridpoints = false)
+    @warn "plot_electroNeutralSolutionBoltzmann() is deprecated, please use plot_electroNeutralSolutionBoltzmann!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_electroNeutralSolutionBoltzmann!(vis, grid, psi0; plotGridpoints)
+
+    reveal(vis)
     return nothing
 end
 
@@ -637,37 +692,13 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
 
 end
 
-# Wo wird diese Funktion genutzt?
-function plot_solution(Plotter, grid, solution, agrid, t, Δu, label_solution)
+function plot_solution(Plotter, ctsys, solution, title, label_solution; plotGridpoints = false)
+    @warn "plot_solution() is deprecated, please use plot_solution!() with a GridVisualizer"
 
-    # Create a visualizer. Works with Plots (fast once compiled) and PyPlot
-    p = GridVisualizer(Plotter = Plotter, layout = (1, 1))
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_solution!(vis, ctsys, solution, title, label_solution; plotGridpoints)
 
-    ipsi = data.index_psi
-
-    colors = ["green", "red", "gold", "purple", "orange"]
-    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
-
-    #Plotter.clf()
-    scalarplot!(p[1, 1], grid, solution[ipsi, :], label = "\$\\psi\$", color = "b", marker = "x", title = "time \$ t =\$ $t, bias \$\\Delta u\$ = $Δu", clear = true)
-
-    for icc in [iphin, iphip]
-        scalarplot!(p[1, 1], grid, solution[icc, :], label = label_solution[icc], color = colors[icc], linestyle = linestyles[icc], clear = false)
-    end
-
-    for icc in 3:data.params.numberOfCarriers
-        scalarplot!(p[1, 1], agrid, view(solution[icc, :], agrid), label = label_solution[icc], color = colors[icc], linestyle = linestyles[icc], clear = false)
-    end
-
-    reveal(p)
-
-    Plotter.grid()
-    Plotter.xlabel("space [m]")
-    Plotter.ylabel("potential [V]")
-    Plotter.legend(fancybox = true, loc = "best")
-    Plotter.title("time \$ t =\$ $t, bias \$\\Delta u\$ = $Δu")
-    Plotter.tight_layout()
-
+    reveal(vis)
     return nothing
 end
 
@@ -697,5 +728,15 @@ function plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints = false)
         ylabel = L"\text{total current [A]}"
     )
 
+    return nothing
+end
+
+function plot_IV(Plotter, biasValues, IV, title, ; plotGridpoints = false)
+    @warn "plot_IV() is deprecated, please use plot_IV!() with a GridVisualizer"
+
+    vis = GridVisualizer(Plotter = Plotter)
+    plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints)
+
+    reveal(vis)
     return nothing
 end

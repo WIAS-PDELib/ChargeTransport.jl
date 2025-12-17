@@ -38,7 +38,7 @@ function initialize_pin_grid(refinementfactor, h_ndoping, h_pdoping_left, h_pdop
     return coord
 end
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(; n = 3, Plotter = nothing, verbose = false, test = false)
 
@@ -299,7 +299,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
     inival = solution
 
     if Plotter !== nothing
-        label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
+        label_solution, label_density, label_energy = set_plotting_labels(data)
 
         ## ##### set legend for plotting routines #####
         plot_energies!(vis[1, 2], ctsys, solution, "Equilibrium", label_energy)

@@ -71,11 +71,14 @@ function main(;
         verbose = false, test = false
     )
 
-    if isnothing(Plotter) || nameof(Plotter) != :PyPlot
+    # TODO MO: Das funktioniert wahrscheinlich auch mit PythonPlot, habe ich noch nicht getestet.
+    if !isnothing(Plotter) && nameof(Plotter) != :PyPlot
         @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
+
+        Plotter = nothing
     end
 
-    if nameof(Plotter) == :PyPlot
+    if Plotter !== nothing
         Plotter.rc("font", family = "sans-serif", size = 14)
         Plotter.rc("mathtext", fontset = "dejavusans")
         Plotter.close("all")
@@ -340,8 +343,7 @@ function main(;
         na = Na .* data.F[iphia].(za * (sol[iphia, :] - sol[ipsi, :]))
     end
 
-    if nameof(Plotter) == :PyPlot
-
+    if Plotter !== nothing
         Plotter.figure()
         Plotter.plot(coord, zn .* sol[iphin, :], color = "green", linewidth = 5, label = "\$ v_{\\mathrm{n}}}\$")
         Plotter.plot(coord, zp .* sol[iphip, :], color = "red", linewidth = 5, linestyle = "--", label = "\$ v_{\\mathrm{p}}}\$")
@@ -404,11 +406,13 @@ function GenerationStudy(;
         verbose = false
     )
 
-    if isnothing(Plotter) || nameof(Plotter) != :PyPlot
+    if !isnothing(Plotter) && nameof(Plotter) != :PyPlot
         @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
+
+        Plotter = nothing
     end
 
-    if nameof(Plotter) == :PyPlot
+    if Plotter !== nothing
         Plotter.rc("font", family = "sans-serif", size = 14)
         Plotter.rc("mathtext", fontset = "dejavusans")
         Plotter.close("all")
@@ -520,7 +524,7 @@ function GenerationStudy(;
     end
 
     ###################################
-    if nameof(Plotter) == :PyPlot
+    if Plotter !== nothing
         size = 12
         if enableIons
             Plotter.loglog(G0Vec, Ca .* ones(length(G0Vec)), color = "gray", linestyle = ":", linewidth = 4, label = "\$  M_{\\mathrm{a}} \$ ")
@@ -681,7 +685,6 @@ function GenerationStudy(;
 
     end
 
-
     return nothing
 
 end
@@ -690,6 +693,5 @@ function test()
     testval = 0.9289261210695825
     return main(test = true) ≈ testval
 end
-
 
 end # module
