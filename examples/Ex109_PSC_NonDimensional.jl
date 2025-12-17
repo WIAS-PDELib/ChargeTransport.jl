@@ -20,8 +20,7 @@ module Ex109_PSC_NonDimensional
 
 using ChargeTransport
 using VoronoiFVM
-using ExtendableGrids  # grid initializer
-# using PyPlot           # solution visualizer
+using ExtendableGrids
 
 # region numbers
 region1 = 1
@@ -68,16 +67,15 @@ function main(;
         parameterStudy = false,
         parseInival = false, inival = Array{Float64, 2},
         #################################
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
         verbose = false, test = false
     )
 
-    if !isnothing(Plotter) && nameof(Plotter) != :PyPlot
+    if isnothing(Plotter) || nameof(Plotter) != :PyPlot
         @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-        plotting = false
     end
 
-    if plotting
+    if nameof(Plotter) == :PyPlot
         Plotter.rc("font", family = "sans-serif", size = 14)
         Plotter.rc("mathtext", fontset = "dejavusans")
         Plotter.close("all")
@@ -112,7 +110,7 @@ function main(;
     bfacemask!(grid, [0.0], [0.0], bregion1)
     bfacemask!(grid, [h_total], [h_total], bregion2)
 
-    if plotting
+    if Plotter == :PyPlot
         gridplot(grid, Plotter = Plotter)
     end
 
@@ -331,7 +329,7 @@ function main(;
     end
 
     ################################################################################
-    if test == false && plotting
+    if test == false && nameof(Plotter) == :PyPlot
         println("Plotting")
     end
     ################################################################################
@@ -342,7 +340,7 @@ function main(;
         na = Na .* data.F[iphia].(za * (sol[iphia, :] - sol[ipsi, :]))
     end
 
-    if plotting
+    if nameof(Plotter) == :PyPlot
 
         Plotter.figure()
         Plotter.plot(coord, zn .* sol[iphin, :], color = "green", linewidth = 5, label = "\$ v_{\\mathrm{n}}}\$")
@@ -376,13 +374,13 @@ function main(;
         Plotter.axvspan(5.0, 7.0, facecolor = [243 / 255 192 / 255 192 / 255])
         Plotter.xlabel("\$ x \$", fontsize = 17)
         Plotter.ylabel("Density", fontsize = 17)
-        Plotter.tight_layout()
+        #Plotter.tight_layout()
 
     end
 
     return sum(filter(!isnan, sol)) / length(sol)
 
-    if test == false && plotting
+    if test == false && nameof(Plotter) == :PyPlot
         println("*** done\n")
     end
 
@@ -402,25 +400,19 @@ function GenerationStudy(;
         λ = 1.0,              # Debye length
         DirichletVal = 2.0,   # Dirichlet value
         enableIons = false,   # enabling ions
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
         verbose = false
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-                plotting = false
-            end
-        end
+    if isnothing(Plotter) || nameof(Plotter) != :PyPlot
+        @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
     end
 
-    Plotter.rc("font", family = "sans-serif", size = 14)
-    Plotter.rc("mathtext", fontset = "dejavusans")
-    Plotter.close("all")
+    if nameof(Plotter) == :PyPlot
+        Plotter.rc("font", family = "sans-serif", size = 14)
+        Plotter.rc("mathtext", fontset = "dejavusans")
+        Plotter.close("all")
+    end
 
     if enableIons && DirichletVal != 1.0
         @warn "Caution, initial value for the ions is only correct for `DirichletVal = 1.0` as the average density need to be equal to Ca.
@@ -528,7 +520,7 @@ function GenerationStudy(;
     end
 
     ###################################
-    if plotting
+    if nameof(Plotter) == :PyPlot
         size = 12
         if enableIons
             Plotter.loglog(G0Vec, Ca .* ones(length(G0Vec)), color = "gray", linestyle = ":", linewidth = 4, label = "\$  M_{\\mathrm{a}} \$ ")

@@ -259,7 +259,6 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                     color = colors[icc],
                     linestyle = linestyles[1]
                 )
-                #Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q), label = label1, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[1])
 
                 scalarplot!(
                     visualizer,
@@ -272,19 +271,10 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                     color = colors[icc],
                     linestyle = linestyles[2]
                 )
-                #Plotter.plot(subg[Coordinates]', data.params.chargeNumbers[icc] .* solcc, label = label2, marker = marker, linewidth = 2, color = colors[icc], linestyle = linestyles[2])
-
                 count = count + 1
             end
         end
     end
-
-    # Plotter.grid()
-    # Plotter.xlabel("space [\$m\$]")
-    # Plotter.ylabel("energies [\$eV\$]")
-    # Plotter.legend(fancybox = true, loc = "best")
-    # Plotter.title(title)
-    # Plotter.tight_layout()
 
     return nothing
 end
@@ -647,6 +637,7 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
 
 end
 
+# Wo wird diese Funktion genutzt?
 function plot_solution(Plotter, grid, solution, agrid, t, Δu, label_solution)
 
     # Create a visualizer. Works with Plots (fast once compiled) and PyPlot

@@ -99,9 +99,10 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
     bfacemask!(grid, [h_ndoping + h_pdoping_left], [h_ndoping + h_pdoping_left], bregionALeftATrap, tol = 1.0e-18)
     bfacemask!(grid, [h_ndoping + h_pdoping_left + h_pdoping_trap], [h_ndoping + h_pdoping_left + h_pdoping_trap], bregionATrapARight, tol = 1.0e-18)
 
+    # TODO MO: Hier habe ich die Legende weggelassen, sonst werden die Bilder nicht richtig angezeigt bei PythonPlot
     if Plotter !== nothing
-        vis = GridVisualizer(; Plotter, layout = (2, 5), size = (1550, 800))
-        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
+        vis = GridVisualizer(; Plotter, layout = (3, 4), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :none, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false
@@ -353,13 +354,13 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
     ## plot solution and IV curve
     if Plotter !== nothing
 
-        plot_energies!(vis[1, 5], ctsys, solution, "bias Δu = $(endVoltage) V", label_energy)
-        plot_densities!(vis[2, 1], ctsys, solution, "bias Δu = $(endVoltage) V", label_density)
-        plot_solution!(vis[2, 2], ctsys, solution, "bias Δu = $(endVoltage) V", label_solution)
-        plot_IV!(vis[2, 3], biasValues, IV, "bias Δu = $(biasValues[end]) V", plotGridpoints = true) # total current
+        plot_energies!(vis[2, 1], ctsys, solution, "bias Δu = $(endVoltage) V", label_energy)
+        plot_densities!(vis[2, 2], ctsys, solution, "bias Δu = $(endVoltage) V", label_density)
+        plot_solution!(vis[2, 3], ctsys, solution, "bias Δu = $(endVoltage) V", label_solution)
+        plot_IV!(vis[2, 4], biasValues, IV, "bias Δu = $(biasValues[end]) V", plotGridpoints = true) # total current
 
         scalarplot!(
-            vis[2, 4],
+            vis[3, 1],
             biasValues[1:length(chargeDensities)],
             chargeDensities;
             color = :blue,
@@ -369,13 +370,9 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
             xlabel = L"\text{bias [V]}",
             ylabel = L"\text{Charge density [C]}"
         )
-        # plot_IV!(Plotter, biasValues, chargeDensities, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
-        # Plotter.title("Charge density in donor region")
-        # Plotter.ylabel("Charge density [C]")
-        # Plotter.tight_layout()
 
         scalarplot!(
-            vis[2, 5],
+            vis[3, 2],
             biasValues[1:length(staticCapacitance)],
             staticCapacitance;
             color = :blue,
@@ -385,11 +382,6 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
             xlabel = L"\text{bias [V]}",
             ylabel = L"Static capacitance [$\frac{C}{V}$]"
         )
-        # Plotter.figure()
-        # plot_IV(Plotter, biasValues, staticCapacitance, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
-        # Plotter.title("Static capacitance in donor region")
-        # Plotter.ylabel("Static capacitance [C/V]")
-        # Plotter.tight_layout()
 
         reveal(vis)
     end

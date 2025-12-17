@@ -303,7 +303,6 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
     end
 
     if Plotter !== nothing
-        ###########
         scalarplot!(
             vis[2, 2],
             tvalues,
@@ -314,10 +313,9 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
             ylabel = L"\text{voltage [V]}",
             title = "Applied voltage over time"
         )
-        ###########
+
         currentValues = abs.(Area .* IV)
         mask = currentValues .> 0 # TODO MO: für log, sonst wird nichts geplottet, jetzt wird nur der erste Wert nicht geplottet, ok so?
-
         scalarplot!(
             vis[3, 1],
             biasValues[mask],
@@ -329,7 +327,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
             title = "Total current",
             yscale = :log
         )
-        ###########
+
         reveal(vis)
     end
 

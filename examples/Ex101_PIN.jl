@@ -13,8 +13,8 @@ module Ex101_PIN
 
 using ChargeTransport  # drift-diffusion solver
 using ExtendableGrids  # grid initializer
-using GLMakie          # solution visualizer
 using GridVisualize
+using LaTeXStrings
 
 ## This function is used to initialize the grid for a possible extension to other p-i-n devices.
 function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping)
@@ -29,7 +29,7 @@ end
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
+function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K
@@ -89,7 +89,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
     bfacemask!(grid, [h_pdoping], [h_pdoping], bregionJunction1) # first  inner interface
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
-    if plotting
+    if Plotter !== nothing
         vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
         gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
@@ -233,7 +233,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
         println("*** done\n")
     end
 
-    if plotting
+    if Plotter !== nothing
         ################################################################################
         println("Plot electroneutral potential, band-edge energies and doping")
         ################################################################################
@@ -315,7 +315,7 @@ function main(; n = 3, Plotter = GLMakie, plotting = false, verbose = false, tes
     end
 
     ## plot solution and IV curve
-    if plotting
+    if Plotter !== nothing
         ################################################################################
         println("Plot results")
         ################################################################################

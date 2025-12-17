@@ -11,12 +11,12 @@ module Ex102_PIN_nodal_doping
 
 using ChargeTransport
 using ExtendableGrids
-using GLMakie
 using GridVisualize
+using LaTeXStrings
 
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
-function main(; Plotter = GLMakie, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
+function main(; Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K ps
@@ -68,9 +68,9 @@ function main(; Plotter = GLMakie, plotting = false, verbose = false, test = fal
     bfacemask!(grid, [h_pdoping], [h_pdoping], bregionJunction1) # first  inner interface
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
-    if plotting
+    if Plotter !== nothing
         vis = GridVisualizer(; Plotter, layout = (3, 3), size = (1550, 800))
-        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\rm space[m]", show = true)
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false
@@ -191,7 +191,7 @@ function main(; Plotter = GLMakie, plotting = false, verbose = false, test = fal
         show_params(ctsys)
     end
 
-    if plotting == true
+    if Plotter !== nothing
         ################################################################################
         println("Plot doping")
         ################################################################################
@@ -225,7 +225,7 @@ function main(; Plotter = GLMakie, plotting = false, verbose = false, test = fal
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
 
-    if plotting
+    if Plotter !== nothing
         ## set legend for plotting routines. Either you can use the predefined labels or write your own.
         label_solution, label_density, label_energy = set_plotting_labels(data, Plotter)
 
@@ -274,7 +274,7 @@ function main(; Plotter = GLMakie, plotting = false, verbose = false, test = fal
         println("*** done\n")
     end
 
-    if plotting # plot solution and IV curve
+    if Plotter !== nothing # plot solution and IV curve
 
         plot_energies!(vis[2, 3], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_energy)
         plot_densities!(vis[3, 2], ctsys, solution, "Applied voltage Δu = $(biasValues[end])", label_density, plotGridpoints = true)
