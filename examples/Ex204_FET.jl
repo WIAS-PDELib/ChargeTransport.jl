@@ -56,22 +56,25 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
 
     ########## physical values of Si at room temperature ##########
 
-    Ec = 0.562 * eV                                     # conduction band-edge energy
-    Ev = -0.562 * eV                                    # valence band-edge energy
-    Nc = 2.86e19 / (cm^3)                               # conduction band density of states
-    Nv = 3.1e19 / (cm^3)                                # valence band densitiy of states
+    Ec = 0.562 * eV                                     # conduction band-edge energy, Tesca Manal S. 83
+    Ev = -0.562 * eV                                    # valence band-edge energy, Tesca Manual S. 83
+    Nc = 2.86e19 / (cm^3)                               # conduction band density of states, Tesca Manual S.85
+    Nv = 3.1e19 / (cm^3)                                # valence band densitiy of states, Tesca Manual S.85
 
-    mun = 1200.0 * (cm^2) / (V * s)                     # electron mobility
-    mup = 350.0 * (cm^2) / (V * s)                      # hole mobility
-    εr = 11.68 * 1.0                                    # relative dielectric permittivity of Si
-    εr_ox = 3.9 * 1.0                                   # relative dielectric permittivity of SiO2
+    mun = 1030.0 * (cm^2) / (V * s)                     # electron mobility, ioffe \leq 1400, Tesca Manual S.92: 1030
+    mup = 495.0 * (cm^2) / (V * s)                      # hole mobility \ioffe \leq 450, Tesaca Manual S. 92: 495
+    εr = 11.67 * 1.0                                    # relative dielectric permittivity of Si, Tesca Manual S.21: 11.67
+    εr_ox = 3.8 * 1.0                                   # relative dielectric permittivity of SiO2 at gate, Tesca Manual S. 21. 3.8
     T = 300.0 * K                                       # room temperature
 
     # Recombination parameters (from Tesca)
-    Auger_n = 2.8e-31 * cm^6 / s
-    Auger_p = 9.91e-32 * cm^6 / s
-    SRH_TrapDensity = 1.09e10 / cm^3
-    SRH_LifeTime = 1.0 * ns # das ist in Tesca über mehrere Variablen definiert, habe ich deshalb erstmal so gelassen
+    # Radiative = 0 # Tesca Manual S.127
+    Auger_n = 2.8e-31 * cm^6 / s              # Tesca Manual S. 127: 2.8d-31
+    Auger_p = 9.9e-32 * cm^6 / s              # Tesca Manual S. 127: 9.9d-32
+    SRH_TrapDensity_n = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10
+    SRH_TrapDensity_p = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10
+    SRH_LifeTime_n = 2.0e-4 * s               # Tesca Manual S. 128, tau_n0 = 2e-4 s
+    SRH_LifeTime_p = 2.0e-6 * s               # Tesca Manual S. 128, trau_p0 = 2e-6 s
 
     # Doping (Vereinfacht, nur eine Dotierung pro Region)
     Na_gate = 1.0e16 / cm^3
@@ -126,8 +129,7 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
     Y2 = collect(range(y1, y2, length = 11))
-    #Y3 = geomspace(y2, y3, 4.0e-8, 1.0e-8)
-    Y3 = geomspace(y2, y3, 3.0e-8, 1.0e-8)
+    Y3 = geomspace(y2, y3, 2.0e-8, 0.5e-8) # wenn ^-10, dann dünner film nach oben am Gate Rand, wenn ^-8 dann ca. 1000 Knoten Punkte
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
@@ -180,10 +182,10 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         params.mobility[iphin, ireg] = mun
         params.mobility[iphip, ireg] = mup
 
-        params.recombinationSRHLifetime[iphin, ireg] = SRH_LifeTime
-        params.recombinationSRHLifetime[iphip, ireg] = SRH_LifeTime
-        params.recombinationSRHTrapDensity[iphin, ireg] = SRH_TrapDensity
-        params.recombinationSRHTrapDensity[iphip, ireg] = SRH_TrapDensity
+        params.recombinationSRHLifetime[iphin, ireg] = SRH_LifeTime_n
+        params.recombinationSRHLifetime[iphip, ireg] = SRH_LifeTime_p
+        params.recombinationSRHTrapDensity[iphin, ireg] = SRH_TrapDensity_n
+        params.recombinationSRHTrapDensity[iphip, ireg] = SRH_TrapDensity_p
         params.recombinationAuger[iphin, ireg] = Auger_n
         params.recombinationAuger[iphip, ireg] = Auger_p
     end
@@ -297,14 +299,12 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
             return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
         end
 
-        vmin = 1.0e15
-        vmax = 1.0e25
-
+        # electron density
         nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution_eq[iphin, :] .- solution_eq[ipsi, :]) .+ Ec) ./ (k_B * T))
-        np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution_eq[iphip, :] .- solution_eq[ipsi, :]) .+ Ev) ./ (k_B * T))
 
+        # plot electron density
         Plotter.figure()
-        Plotter.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        Plotter.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = 1.0e11, vmax = 1.0e27), shading = "gouraud", rasterized = true)
         Plotter.xlabel(" \$x\$ [nm]", fontsize = 12)
         Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
         Plotter.title("electron density")
@@ -314,8 +314,12 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         Plotter.tight_layout()
         display(gcf())
 
+        # hole density
+        np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution_eq[iphip, :] .- solution_eq[ipsi, :]) .+ Ev) ./ (k_B * T))
+
+        # plot hole density
         Plotter.figure()
-        Plotter.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        Plotter.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = 1.0e9, vmax = 1.0e22), shading = "gouraud", rasterized = true)
         Plotter.xlabel(" \$x\$ [nm]", fontsize = 12)
         Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
         Plotter.title("hole density")
@@ -398,24 +402,6 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         display(gcf())
 
         ################################################################################
-        # Plotter.figure()
-        # Plotter.surf(XX[:], YY[:], solution[iphin, :])
-        # Plotter.title("Quasi Fermi potential for electrons")
-        # Plotter.xlabel("length [m]")
-        # Plotter.ylabel("height [m]")
-        # Plotter.zlabel("potential [V]")
-        # display(gcf())
-
-        ################################################################################
-        # Plotter.figure()
-        # Plotter.surf(XX[:], YY[:], solution[iphip, :])
-        # Plotter.title("Quasi Fermi potential for holes")
-        # Plotter.xlabel("length [m]")
-        # Plotter.ylabel("height [m]")
-        # Plotter.zlabel("potential [V]")
-        # display(gcf())
-
-        ################################################################################
         # Density plots with PythonPlot
         ################################################################################
         function tridata(grid::ExtendableGrid)
@@ -424,14 +410,12 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
             return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
         end
 
-        vmin = 1.0e9
-        vmax = 1.0e28
-
+        # electron density
         nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution[iphin, :] .- solution[ipsi, :]) .+ Ec) ./ (k_B * T))
-        np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution[iphip, :] .- solution[ipsi, :]) .+ Ev) ./ (k_B * T))
 
+        # electron density plot
         Plotter.figure()
-        Plotter.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        Plotter.tripcolor(tridata(grid)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = 1.0e11, vmax = 1.0e27), shading = "gouraud", rasterized = true)
         Plotter.xlabel(" \$x\$ [nm]", fontsize = 12)
         Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
         Plotter.title("electron density")
@@ -439,8 +423,12 @@ function main(; plotting = true, Plotter = PythonPlot, test = false)
         Plotter.tight_layout()
         display(gcf())
 
+        # hole density
+        np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution[iphip, :] .- solution[ipsi, :]) .+ Ev) ./ (k_B * T))
+
+        # hole density plot
         Plotter.figure()
-        Plotter.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = "gouraud", rasterized = true)
+        Plotter.tripcolor(tridata(grid)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = 1.0e5, vmax = 1.0e22), shading = "gouraud", rasterized = true)
         Plotter.xlabel(" \$x\$ [nm]", fontsize = 12)
         Plotter.ylabel(" \$y\$ [nm]", fontsize = 12)
         Plotter.title("hole density")
