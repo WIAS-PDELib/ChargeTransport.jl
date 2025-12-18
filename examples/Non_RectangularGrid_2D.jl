@@ -104,13 +104,15 @@ module Non_RectangularGrid_2D
 
         grid = simplexgrid(b)
 
-        return if plotting
-            gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.6)
+        if Plotter !== nothing
+            gridplot(grid; Plotter, resolution = (600, 400), linewidth = 0.6)
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")
             Plotter.tight_layout()
             # builderplot(b,Plotter=Plotter,resolution=(750,700))
         end
+
+        return grid
 
     end # main
 

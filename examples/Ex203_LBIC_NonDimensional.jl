@@ -49,24 +49,18 @@ function main(;
         ####################################
         parameterStudy = false,
         ####################################
-        Plotter = nothing, plotting = false,
+        Plotter = nothing, # only Plotter = PythonPlot or Plotter = PyPlot are supported in this example
         verbose = false, test = false
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-                plotting = false
-            end
-        end
+    if Plotter !== nothing && !(nameof(Plotter) in [:PyPlot, :PythonPlot])
+        @warn "Plotting in Ex203_LBIC_NonDimensional is only possible for Plotter = PyPlot or Plotter = PythonPlot"
+        Plotter = nothing
     end
 
-    if plotting
+    if Plotter !== nothing
 
+        # you need PyCall in your global environment
         @eval using PyCall
         # https://stackoverflow.com/questions/29443369/how-to-make-a-custom-colormap-using-pyplot-not-matplotlib-proper
         matcolors = pyimport("matplotlib.colors")
@@ -188,8 +182,8 @@ function main(;
     bfacemask!(grid, [0.0, 0.0], [length_x, 0.0], 0)
     bfacemask!(grid, [0.0, length_y], [length_x, length_y], 0)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter)
+    if Plotter !== nothing
+        gridplot(grid; Plotter)
     end
 
     if test == false
@@ -217,7 +211,7 @@ function main(;
         genData[inode] = G(x, y)
     end
 
-    if plotting
+    if Plotter !== nothing
         XX = grid[Coordinates][1, :]
         YY = grid[Coordinates][2, :]
 
@@ -378,7 +372,7 @@ function main(;
     end
     ################################################################################
 
-    if plotting
+    if Plotter !== nothing
         # https://github.com/j-fu/GridVisualize.jl/blob/1f2b299a436b7750702ccca282fa14152d80ebf9/src/pyplot.jl#L86
         function tridata(grid::ExtendableGrid)
             coord = grid[Coordinates]
@@ -477,15 +471,15 @@ function ParameterStudy1D(;
         Cn = 1.0e1, Cp = 1.0e1,            # doping
         λ = 1.0,                           # Debye length
         G0 = 1.0,                          # laser information
-        Plotter = nothing, plotting = false
+        Plotter = nothing
     )
 
-    if !isnothing(Plotter) && nameof(Plotter) != :PyPlot
-        @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-        plotting = false
+    if Plotter !== nothing && !(nameof(Plotter) in [:PyPlot, :PythonPlot])
+        @warn "Plotting in ParameterStudy1D is only possible for Plotter = PyPlot or Plotter = PythonPlot"
+        Plotter = nothing
     end
 
-    if plotting
+    if Plotter !== nothing
         Plotter.rc("font", family = "sans-serif", size = 14)
         Plotter.rc("mathtext", fontset = "dejavusans")
         Plotter.close("all")
@@ -537,7 +531,7 @@ function ParameterStudy1D(;
         #########################################################
     end
 
-    if plotting
+    if Plotter !== nothing
         Plotter.plot(X, IVec, linewidth = 4, marker = "o", markersize = 12)
         Plotter.axvspan(0.0, 2.0, facecolor = [211 / 255 232 / 255 208 / 255])
         Plotter.axvspan(2.0, 6.0, facecolor = [243 / 255 192 / 255 192 / 255])
@@ -559,22 +553,15 @@ function ParameterStudy2D(;
         Cn = 1.0e1, Cp = 1.0e1,            # doping
         λ = 1.0,                           # Debye length
         G0 = 1.0,                          # laser information
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-                plotting = false
-            end
-        end
+    if Plotter !== nothing && !(nameof(Plotter) in [:PyPlot, :PythonPlot])
+        @warn "Plotting in ParameterStudy2D is only possible for Plotter = PyPlot or Plotter = PythonPlot"
+        Plotter = nothing
     end
 
-    if plotting
+    if Plotter !== nothing
         Plotter.rc("font", family = "sans-serif", size = 14)
         Plotter.rc("mathtext", fontset = "dejavusans")
         Plotter.close("all")
@@ -626,7 +613,7 @@ function ParameterStudy2D(;
 
     end
 
-    if plotting
+    if Plotter !== nothing
         X = grid[Coordinates][1, :]; Y = grid[Coordinates][2, :]
         Plotter.surf(X[:], Y[:], IVec)
         Plotter.title(" \$ I \$")

@@ -14,9 +14,8 @@ using ChargeTransport
 ## For using this example, one additionally needs to add TetGen. SimplexGridFactory is a wrapper for using this meshgenerator.
 using SimplexGridFactory
 using TetGen
-using GLMakie
 
-function main(; Plotter = GLMakie, plotting = true) # plotting is currently only tested with GLMakie and PyPlot
+function main(; Plotter = nothing) # plotting is currently only tested with GLMakie and PythonPlot
 
     @local_unitfactors μm cm s ns V K ps Hz W
 
@@ -145,9 +144,11 @@ function main(; Plotter = GLMakie, plotting = true) # plotting is currently only
 
     grid = simplexgrid(builder3d)
 
-    return if plotting == true # plotting is currently only tested with GLMakie and PyPlot
-        gridplot(Plotter = Plotter, grid, zplane = 1.5e-7, azim = 20, elev = 60, linewidth = 0.5, legend = :lt)
+    if Plotter !== nothing # plotting is currently only tested with GLMakie and PythonPlot
+        gridplot(grid; Plotter, zplane = 1.5e-7, azim = 20, elev = 60, linewidth = 0.5, legend = :lt)
     end
+
+    return grid
 
 end # main
 

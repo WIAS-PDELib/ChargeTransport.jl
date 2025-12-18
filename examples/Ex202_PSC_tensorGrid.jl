@@ -16,10 +16,17 @@ using ExtendableGrids
 # you can also use other Plotters, if you add them to the example file
 # you can set verbose also to true to display some solver information
 function main(;
-        n = 3, Plotter = nothing, verbose = false, test = false,
+        n = 3,
+        Plotter = nothing, # only Plotter = PythonPlot or Plotter = PyPlot are supported in this example
+        verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
         vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
     )
+
+    if Plotter !== nothing && !(nameof(Plotter) in [:PyPlot, :PythonPlot])
+        @warn "Plotting in Ex202_PSC_tensorGrid is only possible for Plotter = PyPlot or Plotter = PythonPlot"
+        Plotter = nothing
+    end
 
     ################################################################################
     if test == false
@@ -120,8 +127,8 @@ function main(;
     bfacemask!(grid, [0.0, 0.0], [p.h_total, 0.0], 0)
     bfacemask!(grid, [0.0, height], [p.h_total, height], 0)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
+    if Plotter !== nothing
+        gridplot(grid; Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
         Plotter.title("Grid")
     end
 
@@ -209,7 +216,7 @@ function main(;
     solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
 
-    if plotting # currently, plotting the solution was only tested with PyPlot.
+    if Plotter !== nothing
         ipsi = data.index_psi
         X = grid[Coordinates][1, :]
         Y = grid[Coordinates][2, :]
@@ -269,7 +276,7 @@ function main(;
 
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
-    if plotting
+    if Plotter !== nothing
         Plotter.figure()
         Plotter.surf(X[:], Y[:], solution[ipsi, :])
         Plotter.title("Electrostatic potential \$ \\psi \$ at end time")

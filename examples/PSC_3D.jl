@@ -19,7 +19,9 @@ using GridVisualize
 
 # We strongly emphasize to use Plotter = GLMakie for the visualization here.
 function main(;
-        Plotter = nothing, test = false, verbose = false,
+        Plotter = nothing,
+        test = false,
+        verbose = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
@@ -90,11 +92,10 @@ function main(;
     bfacemask!(grid3D, [0.0, 0.0, 0.0], [p.h_total, height, 0.0], 0)
     bfacemask!(grid3D, [0.0, 0.0, width], [p.h_total, height, width], 0)
 
-    vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
-
-    if plotting == true && Plotter !== nothing # plotting is currently only tested with GLMakie and PyPlot
+    if Plotter !== nothing # plotting is currently only tested with GLMakie and PyPlot
+        vis = GridVisualizer(Plotter = Plotter, resolution = (1500, 1500), layout = (3, 2))
         gridplot!(vis[1, 1], grid1D)
-        if nameof(Plotter) == :PyPlot
+        if nameof(Plotter) in [:PyPlot, :PythonPlot]
             gridplot!(vis[1, 2], grid3D, linewidth = 0.5, xplanes = [5.5e-7], zplanes = [1.5e-7])
         elseif nameof(Plotter) == :GLMakie
             gridplot!(vis[1, 2], grid3D, zplane = 1.0e-7, azim = 20, elev = 60, linewidth = 0.5, scene3d = :Axis3, legend = :none)
@@ -198,7 +199,7 @@ function main(;
     # In case you want that the solver also calculates this value, simply set vacancyEnergyCalculation = true.
     sol3D = equilibrium_solve!(ctsys3D, control = control, vacancyEnergyCalculation = false)
 
-    if plotting == true
+    if Plotter !== nothing
         #################################################
         scalarplot!(vis[2, 1], grid1D, sol1D[ipsi, :]; color = :blue, linewidth = 5, xlabel = "space [m]", ylabel = "potential [V]", title = "Electric potential (1D)")
         scalarplot!(vis[2, 2], grid3D, sol3D[ipsi, :]; scene3d = :Axis3, levels = 4, levelalpha = 0.9, outlinealpha = 0.0, xplanes = collect(range(0.0, stop = p.h_total, length = 100)), title = "Electric potential (3D)")

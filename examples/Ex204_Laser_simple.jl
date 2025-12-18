@@ -33,7 +33,7 @@ numberOfRows = Dict(
 ###################################################################
 
 """ Initializing X and Y coords for the tesca grid"""
-function tesca_grid(; refinement = 1, showplot = false, airbox = false)
+function tesca_grid(; refinement = 1, Plotter = nothing, airbox = false)
 
     @local_unitfactors μm
 
@@ -91,7 +91,7 @@ function tesca_grid(; refinement = 1, showplot = false, airbox = false)
         grid = subgrid(grid, [1, 2, 3, 4, 5])
     end
 
-    if showplot == true
+    if Plotter !== nothing
         GridVisualize.gridplot(
             grid; Plotter, linewidth = 1, fontsize = 35, size = (1200, 900),
             legend = :best, show = true, aspect = 4, colorbar = false, title = "Device Geometry, values in [m]", xlabel = "x-coordinates", ylabel = "y-coordinates"
@@ -102,7 +102,9 @@ function tesca_grid(; refinement = 1, showplot = false, airbox = false)
 end
 
 function main(;
-        refinement = 1, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse,
+        refinement = 1,
+        Plotter = nothing,
+        verbose = false, test = false, unknown_storage = :sparse,
         numberOfEigenvalues = 1,
         parameter_set = Params_Laser_simple # choose the parameter set
     )
@@ -116,7 +118,7 @@ function main(;
     end
     ################################################################################
 
-    grid = tesca_grid(refinement = refinement, showplot = plotting, airbox = false)
+    grid = tesca_grid(; refinement, Plotter, airbox = false)
 
     if test == false
         println("*** done\n")

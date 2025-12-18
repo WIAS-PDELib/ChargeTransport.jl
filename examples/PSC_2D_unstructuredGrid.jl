@@ -21,12 +21,20 @@ module PSC_2D_unstructuredGrid
     using Triangulate
 
     function main(;
-            Plotter = nothing, verbose = false, test = false,
+            Plotter = nothing, # only Plotter = PythonPlot or Plotter = PyPlot are supported in this example
+            verbose = false, test = false,
             parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
             vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
         )
 
-        Plotter.close("all")
+        if Plotter !== nothing && !(nameof(Plotter) in [:PyPlot, :PythonPlot])
+            @warn "Plotting in PSC_2D_unstructuredGrid is only possible for Plotter = PyPlot or Plotter = PythonPlot"
+            Plotter = nothing
+        end
+
+        if Plotter !== nothing
+            Plotter.close("all")
+        end
 
         ################################################################################
         if test == false
@@ -115,8 +123,8 @@ module PSC_2D_unstructuredGrid
 
         grid = simplexgrid(b)
 
-        if plotting
-            GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
+        if Plotter !== nothing
+            GridVisualize.gridplot(grid; Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
             Plotter.title("Grid")
         end
 
@@ -202,7 +210,7 @@ module PSC_2D_unstructuredGrid
         solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
         inival = solution
 
-        if plotting # currently, plotting the solution was only tested with PyPlot.
+        if Plotter !== nothing
             ipsi = data.index_psi
             X = grid[Coordinates][1, :]
             Y = grid[Coordinates][2, :]
@@ -266,7 +274,7 @@ module PSC_2D_unstructuredGrid
             println("*** done\n")
         end
 
-        if plotting
+        if Plotter !== nothing
             Plotter.figure()
             Plotter.surf(X[:], Y[:], solution[ipsi, :])
             Plotter.title("Electrostatic potential \$ \\psi \$ at end time")
