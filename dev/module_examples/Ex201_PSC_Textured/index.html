@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>2D textured perovskite solar cell. · ChargeTransport.jl</title><meta name="title" content="2D textured perovskite solar cell. · ChargeTransport.jl"/><meta property="og:title" content="2D textured perovskite solar cell. · ChargeTransport.jl"/><meta property="twitter:title" content="2D textured perovskite solar cell. · ChargeTransport.jl"/><meta name="description" content="Documentation for ChargeTransport.jl."/><meta property="og:description" content="Documentation for ChargeTransport.jl."/><meta property="twitter:description" content="Documentation for ChargeTransport.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../general/">ChargeTransport.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../general/">Home</a></li><li><a class="tocitem" href="../../changes/">Changelog</a></li><li><a class="tocitem" href="../../backgroundinfo/">Mathematical drift-diffusion models</a></li><li><span class="tocitem">How to get started</span><ul><li><a class="tocitem" href="../../GaAs/">van Roosbroeck system</a></li><li><a class="tocitem" href="../../PSC/">Perovskite solar cell</a></li></ul></li><li><a class="tocitem" href="../../allindex/">Types, Constructors and Methods</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../Ex101_PIN/">GaAs diode (1D).</a></li><li><a class="tocitem" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D).</a></li><li><a class="tocitem" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D).</a></li><li><a class="tocitem" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D).</a></li><li><a class="tocitem" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li><li><a class="tocitem" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D).</a></li><li><a class="tocitem" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering.</a></li><li><a class="tocitem" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts.</a></li><li><a class="tocitem" href="../Ex109_PSC_NonDimensional/">Nondimensionalized perovskite solar cell.</a></li><li class="is-active"><a class="tocitem" href>2D textured perovskite solar cell.</a></li><li><a class="tocitem" href="../Ex202_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid).</a></li><li><a class="tocitem" href="../Ex203_LBIC_NonDimensional/">2D nondimensionalized LBIC measurement.</a></li><li><a class="tocitem" href="../Ex204_Laser_simple/">Simple laser structure with 5 layers.</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>2D textured perovskite solar cell.</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>2D textured perovskite solar cell.</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WIAS-PDELib/ChargeTransport.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="2D-textured-perovskite-solar-cell."><a class="docs-heading-anchor" href="#2D-textured-perovskite-solar-cell.">2D textured perovskite solar cell.</a><a id="2D-textured-perovskite-solar-cell.-1"></a><a class="docs-heading-anchor-permalink" href="#2D-textured-perovskite-solar-cell." title="Permalink"></a></h1><p>(<a href="../Ex201_PSC_Textured.jl">source code</a>)</p><p>Simulating a three layer textured PSC device with mobile ions. The simulations are performed in 2D on an unstructured grid. This is a minimal example related to the manuscript https://doi.org/10.48550/arXiv.2506.10691.</p><pre><code class="language-julia hljs">ENV[&quot;LC_NUMERIC&quot;] = &quot;C&quot; # put this in to work with Triangulate.jl, which is originally written in c++
+
+module Ex201_PSC_Textured
+
+    using ChargeTransport
+    using ExtendableGrids
+    using PyPlot
+    using VoronoiFVM
+
+    # For using this example one additionally needs to add Triangulate.
+    # SimplexGridFactory is a wrapper for using this meshgenerator.
+    using SimplexGridFactory
+    using Triangulate
+
+    function generate_grid(; parameter_set, amplitude = 4.0e-7)
+
+        @local_unitfactors nm</code></pre><p>use the destructuring operator to extract all the necessary parameters</p><pre><code class="language-julia hljs">        (;
+            h_ETL, h_HTL, regionETL, regionPero, regionHTL, bregionLeft,
+            bregionRight, bregionJ1, bregionJ2, heightDev,
+        ) = parameter_set()</code></pre><p>length of perovskite region depends on amplitude of cos</p><pre><code class="language-julia hljs">        h_active = 400 * nm - amplitude / 2 # perovskite
+        heightLayers = [h_ETL, h_ETL + h_active, h_ETL + h_active + h_HTL]
+        h_total = heightLayers[end]
+
+        maxvolume = 2.0e-15
+        eps = 2.0e-10
+
+        # ETL1  C60
+        heightETL1Bottom = 0.0 + 3.0e1 * eps
+
+        heightETL1Top = heightLayers[1] - 20.0 * eps
+        heightETL1Top2 = heightLayers[1] - 20.0 * eps
+        heightETL1Top3 = heightLayers[1] - 20.0 * eps
+        heightETL1Top4 = heightLayers[1] - 20.0 * eps
+        heightETL1Top5 = heightLayers[1] - 20.0 * eps
+        heightETL1Top6 = heightLayers[1] - 20.0 * eps
+
+        # pero
+        heightPeroBottom = heightLayers[1] + 20.0 * eps
+        heightPeroBottom2 = heightLayers[1] + 20.0 * eps
+        heightPeroBottom3 = heightLayers[1] + 20.0 * eps
+        heightPeroBottom4 = heightLayers[1] + 20.0 * eps
+        heightPeroBottom5 = heightLayers[1] + 20.0 * eps
+        heightPeroBottom6 = heightLayers[1] + 20.0 * eps
+
+        heightPeroTop = heightLayers[2] - 20.0 * eps
+        heightPeroTop2 = heightLayers[2] - 20.0 * eps
+        heightPeroTop3 = heightLayers[2] - 20.0 * eps
+        heightPeroTop4 = heightLayers[2] - 20.0 * eps
+        heightPeroTop5 = heightLayers[2] - 20.0 * eps
+        heightPeroTop6 = heightLayers[2] - 20.0 * eps
+
+        heightPero1MaxBottom = 60.0 * nm - 5.0 * nm
+        heightPero1MaxTop = 60.0 * nm + 5.0 * nm
+        heightPero2MaxBottom = 200.0 * nm - 5.0 * nm
+        heightPero2MaxTop = 200.0 * nm + 5.0 * nm
+        heightPero3MaxBottom = 350.0 * nm - 5.0 * nm
+        heightPero3MaxTop = 350.0 * nm + 5.0 * nm</code></pre><p>HTL</p><pre><code class="language-julia hljs">        heightHTLBottom = heightLayers[2] + 20 * eps
+        heightHTLBottom2 = heightLayers[2] + 20 * eps
+        heightHTLBottom3 = heightLayers[2] + 20 * eps
+        heightHTLBottom4 = heightLayers[2] + 20 * eps
+        heightHTLBottom5 = heightLayers[2] + 20 * eps
+        heightHTLBottom6 = heightLayers[2] + 20 * eps
+
+        heightHTLTop = heightLayers[3] - 3.0e1 * eps
+
+        #############################################
+        ampl = 0.5 * amplitude; phase = pi; period = 7.5e-7
+
+        fCos(x, heightLayer) = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ heightLayer
+        fPlanar(x, heightLayer) = heightLayer
+
+        XFine = collect(range(0.0, heightDev, length = 140))
+
+        b = SimplexGridBuilder(Generator = Triangulate)
+        ###############################################################
+        # first region (SnO2)
+        ###############################################################
+
+        # nodes
+        height_0 = point!(b, heightDev, 0.0)
+        height_n = point!(b, heightDev, heightLayers[1])
+
+        length_0 = point!(b, 0.0, 0.0)
+        length_n = point!(b, 0.0, heightLayers[1])
+
+        # facets
+        facetregion!(b, bregionLeft); facet!(b, height_0, length_0)
+        facetregion!(b, bregionJ1); facet!(b, height_n, length_n)
+        facetregion!(b, 0); facet!(b, length_0, length_n)
+        facet!(b, height_0, height_n)
+
+        # refinement
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightETL1Bottom))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightETL1Bottom))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightETL1Top2))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightETL1Top2))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightETL1Top3))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightETL1Top3))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightETL1Top4))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightETL1Top4))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightETL1Top5))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightETL1Top5))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+        # regions
+        cellregion!(b, regionETL)
+        regionpoint!(b, 0.0, 0.6 * heightLayers[1])
+        regionpoint!(b, 0.0, 0.99999 * heightETL1Bottom)
+
+        regionpoint!(b, 0.0, 1.00001 * heightETL1Top)
+        regionpoint!(b, 0.0, 1.00001 * heightETL1Top2)
+        regionpoint!(b, 0.0, 1.00001 * heightETL1Top3)
+        regionpoint!(b, 0.0, 1.00001 * heightETL1Top4)
+        regionpoint!(b, 0.0, 1.00001 * heightETL1Top5)
+        regionpoint!(b, 0.0, 1.00001 * heightETL1Top6)
+
+
+        ###############################################################
+        # second region (perovskite)
+        ###############################################################
+
+        # nodes
+        length_ni = point!(b, 0.0, heightLayers[2])
+        height_ni = point!(b, heightDev, heightLayers[2])
+
+        # facets
+        facet!(b, length_n, length_ni)
+        facet!(b, height_n, height_ni)
+
+        # sinusoidal boundary
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightLayers[2]))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightLayers[2]))
+            facetregion!(b, bregionJ2); facet!(b, A, B)
+        end
+
+        # refinement
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightPeroBottom))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightPeroBottom))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightPeroBottom3))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightPeroBottom3))
+            facet!(b, A, B)
+        end
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightPeroBottom4))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightPeroBottom4))
+            facet!(b, A, B)
+        end
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fPlanar(XFine[ix - 1], heightPeroBottom5))
+            B = point!(b, XFine[ix], fPlanar(XFine[ix], heightPeroBottom5))
+            facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightPeroTop))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightPeroTop))
+            facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightPeroTop2))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightPeroTop2))
+            facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightPeroTop3))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightPeroTop3))
+            facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightPeroTop4))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightPeroTop4))
+            facet!(b, A, B)
+        end
+
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightPeroTop5))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightPeroTop5))
+            facet!(b, A, B)
+        end
+
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightPeroTop6))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightPeroTop6))
+            facet!(b, A, B)
+        end
+
+        # regions
+        cellregion!(b, regionPero)
+        regionpoint!(b, 0.0, 0.9999 * heightPeroBottom)
+        regionpoint!(b, 0.0, 0.9999 * heightPeroBottom2)
+        regionpoint!(b, 0.0, 0.9999 * heightPeroBottom3)
+        regionpoint!(b, 0.0, 0.9999 * heightPeroBottom4)
+        regionpoint!(b, 0.0, 0.9999 * heightPeroBottom5)
+        regionpoint!(b, 0.0, 0.9999 * heightPeroBottom6)
+        regionpoint!(b, 0.0, 1.5 * heightLayers[1])
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop)
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop)
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop2)
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop3)
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop4)
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop5)
+        regionpoint!(b, 0.0, 1.0001 * heightPeroTop6)
+
+        regionpoint!(b, 0.0, 0.9999 * heightPero1MaxBottom)
+        regionpoint!(b, 0.0, 0.9999 * heightPero1MaxTop)
+        regionpoint!(b, 0.0, 0.9999 * heightPero2MaxBottom)
+        regionpoint!(b, 0.0, 0.9999 * heightPero2MaxTop)
+        regionpoint!(b, 0.0, 0.9999 * heightPero3MaxBottom)
+        regionpoint!(b, 0.0, 1.0001 * heightPero3MaxBottom)
+        regionpoint!(b, 0.0, 1.0001 * heightPero3MaxTop)
+
+        ###############################################################
+        # third region (PTAA)
+        ###############################################################
+
+        # nodes
+        length_nip = point!(b, 0.0, heightLayers[3])
+        height_nip = point!(b, heightDev, heightLayers[3])
+
+        # facets
+        facet!(b, length_ni, length_nip)
+        facet!(b, height_ni, height_nip)
+
+        # sinusoidal boundary
+        for ix in 2:length(XFine)
+
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightLayers[3]))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightLayers[3]))
+
+            facetregion!(b, bregionRight); facet!(b, A, B)
+
+        end</code></pre><p>refinement</p><pre><code class="language-julia hljs">        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightHTLBottom))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightHTLBottom))
+            facetregion!(b, 0); facet!(b, A, B)
+        end
+
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightHTLBottom3))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightHTLBottom3))
+            facet!(b, A, B)
+        end
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightHTLBottom4))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightHTLBottom4))
+            facet!(b, A, B)
+        end
+
+        # bottom
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightHTLBottom5))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightHTLBottom5))
+            facet!(b, A, B)
+        end
+
+        # top
+        for ix in 2:length(XFine)
+            A = point!(b, XFine[ix - 1], fCos(XFine[ix - 1], heightHTLTop))
+            B = point!(b, XFine[ix], fCos(XFine[ix], heightHTLTop))
+            facet!(b, A, B)
+        end
+
+
+        # regions
+        cellregion!(b, regionHTL)
+        regionpoint!(b, 0.0, 0.9999 * heightHTLBottom)
+        regionpoint!(b, 0.0, 0.9999 * heightHTLBottom2)
+        regionpoint!(b, 0.0, 0.9999 * heightHTLBottom3)
+        regionpoint!(b, 0.0, 0.9999 * heightHTLBottom4)
+        regionpoint!(b, 0.0, 0.9999 * heightHTLBottom5)
+        regionpoint!(b, 0.0, 0.9999 * heightHTLBottom6)
+
+        regionpoint!(b, 0.0, 1.00001 * heightHTLTop)
+        regionpoint!(b, 0.0, heightLayers[2] + 0.5 * h_HTL)
+
+        ###############################################################
+        # final
+        ###############################################################
+
+        options!(b, maxvolume = maxvolume)
+
+        grid = simplexgrid(b)
+
+        bfacemask!(grid, [0.0, 0.0], [0.0, heightLayers[3]], 0, tol = 1.0e-20)
+        bfacemask!(grid, [heightDev, 0.0], [heightDev, heightLayers[3]], 0, tol = 1.0e-20)
+
+        return grid
+
+    end</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">    function main(;
+            Plotter = PyPlot, plotting = false, verbose = false, test = false,
+            amplitude = 0.5e-7,
+            parameter_set = Params_PSC_C60_TripleCation_PTAA, # choose the parameter set
+            vacancyEnergyCalculation = false,                 # assume the vacancy energy level is either given or not
+            vETL = 2000 * ufac&quot;cm&quot; / ufac&quot;s&quot;,                 # surface reco velocity at ETL
+            vHTL = 500 * ufac&quot;cm&quot; / ufac&quot;s&quot;,                  # surface reco velocity at HTL
+        )
+
+        Plotter.rc(&quot;font&quot;, family = &quot;sans-serif&quot;, size = 14)
+        Plotter.rc(&quot;mathtext&quot;, fontset = &quot;dejavusans&quot;)
+        Plotter.close(&quot;all&quot;)
+
+        ################################################################################
+        if test == false
+            println(&quot;Define physical parameters and model&quot;)
+        end
+        ################################################################################
+
+        @local_unitfactors V cm m s W nm
+
+        (; q) = ChargeTransport.constants
+
+        ######### primary data for I-V scan protocol ##########
+        endVoltage = 1.2 * V
+        tPrecond = 0.001
+        scanrate = 1.0e3 * V / s
+        tend = endVoltage / scanrate
+
+        # Define scan protocol function
+        function scanProtocolPrecond(t)
+            biasVal = 0.0
+            if data.calculationType == InEquilibrium
+                biasVal = 0.0
+            else
+                if 0.0 &lt;= t &amp;&amp; t &lt;= tPrecond
+                    biasVal = endVoltage
+                elseif tPrecond &lt;= t  &amp;&amp; t &lt;= tPrecond + tend
+                    biasVal = endVoltage .- scanrate * (t - tPrecond)
+                elseif tend + tPrecond &lt; t  &amp;&amp; t &lt;= tPrecond + 2 * tend
+                    biasVal = scanrate * (t - endVoltage / scanrate - tPrecond) # tend = endVoltage / scanrate
+                else
+                    biasVal = 0.0
+                end
+            end</code></pre><p>we need this such that during the computation of the equilibrium solution, we are safe that no bias is applied.</p><pre><code class="language-julia hljs">            if !data.generationComplete
+                biasVal = 0.0
+            end
+            return biasVal
+        end</code></pre><p>Apply zero voltage on left boundary and scan protocol on right boundary</p><pre><code class="language-julia hljs">        contactVoltageFunction = [zeroVoltage, scanProtocolPrecond]</code></pre><p>parameter</p><pre><code class="language-julia hljs">        p = parameter_set()
+
+        ################################################################################
+        if test == false
+            println(&quot;Set up grid and regions&quot;)
+        end
+        ################################################################################
+
+        grid = generate_grid(parameter_set = parameter_set, amplitude = amplitude)
+
+        if plotting
+            gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :rc)
+        end
+
+        if !test
+            println(&quot;*** done\n&quot;)
+        end
+
+        function BeerLamb(x, y)
+
+            ampl = 0.5 * amplitude
+            phase = pi
+            period = 7.5e-7</code></pre><p>length of perovskite region depends on amplitude of cos</p><pre><code class="language-julia hljs">            h_active = 400 * nm - amplitude / 2 # perovskite
+            heightLayers = [p.h_ETL, p.h_ETL + h_active, p.h_ETL + h_active + p.h_HTL]</code></pre><p>optical Parameters</p><pre><code class="language-julia hljs">            Fph = p.incidentPhotonFlux[p.regionPero]
+            ag = p.absorption[p.regionPero]
+            inv = p.invertedIllumination
+            genPeak = ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ heightLayers[2]
+
+            if heightLayers[1] &lt;= y &lt;= ampl .* cos.(phase .+ 2 .* pi .* x ./ period) .+ ampl .+ heightLayers[2]
+                G = Fph .* ag .* exp.(- inv .* ag .* (y .- genPeak))
+            else
+                G = 0
+            end
+
+            return G
+        end
+
+        generationData = zeros(length(grid[Coordinates][1, :]))
+
+        i = 0
+        for  coord in eachcol(grid[Coordinates])
+            i = i + 1
+            x0 = coord[1]
+            y0 = coord[2]
+
+            generationData[i] = BeerLamb(x0, y0)
+
+        end
+
+        # Plot of photogeneration</code></pre><p>XX = grid[Coordinates][1, :] YY = grid[Coordinates][2, :]</p><p>figure() tricontourf(XX ./ nm, YY ./ nm, generationData, levels = 40)</p><p>colorbar()</p><pre><code class="language-julia hljs">        ################################################################################
+        if test == false
+            println(&quot;Define System and fill in information about model&quot;)
+        end
+        ################################################################################
+
+        # Initialize Data instance and fill in data
+        data = Data(grid, p.numberOfCarriers, contactVoltageFunction = contactVoltageFunction, generationData = generationData)
+
+        # Possible choices: Stationary, Transient
+        data.modelType = Transient
+
+        data.bulkRecombination = set_bulk_recombination(;
+            iphin = p.iphin, iphip = p.iphip,
+            bulk_recomb_Auger = false,
+            bulk_recomb_radiative = true,
+            bulk_recomb_SRH = true
+        )
+
+        # Possible choices: OhmicContact, SchottkyContact (outer boundary) and InterfaceNone,
+        data.boundaryType[p.bregionLeft] = MixedOhmicSchottkyContact
+        data.boundaryType[p.bregionRight] = MixedOhmicSchottkyContact
+        data.boundaryType[p.bregionJ1] = InterfaceRecombination
+        data.boundaryType[p.bregionJ2] = InterfaceRecombination
+
+        # currently Beer-Lambert not working for textured devices
+        data.generationModel = GenerationUserDefined
+
+        # Present ionic vacancies in perovskite layer
+        # by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+        enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionPero])
+
+        if test == false
+            println(&quot;*** done\n&quot;)
+        end
+
+        ################################################################################
+        if test == false
+            println(&quot;Define Params and fill in physical parameters&quot;)
+        end
+        ################################################################################
+
+        data.params = Params(p)
+
+        if !vacancyEnergyCalculation
+            data.params.bandEdgeEnergy[p.iphia, :] .= p.Ea2D
+        end
+
+        data.params.recombinationSRHvelocity[p.iphin, p.bregionJ1] = vETL
+        data.params.recombinationSRHvelocity[p.iphip, p.bregionJ1] = vETL
+
+        data.params.recombinationSRHvelocity[p.iphin, p.bregionJ2] = vHTL
+        data.params.recombinationSRHvelocity[p.iphip, p.bregionJ2] = vHTL
+
+        ctsys = System(grid, data, unknown_storage = :sparse)
+
+        if test == false
+            println(&quot;*** done\n&quot;)
+        end
+        ################################################################################
+        if test == false
+            println(&quot;Define control parameters for Solver&quot;)
+        end
+        ################################################################################
+
+        control = ChargeTransport.SolverControl()
+        control.verbose = verbose
+        control.damp_initial = 0.5
+        control.damp_growth = 1.61 # &gt;= 1
+        control.maxiters = 300
+        control.max_round = 5
+        control.abstol = 1.0e-7
+        control.reltol = 1.0e-7
+        control.tol_round = 1.0e-7
+        control.Δu_opt = Inf
+
+        if test == false
+            println(&quot;*** done\n&quot;)
+        end
+
+        ################################################################################
+        if test == false
+            println(&quot;Compute solution in thermodynamic equilibrium for Boltzmann&quot;)
+        end
+        ################################################################################
+
+        #data.params.bandEdgeEnergy[3, 2] = -5.267 * eV
+        # Solve for the equilibrium solution in several steps:</code></pre><ol><li>Poisson problem is solved,</li><li>Full system is solved in equilibrium with photogeneration turned on,</li></ol><p>Since vacancyEnergyCalculation = true, we repeat 1) and 2) until Ea is found (which corresponds to given initial vacancy density p.Ca)</p><pre><code class="language-julia hljs">        solEQ = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+        inival = solEQ
+
+        if test == false
+            println(&quot;*** done\n&quot;)
+        end
+        ################################################################################
+        if test == false
+            println(&quot;Loop to increase bias (so that following scan protocol starts near VOC)&quot;)
+        end
+        ################################################################################
+
+        biasLoop = collect(reverse(-range(0.0, endVoltage, length = 21)))
+
+        sol0p0 = ChargeTransport.unknowns(ctsys)
+        for istep in 1:length(biasLoop)
+
+            # turn slowly voltage on
+            set_contact!(ctsys, p.bregionRight, Δu = biasLoop[istep])
+
+            # keep some big time stepping here, so we preserve the vacancy density
+            sol0p0 = ChargeTransport.solve(ctsys, inival = inival, control = control, tstep = 1.0e3)
+            inival = sol0p0
+
+        end # bias loop
+
+        if !test
+            println(&quot;*** done\n&quot;)
+        end</code></pre><p>Now we have the correct initial condition to start the scan protocol</p><pre><code class="language-julia hljs">        ################################################################################
+        if test == false
+            println(&quot;Preconditioning&quot;)
+        end
+        ################################################################################
+
+        control.Δt = 1.0e-4
+        control.Δt_min = 1.0e-5
+        control.Δt_max = 5.0e-4
+        control.Δt_grow = 1.1
+
+        solPrecond = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tPrecond), control = control)
+
+        if !test
+            println(&quot;*** done\n&quot;)
+        end
+
+        ################################################################################
+        if !test
+            println(&quot;Reverse IV Measurement loop&quot;)
+        end
+        ################################################################################
+
+        control.Δt = 4.0e-3 / scanrate
+        control.Δt_min = 4.0e-3 / scanrate
+        control.Δt_max = 6.0e-2 / scanrate
+        control.Δt_grow = 1.15
+
+        solRev = ChargeTransport.solve(ctsys, inival = solPrecond.u[end], times = (tPrecond, tPrecond + tend), control = control)
+
+        if !test
+            println(&quot;*** done\n&quot;)
+        end
+
+        ################################################################################
+        if !test
+            println(&quot;Forward IV Measurement loop&quot;)
+        end
+        ################################################################################
+
+        solForw = ChargeTransport.solve(ctsys, inival = solRev.u[end], times = (tPrecond + tend, tPrecond + 2 * tend), control = control)
+
+        if plotting
+            subg = subgrid(grid, [p.regionPero])</code></pre><p>https://github.com/j-fu/GridVisualize.jl/blob/1f2b299a436b7750702ccca282fa14152d80ebf9/src/pyplot.jl#L86</p><pre><code class="language-julia hljs">            function tridata(grid::ExtendableGrid)
+                coord = grid[Coordinates] ./ nm
+                cellnodes = Matrix(grid[CellNodes])
+                return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
+            end
+
+            nn = get_density(solForw.u[1], p.regionPero, ctsys, p.iphin)
+            np = get_density(solForw.u[1], p.regionPero, ctsys, p.iphip)
+            na = get_density(solForw.u[1], p.regionPero, ctsys, p.iphia)
+
+            @show minimum(nn), maximum(nn)
+            @show minimum(np), maximum(np)
+            @show minimum(na), maximum(na)
+
+            figsize = (7.2, 5.6)
+            vmin = 5.0e17; vmax = 6.0e20
+            vminIon = 1.0e22; vmaxIon = 5.0e23
+
+
+            figure(figsize = figsize)
+            tripcolor(tridata(subg)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = &quot;gouraud&quot;, rasterized = true)
+            xlabel(&quot; \$x\$ [nm]&quot;, fontsize = 17)
+            ylabel(&quot; \$y\$ [nm]&quot;, fontsize = 17)
+            axis([-20, 770, 20, 800])
+            title(&quot;Electron density (beginning forward scan)&quot;)
+            colorbar(orientation = &quot;vertical&quot;, label = &quot; Density [\$\\mathrm{m}^{-3}\$]&quot;, extend = &quot;both&quot;)
+            tight_layout()
+
+            #################
+            figure(figsize = figsize)
+            tripcolor(tridata(subg)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = &quot;gouraud&quot;, rasterized = true)
+            xlabel(&quot; \$x\$ [nm]&quot;, fontsize = 17)
+            ylabel(&quot; \$y\$ [nm]&quot;, fontsize = 17)
+            axis([-20, 770, 20, 800])
+            title(&quot;Hole density (beginning forward scan)&quot;)
+            colorbar(orientation = &quot;vertical&quot;, label = &quot; Density [\$\\mathrm{m}^{-3}\$]&quot;, extend = &quot;both&quot;)
+            tight_layout()
+
+            #################
+            figure(figsize = figsize)
+            tripcolor(tridata(subg)..., vcat(na...), norm = matplotlib.colors.LogNorm(vmin = vminIon, vmax = vmaxIon), shading = &quot;gouraud&quot;, rasterized = true)
+            xlabel(&quot; \$x\$ [nm]&quot;, fontsize = 17)
+            ylabel(&quot; \$y\$ [nm]&quot;, fontsize = 17)
+            axis([-20, 770, 20, 800])
+            title(&quot;Ion density (beginning forward scan)&quot;)
+            colorbar(orientation = &quot;vertical&quot;, label = &quot; Density [\$\\mathrm{m}^{-3}\$]&quot;, extend = &quot;both&quot;)
+            tight_layout()
+
+        end
+
+        if plotting
+            nn = get_density(solForw.u[end], p.regionPero, ctsys, p.iphin)
+            np = get_density(solForw.u[end], p.regionPero, ctsys, p.iphip)
+            na = get_density(solForw.u[end], p.regionPero, ctsys, p.iphia)
+
+            println(&quot; &quot;)
+            @show minimum(nn), maximum(nn)
+            @show minimum(np), maximum(np)
+            @show minimum(na), maximum(na)
+
+            figure(figsize = figsize)
+            tripcolor(tridata(subg)..., vcat(nn...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = &quot;gouraud&quot;, rasterized = true)
+            xlabel(&quot; \$x\$ [nm]&quot;, fontsize = 17)
+            ylabel(&quot; \$y\$ [nm]&quot;, fontsize = 17)
+            axis([-20, 770, 20, 800])
+            title(&quot;Electron density (end forward scan)&quot;)
+            colorbar(orientation = &quot;vertical&quot;, label = &quot; Density [\$\\mathrm{m}^{-3}\$]&quot;, extend = &quot;both&quot;)
+            tight_layout()
+
+            #################
+            figure(figsize = figsize)
+            tripcolor(tridata(subg)..., vcat(np...), norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax), shading = &quot;gouraud&quot;, rasterized = true)
+            xlabel(&quot; \$x\$ [nm]&quot;, fontsize = 17)
+            ylabel(&quot; \$y\$ [nm]&quot;, fontsize = 17)
+            axis([-20, 770, 20, 800])
+            title(&quot;Hole density (end forward scan)&quot;)
+            colorbar(orientation = &quot;vertical&quot;, label = &quot; Density [\$\\mathrm{m}^{-3}\$]&quot;, extend = &quot;both&quot;)
+            tight_layout()
+
+            #################
+            figure(figsize = figsize)
+            tripcolor(tridata(subg)..., vcat(na...), norm = matplotlib.colors.LogNorm(vmin = vminIon, vmax = vmaxIon), shading = &quot;gouraud&quot;, rasterized = true)
+            xlabel(&quot; \$x\$ [nm]&quot;, fontsize = 17)
+            ylabel(&quot; \$y\$ [nm]&quot;, fontsize = 17)
+            axis([-20, 770, 20, 800])
+            title(&quot;Ion density (end forward scan)&quot;)
+            colorbar(orientation = &quot;vertical&quot;, label = &quot; Density [\$\\mathrm{m}^{-3}\$]&quot;, extend = &quot;both&quot;)
+            tight_layout()
+        end
+
+        if !test
+            println(&quot;*** done\n&quot;)
+        end
+
+        ################################################################################
+        if test == false
+            println(&quot;Forward IV curve calculation&quot;)
+        end
+        ################################################################################
+
+        IV = zeros(0) # for saving I-V data
+        IVn = zeros(0); IVp = zeros(0)
+        IVa = zeros(0); IVψ = zeros(0)
+
+        ######################
+        ISRHn = zeros(0); IRadn = zeros(0)
+        ISRHp = zeros(0); IRadp = zeros(0)
+        ISRnL = zeros(0)
+        ISRnR = zeros(0)
+        IGen = zeros(0)
+
+        tvalues = solForw.t
+        number_tsteps = length(tvalues)
+        biasValues = data.contactVoltageFunction[2].(tvalues[2:end])
+
+        factory = ChargeTransport.TestFunctionFactory(ctsys)
+        tf = ChargeTransport.testfunction(factory, [p.bregionLeft], [p.bregionRight])
+
+        for istep in 2:number_tsteps
+
+            Δt = tvalues[istep] - tvalues[istep - 1] # Time step size
+            inival = solForw.u[istep - 1]
+            solution = solForw.u[istep]
+
+            IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
+            IEdgeOld = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, inival)
+
+            push!(IVn, IEdge[p.iphin]); push!(IVp, IEdge[p.iphip])
+            push!(IVψ, (IEdge[p.ipsi] - IEdgeOld[p.ipsi]) / Δt)
+
+            push!(IVa, IEdge[p.iphia])
+            push!(IV, IVψ[istep - 1] + IVn[istep - 1] + IVp[istep - 1] + IVa[istep - 1])
+
+            IntSRH = ChargeTransport.integrate(ctsys, SRHRecombination!, solution)
+            IntRad = ChargeTransport.integrate(ctsys, RadiativeRecombination!, solution)
+            IntSR = ChargeTransport.integrate(ctsys, SRRecombination!, solution, boundary = true)
+            IntGen = ChargeTransport.integrate(ctsys, Photogeneration!, solution)
+
+            IntSRHnSum = 0.0; IntRadnSum = 0.0
+            IntSRHpSum = 0.0; IntRadpSum = 0.0
+
+            for ii in 1:p.numberOfRegions
+                IntSRHnSum = IntSRHnSum - IntSRH[p.iphin, ii]
+                IntRadnSum = IntRadnSum - IntRad[p.iphin, ii]
+
+                IntSRHpSum = IntSRHpSum + IntSRH[p.iphip, ii]
+                IntRadpSum = IntRadpSum + IntRad[p.iphip, ii]
+            end
+
+            IntGenp = IntGen[p.iphip, p.regionPero]
+            IntSRnL = - IntSR[p.iphin, p.bregionJ1]
+            IntSRnR = - IntSR[p.iphin, p.bregionJ2]
+
+            push!(ISRHn, IntSRHnSum); push!(ISRHp, IntSRHpSum)
+            push!(IRadn, IntRadnSum); push!(IRadp, IntRadpSum)
+            push!(ISRnL, IntSRnL)
+            push!(ISRnR, IntSRnR)
+            push!(IGen, IntGenp)
+
+        end
+
+        if plotting
+
+            figure()
+            tEnd = tPrecond + 2 * tend
+
+            tt = collect(range(0.0, tEnd, length = 201))
+            T = data.contactVoltageFunction[2]
+            plot(tt, T.(tt), marker = &quot;o&quot;)
+            xlabel(&quot;time [s]&quot;)
+            ylabel(&quot;voltage [V]&quot;)
+            Plotter.tight_layout()
+
+            figure()
+            plot(biasValues, -IV .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = &quot;blue&quot;, label = &quot;forward&quot;)
+
+            Plotter.grid()
+            Plotter.legend()
+            Plotter.xlabel(&quot;bias [V]&quot;, fontsize = 17)
+            Plotter.ylabel(&quot;current density [mAcm\$^{-2} \$]&quot;, fontsize = 17)
+            Plotter.tick_params(which = &quot;both&quot;, labelsize = 18)
+            Plotter.tight_layout()
+
+            #####################################
+            figure()
+            semilogy(biasValues, ISRHn .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = &quot;blue&quot;, label = &quot;SRH&quot;)
+            semilogy(biasValues, IRadn .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = &quot;red&quot;, label = &quot;rad&quot;)
+            semilogy(biasValues, IGen .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = &quot;gold&quot;, label = &quot;Gen&quot;)
+            semilogy(biasValues, ISRnL .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = &quot;black&quot;, label = &quot;SR, left&quot;)
+            semilogy(biasValues, ISRnR .* (cm^2) .* 1.0e3 ./ p.heightDev, linewidth = 5, color = &quot;darkgreen&quot;, label = &quot;SR, right&quot;)
+
+            Plotter.grid()
+            Plotter.legend()
+            Plotter.xlabel(&quot;bias [V]&quot;, fontsize = 17)
+            Plotter.ylabel(&quot;current density [mAcm\$^{-2} \$]&quot;, fontsize = 17)
+            Plotter.tick_params(which = &quot;both&quot;, labelsize = 18)
+            Plotter.tight_layout()
+        end
+
+        if test == false
+            IV = -IV
+            bias = biasValues
+
+            powerDensity = bias .* (IV)           # power density function
+            MaxPD, indexPD = findmax(powerDensity)
+
+            open_circuit = compute_open_circuit_voltage(bias, IV)
+
+            IncLightPowerDens = 1000.0 * W / m^2
+
+            fillfactor = 100 * (bias[indexPD] * IV[indexPD]) / (IV[1] * open_circuit)
+
+            efficiency = 100 * bias[indexPD] * (IV[indexPD] / p.heightDev) / (IncLightPowerDens)
+            JSC = IV[1] .* (cm)^(2) .* 1.0e3 ./ p.heightDev
+
+            println(&quot; &quot;)
+            println(&quot;The JSC                  is $(round(JSC, digits = 3)) mAcm^{-2}.&quot;)
+            println(&quot;The fill factor          is $(round(fillfactor, digits = 2)) %.&quot;)
+            println(&quot;The efficiency           is $(round(efficiency, digits = 2)) %.&quot;)
+            println(&quot;The open circuit voltage is $(round(open_circuit, digits = 4)) V.&quot;)
+            println(&quot; &quot;)
+        end
+        if test == false
+            integral = integrated_density(ctsys, sol = solEQ, icc = p.iphia, ireg = p.regionPero)
+            mOmega = data.regionVolumes[p.regionPero]
+
+            println(&quot;Calculated average vacancy density is: &quot;, integral / mOmega)
+            println(&quot; &quot;)
+            vacancyEnergy = data.params.bandEdgeEnergy[p.iphia, p.regionPero] / q
+            println(&quot;Value for vacancy energy is: &quot;, vacancyEnergy, &quot; eV. Save this value for later use.&quot;)
+            println(&quot; &quot;)
+        end
+
+        testval = sum(filter(!isnan, solForw.u[end])) / length(solForw.u[end]) # when using sparse storage, we get NaN values in solution
+        return testval
+
+    end #  main
+
+    function test()
+        testval = -0.5987199947920246
+        return main(test = true) ≈ testval
+    end
+
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex109_PSC_NonDimensional/">« Nondimensionalized perovskite solar cell.</a><a class="docs-footer-nextpage" href="../Ex202_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 18 December 2025 13:05">Thursday 18 December 2025</span>. Using Julia version 1.12.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

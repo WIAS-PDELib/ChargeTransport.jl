@@ -8,7 +8,7 @@ performed in 2D on a tensor grid, out of equilibrium and with abrupt interfaces.
 
 =#
 
-module Ex201_PSC_tensorGrid
+module Ex202_PSC_tensorGrid
 
 using ChargeTransport
 using ExtendableGrids
