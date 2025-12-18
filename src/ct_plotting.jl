@@ -99,8 +99,7 @@ function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGr
     vis = GridVisualizer(Plotter = Plotter)
     plot_densities!(vis, ctsys, solution, title, label_density, ; plotGridpoints)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -291,8 +290,7 @@ function plot_energies(Plotter, ctsys, solution, title, label_energy, ; plotGrid
     vis = GridVisualizer(Plotter = Plotter)
     plot_energies!(vis, ctsys, solution, title, label_energy, ; plotGridpoints)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -385,8 +383,7 @@ function plot_energies(Plotter, ctsys, label_BEE)
     vis = GridVisualizer(Plotter = Plotter)
     plot_energies!(vis, ctsys, label_BEE)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -474,8 +471,7 @@ function plot_doping(Plotter, ctsys, label_density)
     vis = GridVisualizer(Plotter = Plotter)
     plot_doping!(vis, ctsys, label_density)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -514,8 +510,7 @@ function plot_doping(Plotter, g::ExtendableGrid, paramsnodal::ParamsNodal)
     vis = GridVisualizer(Plotter = Plotter)
     plot_doping!(vis, g::ExtendableGrid, paramsnodal::ParamsNodal)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -555,8 +550,7 @@ function plot_electroNeutralSolutionBoltzmann(Plotter, grid, psi0; plotGridpoint
     vis = GridVisualizer(Plotter = Plotter)
     plot_electroNeutralSolutionBoltzmann!(vis, grid, psi0; plotGridpoints)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -698,8 +692,7 @@ function plot_solution(Plotter, ctsys, solution, title, label_solution; plotGrid
     vis = GridVisualizer(Plotter = Plotter)
     plot_solution!(vis, ctsys, solution, title, label_solution; plotGridpoints)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
 
 """
@@ -737,6 +730,5 @@ function plot_IV(Plotter, biasValues, IV, title, ; plotGridpoints = false)
     vis = GridVisualizer(Plotter = Plotter)
     plot_IV!(visualizer, biasValues, IV, title, ; plotGridpoints)
 
-    reveal(vis)
-    return nothing
+    return reveal(vis)
 end
