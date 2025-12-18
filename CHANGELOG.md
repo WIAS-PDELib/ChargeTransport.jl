@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -----------------------------------------------------------------------------------------------
 
+## v1.4.0
+
+### Added
+
+  - Added example Ex201_PSC_Textured.jl which computes the charges in textured 2D solar cell.
+
 ## v1.3.1
 
 ### Fixed
