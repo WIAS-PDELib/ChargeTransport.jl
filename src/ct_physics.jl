@@ -629,11 +629,11 @@ function breaction!(f, u, bnode, data, ::Type{GateContact})
 
     params = data.params
     ipsi = data.index_psi
-    iphin = data.bulkRecombination.iphin # integer index of φ_n
-    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    # iphin = data.bulkRecombination.iphin # integer index of φ_n
+    # iphip = data.bulkRecombination.iphip # integer index of φ_p
 
-    n = get_density!(u, bnode, data, iphin)
-    p = get_density!(u, bnode, data, iphip)
+    # n = get_density!(u, bnode, data, iphin)
+    # p = get_density!(u, bnode, data, iphip)
 
     # Robin boundary condition for electrostatic potential
     f[ipsi] = (params.dielectricConstantOxide[bnode.region] / params.thicknessOxide[bnode.region]) * (u[ipsi] - params.contactVoltage[bnode.region] - params.additionalVoltageGate[bnode.region]) - data.constants.q * params.surfacechargeDensityGate[bnode.region]
@@ -642,17 +642,17 @@ function breaction!(f, u, bnode, data, ::Type{GateContact})
 
     # Surface Recombination on gate
     # Default Werte aus Tesca
-    rn = 1.09e10 / cm^3 # page 128 TeSCA, n0 in ChargeTransport
-    rp = 1.09e10 / cm^3 # p0 in ChargeTransport
-    vn = 5.0 * (cm / s) # page 129 TeSCA
-    vp = 5.0 * (cm / s)
-    ni = 0.0
+    # rn = 1.09e10 / cm^3 # page 128 TeSCA, n0 in ChargeTransport
+    # rp = 1.09e10 / cm^3 # p0 in ChargeTransport
+    # vn = 5.0 * (cm / s) # page 129 TeSCA
+    # vp = 5.0 * (cm / s)
+    # ni = 0.0
 
-    denominator = (n + rn) / vn + (p + rp) / vp
-    Rsurf = (n * p - ni^2) / denominator
+    # denominator = (n + rn) / vn + (p + rp) / vp
+    # Rsurf = (n * p - ni^2) / denominator
 
-    f[iphin] = data.constants.q * params.chargeNumbers[iphin] * Rsurf
-    f[iphip] = data.constants.q * params.chargeNumbers[iphip] * Rsurf
+    # f[iphin] = data.constants.q * params.chargeNumbers[iphin] * Rsurf
+    # f[iphip] = data.constants.q * params.chargeNumbers[iphip] * Rsurf
 
     return
 end
