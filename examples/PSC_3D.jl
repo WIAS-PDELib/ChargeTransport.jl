@@ -25,7 +25,12 @@ function main(;
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
-    if nameof(Plotter) == :PyPlot
+    if Plotter !== nothing && !(nameof(Plotter) in [:PyPlot, :PythonPlot])
+        @warn "Plotting in PSC_3D is only possible for Plotter = PyPlot or Plotter = PythonPlot"
+        Plotter = nothing
+    end
+
+    if Plotter !== nothing
         Plotter.close("all")
     end
 
