@@ -16,16 +16,15 @@ module PSC_3D
 using ChargeTransport
 using ExtendableGrids
 using GridVisualize
-using PyPlot
 
 # We strongly emphasize to use Plotter = GLMakie for the visualization here.
 function main(;
-        Plotter = PyPlot, plotting = false, test = false, verbose = false,
+        Plotter = nothing, test = false, verbose = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
     )
 
     if nameof(Plotter) == :PyPlot
-        PyPlot.close("all")
+        Plotter.close("all")
     end
 
     ################################################################################

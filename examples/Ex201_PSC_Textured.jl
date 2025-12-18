@@ -15,7 +15,6 @@ module Ex201_PSC_Textured
 
     using ChargeTransport
     using ExtendableGrids
-    using PyPlot
     using VoronoiFVM
 
     ## For using this example one additionally needs to add Triangulate.
@@ -366,7 +365,7 @@ module Ex201_PSC_Textured
     # you can also use other Plotters, if you add them to the example file
     # you can set verbose also to true to display some solver information
     function main(;
-            Plotter = PyPlot, plotting = false, verbose = false, test = false,
+            Plotter = nothing, verbose = false, test = false,
             amplitude = 0.5e-7,
             parameter_set = Params_PSC_C60_TripleCation_PTAA, # choose the parameter set
             vacancyEnergyCalculation = false,                 # assume the vacancy energy level is either given or not

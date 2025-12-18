@@ -14,7 +14,6 @@ module Ex203_LBIC_NonDimensional
 using ChargeTransport
 using VoronoiFVM
 using ExtendableGrids  # grid initializer
-# using PyPlot           # solution visualizer
 
 # grid information
 length_x = 8.0; length_y = 4.0

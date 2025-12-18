@@ -20,17 +20,13 @@ module PSC_2D_unstructuredGrid
     using SimplexGridFactory
     using Triangulate
 
-    ## problem with linux, when including PyPlot not until the end: "ERROR: LoadError: InitError: could not load library "/home/abdel/.julia/artifacts/8cc532f6a1ace8d1b756fc413f4ab340195ec3c3/lib/libgio-2.0.so"/home/abdel/.julia/artifacts/8cc532f6a1ace8d1b756fc413f4ab340195ec3c3/lib/libgobject-2.0.so.0: undefined symbol: g_uri_ref"
-    ## It seems that this problem is common: https://discourse.julialang.org/t/could-not-load-library-librsvg-very-strange-error/21276
-    using PyPlot
-
-    function main(
-            Plotter = PyPlot, ; plotting = false, verbose = false, test = false,
+    function main(;
+            Plotter = nothing, verbose = false, test = false,
             parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
             vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
         )
 
-        PyPlot.close("all")
+        Plotter.close("all")
 
         ################################################################################
         if test == false
@@ -287,7 +283,7 @@ module PSC_2D_unstructuredGrid
             ## ################
             Plotter.figure()
             Plotter.plot(biasValues[2:end], IV .* (cm)^2 / height, label = "", linewidth = 3, marker = "o")
-            PyPlot.grid()
+            Plotter.grid()
             Plotter.ylabel("total current [A]") #
             Plotter.xlabel("Applied Voltage [V]")
         end

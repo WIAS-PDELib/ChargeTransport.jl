@@ -11,13 +11,12 @@ module Non_RectangularGrid_2D
 
     using ChargeTransport
     using ExtendableGrids
-    using PyPlot
 
     ## For using this example, one additionally needs to add Triangulate. SimplexGridFactory is a wrapper for using this meshgenerator.
     using SimplexGridFactory
     using Triangulate
 
-    function main(; Plotter = PyPlot, plotting = false)
+    function main(; Plotter = nothing)
 
         @local_unitfactors μm cm s ns V K ps Hz W
 
