@@ -80,7 +80,7 @@ function main(; Plotter = nothing, test = false)
 
     ########## physical values of Si at room temperature ##########
 
-    Ec = 0.562 * eV                                     # conduction band-edge energy, Tesca Manal S. 83
+    Ec = 0.562 * eV                                     # conduction band-edge energy, Tesca Manual S. 83
     Ev = -0.562 * eV                                    # valence band-edge energy, Tesca Manual S. 83
     Nc = 2.86e19 / (cm^3)                               # conduction band density of states, Tesca Manual S.85
     Nv = 3.1e19 / (cm^3)                                # valence band densitiy of states, Tesca Manual S.85
@@ -99,6 +99,8 @@ function main(; Plotter = nothing, test = false)
     SRH_TrapDensity_p = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10
     SRH_LifeTime_n = 2.0e-4 * s               # Tesca Manual S. 128, tau_n0 = 2e-4 s
     SRH_LifeTime_p = 2.0e-6 * s               # Tesca Manual S. 128, trau_p0 = 2e-6 s
+    SRH_Velocity_n = 5.0 * (cm / s)           # Tesca Manual S. 129, VREN = 5.d0
+    SRH_Velocity_p = 5.0 * (cm / s)           # Tesca Manual S. 129, VREP = 5.d0
 
     # Doping (Vereinfacht, nur eine Dotierung pro Region)
     Na_gate = 1.0e16 / cm^3 # 1.0e16 = 1.0e22 * 1.0e-6
@@ -148,15 +150,13 @@ function main(; Plotter = nothing, test = false)
     # X_temp = glue(X_temp, X6)
     # X = glue(X_temp, X7)
 
-    # oder vereinfacht, IV Curve bleibt gleich
+    # or more simple, IV curve stays the same
     X = collect(range(x0, x7, length = 31))
 
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
-    Y2 = collect(range(y1, y2, length = 11)) # bei length = 8 wäre ein Abstand: 8.57e-2, bei length = 7: 0.1, *10⁻6 ist dann Meter...
-    Y3 = geomspace(y2, y3, 8.0e-8, 1.0e-10) # Achtung: Grenzen auch in μm
-    #Y2 = collect(range(y1, ytest, length = 7)) # bei length = 8 wäre ein Abstand: 8.57e-2, bei length = 7: 0.1, *10⁻6 ist dann Meter...
-    #Y3 = geomspace(ytest, y3, 1.0e-7, 1.0e-9) # Achtung: Grenzen auch in μm
+    Y2 = collect(range(y1, y2, length = 11))
+    Y3 = geomspace(y2, y3, 8.0e-8, 1.0e-10)
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
@@ -179,7 +179,7 @@ function main(; Plotter = nothing, test = false)
     bfacemask!(grid, [x5, y3], [x6, y3], 0)
 
     if Plotter !== nothing
-        Plotter.pygui(true) # aktiviert/ deaktiviert Abbildungen als Pop-up
+        Plotter.pygui(true) # Plots as Pop-Ups
         ChargeTransport.gridplot(grid, Plotter = Plotter, title = "Grid", xlabel = "Width [m]", ylabel = "Height [m]")
     end
 
@@ -217,6 +217,9 @@ function main(; Plotter = nothing, test = false)
         params.recombinationAuger[iphin, ireg] = Auger_n
         params.recombinationAuger[iphip, ireg] = Auger_p
     end
+
+    params.recombinationSRHvelocity[iphin, bregion_gate] = SRH_Velocity_n # Surface Recombination just at gate
+    params.recombinationSRHvelocity[iphip, bregion_gate] = SRH_Velocity_p
 
     for ibreg in 1:grid[NumBFaceRegions] #boundary region data
         params.dielectricConstantOxide[ibreg] = εr_ox * ε_0
@@ -304,7 +307,7 @@ function main(; Plotter = nothing, test = false)
 
     if Plotter !== nothing
         ################################################################################
-        # Surface plot equlibrium with PythonPlot
+        # Surface plot equilibrium with PythonPlot
         ################################################################################
 
         XX = grid[Coordinates][1, :]; YY = grid[Coordinates][2, :]
