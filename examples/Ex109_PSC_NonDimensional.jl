@@ -111,7 +111,7 @@ function main(;
     bfacemask!(grid, [0.0], [0.0], bregion1)
     bfacemask!(grid, [h_total], [h_total], bregion2)
 
-    if nameof(Plotter) ∈ [:PythonPlot, :PyPlot]
+    if Plotter !== nothing
         gridplot(grid, Plotter = Plotter)
     end
 
