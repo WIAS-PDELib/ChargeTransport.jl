@@ -9,10 +9,8 @@ The material is silicon.
 module Ex205_FET
 
 using ChargeTransport
-using VoronoiFVM # for IV Curve
-using LinearAlgebra # for current density
-using GridVisualize # for current density
-
+using VoronoiFVM          # for IV Curve, Current Density Plot
+using GridVisualize       # for Current Density Plot
 using ExtendableGrids
 
 # This function is used for the plotting lateron
@@ -20,21 +18,6 @@ function tridata(grid::ExtendableGrid)
     coord = grid[Coordinates]
     cellnodes = Matrix(grid[CellNodes])
     return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
-end
-
-# thx https://discourse.julialang.org/t/meshgrid-function-in-julia/48679/4?u=j-fu
-function meshgrid(rc)
-    nx = length(rc[1])
-    ny = length(rc[2])
-    xout = zeros(ny, nx)
-    yout = zeros(ny, nx)
-    for jx in 1:nx
-        for ix in 1:ny
-            xout[ix, jx] = rc[1][jx]
-            yout[ix, jx] = rc[2][ix]
-        end
-    end
-    return xout, yout
 end
 
 function main(; Plotter = nothing, test = false)
@@ -75,11 +58,10 @@ function main(; Plotter = nothing, test = false)
     bregion_source = 3
     bregion_bulk = 4
 
-    zaus = 15.0e-4 * cm                                 # depth of the device  [cm]
-    thickness_ox = 0.044e-4 * cm                        # oxide thickness on gate [cm]
+    zaus = 15.0e-4 * cm                                 # depth of the device [cm], see mosS.dio file
+    thickness_ox = 0.044e-4 * cm                        # oxide thickness on gate [cm], see mosS.dio file
 
     ########## physical values of Si at room temperature ##########
-
     Ec = 0.562 * eV                                     # conduction band-edge energy, Tesca Manual S. 83
     Ev = -0.562 * eV                                    # valence band-edge energy, Tesca Manual S. 83
     Nc = 2.86e19 / (cm^3)                               # conduction band density of states, Tesca Manual S.85
@@ -93,24 +75,24 @@ function main(; Plotter = nothing, test = false)
 
     # Recombination parameters (from Tesca)
     # Radiative = 0 # Tesca Manual S.127
-    Auger_n = 2.8e-31 #* cm^6 / s              # Tesca Manual S. 127: 2.8d-31
-    Auger_p = 9.9e-32 #* cm^6 / s              # Tesca Manual S. 127: 9.9d-32
-    SRH_TrapDensity_n = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10
-    SRH_TrapDensity_p = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10
+    Auger_n = 2.8e-31                         # Tesca Manual S. 127: 2.8d-31
+    Auger_p = 9.9e-32                         # Tesca Manual S. 127: 9.9d-32
+    SRH_TrapDensity_n = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10 1/cm³
+    SRH_TrapDensity_p = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10 1/cm³
     SRH_LifeTime_n = 2.0e-4 * s               # Tesca Manual S. 128, tau_n0 = 2e-4 s
     SRH_LifeTime_p = 2.0e-6 * s               # Tesca Manual S. 128, trau_p0 = 2e-6 s
-    SRH_Velocity_n = 5.0 * (cm / s)           # Tesca Manual S. 129, VREN = 5.d0
-    SRH_Velocity_p = 5.0 * (cm / s)           # Tesca Manual S. 129, VREP = 5.d0
+    SRH_Velocity_n = 5.0 * (cm / s)           # Tesca Manual S. 129, VREN = 5.d0 cm/s
+    SRH_Velocity_p = 5.0 * (cm / s)           # Tesca Manual S. 129, VREP = 5.d0 cm/s
 
-    # Doping (Vereinfacht, nur eine Dotierung pro Region)
-    Na_gate = 1.0e16 / cm^3 # 1.0e16 = 1.0e22 * 1.0e-6
-    Nd_drain = 1.0e20 / cm^3 # 1.0e20 = 1.0e26 *1.0e-6
-    Nd_source = 1.0e20 / cm^3 # 1.0e20 = 1.0e26 * 1.0e-6
-    Na_bulk = 1.0e15 / cm^3 # 1.0e15 = 1.0e21 * 1.0e-6
+    # Doping (Simplified, one doping per region, compare gridplot from Tesca)
+    Na_gate = 1.0e16 / cm^3
+    Nd_drain = 1.0e20 / cm^3
+    Nd_source = 1.0e20 / cm^3
+    Na_bulk = 1.0e15 / cm^3
 
     # Voltage information
-    U_add_gate = 0.55 * V                   # contact voltage on gate
-    qss = 6.0e10 / (cm^2)
+    U_add_gate = 0.55 * V                   # Contact voltage on gate, see mosS.dio file
+    qss = 6.0e10 / (cm^2)                   # Surface charge density on gate, see mosS.dio file
 
     ################################################################################
     if test == false
@@ -131,7 +113,6 @@ function main(; Plotter = nothing, test = false)
     # Gridpoints y-direction
     y0 = -2.4 * μm              # bottom of the device (bulk)
     y1 = -1.0 * μm              # middle of the device (bulk)
-    ytest = -0.4 * μm # test um das Gitter gleichmäßiger zu machen
     y2 = -0.2 * μm              # beginning n-channel (gate region)
     y3 = 0.0 * μm               # top of the device
 
@@ -150,7 +131,7 @@ function main(; Plotter = nothing, test = false)
     # X_temp = glue(X_temp, X6)
     # X = glue(X_temp, X7)
 
-    # or more simple, IV curve stays the same
+    # Simple refinement in x-direction
     X = collect(range(x0, x7, length = 31))
 
     # Refinement y-direction
@@ -240,7 +221,7 @@ function main(; Plotter = nothing, test = false)
     data.modelType = Stationary
 
     # statistics
-    data.F .= Boltzmann
+    data.F .= Boltzmann # Tesca Manual S.84 IFERMI = 0
 
     # recombination
     data.bulkRecombination = set_bulk_recombination(;
@@ -333,21 +314,21 @@ function main(; Plotter = nothing, test = false)
         ################################################################################
 
         # electron density
-        nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution_eq[iphin, :] .- solution_eq[ipsi, :]) .+ Ec) ./ (k_B * T))
+        nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution_eq[iphin, :] .- solution_eq[ipsi, :]) .+ Ec) ./ (k_B * T)) # this is in m, to see this print Nc
+        nn_cm = nn * 1.0e-6 # Convert to cm, so it is better comparable to Tesca
 
         # plot electron density
-        # Stetige FEM Approximation der Dichte
         Plotter.figure()
         Plotter.tripcolor(
-            tridata(grid)..., nn,
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e11, vmax = 1.0e27),
+            tridata(grid)..., nn_cm,
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e5, vmax = 1.0e21),
             shading = "gouraud", # shading = "flat"
             rasterized = true
         )
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Electron Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        Plotter.title("Electron Density (Equilibrium)", fontsize = 12)
+        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
         ax = Plotter.gca()
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
@@ -355,19 +336,20 @@ function main(; Plotter = nothing, test = false)
 
         # hole density
         np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution_eq[iphip, :] .- solution_eq[ipsi, :]) .+ Ev) ./ (k_B * T))
+        np_cm = np * 1.0e-6 # Convert to cm, so it is better comparable to Tesca
 
         # plot hole density
         Plotter.figure()
         Plotter.tripcolor(
-            tridata(grid)..., np,
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e9, vmax = 1.0e22),
+            tridata(grid)..., np_cm,
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e3, vmax = 1.0e16),
             shading = "gouraud",
             rasterized = true
         )
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Hole Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        Plotter.title("Hole Density (Equilibrium)", fontsize = 12)
+        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
@@ -463,19 +445,20 @@ function main(; Plotter = nothing, test = false)
 
         # electron density
         nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution[iphin, :] .- solution[ipsi, :]) .+ Ec) ./ (k_B * T))
+        nn_cm = nn * 1.0e-6 # Convert to cm, so it is better comparable to Tesca
 
         # electron density plot
         Plotter.figure()
         Plotter.tripcolor(
-            tridata(grid)..., vcat(nn...),
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e11, vmax = 1.0e27),
+            tridata(grid)..., vcat(nn_cm...),
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e4, vmax = 1.0e21),
             shading = "gouraud",
             rasterized = true
         )
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
         Plotter.title("Electron Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
@@ -483,22 +466,50 @@ function main(; Plotter = nothing, test = false)
 
         # hole density
         np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution[iphip, :] .- solution[ipsi, :]) .+ Ev) ./ (k_B * T))
-
+        np_cm = np * 1.0e-6 # Convert to cm, so it is better comparable to Tesca
         # hole density plot
         Plotter.figure()
         Plotter.tripcolor(
-            tridata(grid)..., vcat(np...),
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e5, vmax = 1.0e22),
+            tridata(grid)..., vcat(np_cm...),
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0, vmax = 1.0e16),
             shading = "gouraud",
             rasterized = true
         )
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
         Plotter.title("Hole Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{m}^{-3}\$]", extend = "both")
+        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
+
+        ################################################################################
+        # Current Density with PythonPlot
+        ################################################################################
+        nf = -VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
+
+        vis = GridVisualizer(; Plotter = Plotter, dim = 2, resolution = (400, 400))
+
+        scalarplot!(
+            vis,
+            grid,
+            solution[1, :];
+            levels = 10,
+            clear = true,
+            xlabel = "Width [m]",
+            ylabel = "Height [m]",
+            title = "Current Density"
+        )
+
+        vectorplot!(
+            vis,
+            grid,
+            nf[:, 1, :];
+            clear = false,
+            vscale = 1.5
+        )
+
+        reveal(vis)
 
         ################################################################################
         # IV Curve with PythonPlot
@@ -512,50 +523,6 @@ function main(; Plotter = nothing, test = false)
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
-
-
-        ################################################################################
-        # Current Density with PythonPlot
-        ################################################################################
-        nodes = 1:num_nodes(grid) # weil ich habe ein SimplexGrid ohne Subgrids
-        nft = VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
-        jPsi = nft[:, ipsi, nodes] ./ (ε_0 * εr)
-        jPsiAbs = norm.(eachcol(jPsi))
-        #jPsiAbs = vec(sqrt.(sum(abs2, jPsi; dims = 1))) # Alternative, noch nict getestet??
-
-        # für die Pfeile?
-        #rasterpoints = 5
-        #rcE, rvE = vectorsample(grid, jPsi, rasterpoints = rasterpoints) # aus GridVisualize
-        #scaleLines = 1.0e-10
-        #X_mesh, Y_mesh = meshgrid(rcE)
-
-        Plotter.figure()
-        Plotter.tripcolor(
-            tridata(grid)..., vcat(jPsiAbs...),
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e-2, vmax = 1.0e10),
-            shading = "gouraud",
-            rasterized = true
-        )
-        Plotter.xlabel("Width [m]", fontsize = 12)
-        Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Current Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = "El. field strength [\$\\mathrm{V} \\mathrm{m}^{-1}\$]", extend = "both")
-        #cbar = colorbar(orientation = "vertical", label = "El. field strength [\$\\mathrm{V} \\mathrm{m}^{-1}\$]", extend = "both")
-        #Plotter.streamplot(
-        #     X_mesh, Y_mesh,
-        #     scaleLines .* rvE[1, :, :, 1]', scaleLines .* rvE[2, :, :, 1]',
-        #     color = "black", density = (0.6, 0.8)
-        # )
-        Plotter.tight_layout()
-        current_figure = Plotter.gcf()
-        display(current_figure)
-
-        # Hier ein Test mit GridVisualize
-        # ispec = ipsi
-        # vis = GridVisualizer(Plotter = Plotter)
-        # scalarplot!(vis, grid, solution[ispec, :], clear = true, colormap = :summer)
-        # vectorplot!(vis, grid, nf[:, ispec, :], clear = false)
-        # reveal(vis)
 
     end
 

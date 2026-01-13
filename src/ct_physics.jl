@@ -625,8 +625,6 @@ For the quasi Fermi potentials, homogeneous Neumann boundary conditions are impl
 # Boundary conditions for Gate contact
 function breaction!(f, u, bnode, data, ::Type{GateContact})
 
-    @local_unitfactors cm s
-
     params = data.params
     ipsi = data.index_psi
 
