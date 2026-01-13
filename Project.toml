@@ -30,7 +30,7 @@ Roots = "2.0"
 SimplexGridFactory = "2.6.0"
 Test = "1.10"
 Triangulate = "3.0"
-VoronoiFVM = "2.13"
+VoronoiFVM = "2.13, 3.0"
 julia = "1.10"
 
 [extras]
