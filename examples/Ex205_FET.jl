@@ -132,7 +132,7 @@ function main(; Plotter = nothing, test = false)
     # X = glue(X_temp, X7)
 
     # Simple refinement in x-direction
-    X = collect(range(x0, x7, length = 31))
+    X = collect(range(x0, x7, length = 62))
 
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
@@ -163,6 +163,8 @@ function main(; Plotter = nothing, test = false)
         Plotter.pygui(true) # Plots as Pop-Ups
         ChargeTransport.gridplot(grid, Plotter = Plotter, title = "Grid", xlabel = "Width [m]", ylabel = "Height [m]")
     end
+
+    #return
 
     if test == false
         println("*** done\n")
