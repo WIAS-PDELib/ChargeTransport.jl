@@ -20,8 +20,8 @@ module Ex109_PSC_NonDimensional
 
 using ChargeTransport
 using VoronoiFVM
-using ExtendableGrids  # grid initializer
-# using PyPlot           # solution visualizer
+using ExtendableGrids
+using LaTeXStrings
 
 # region numbers
 region1 = 1
@@ -68,16 +68,15 @@ function main(;
         parameterStudy = false,
         parseInival = false, inival = Array{Float64, 2},
         #################################
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
         verbose = false, test = false
     )
 
-    if !isnothing(Plotter) && nameof(Plotter) != :PyPlot
-        @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-        plotting = false
+    if Plotter !== nothing && (nameof(Plotter) ∉ [:PythonPlot, :PyPlot])
+        error("We need PythonPlot as Plotter for this example. Please add PythonPlot to your global environment via the package manager and choose `Plotter = PythonPlot`.")
     end
 
-    if plotting
+    if Plotter !== nothing
         Plotter.rc("font", family = "sans-serif", size = 14)
         Plotter.rc("mathtext", fontset = "dejavusans")
         Plotter.close("all")
@@ -112,7 +111,7 @@ function main(;
     bfacemask!(grid, [0.0], [0.0], bregion1)
     bfacemask!(grid, [h_total], [h_total], bregion2)
 
-    if plotting
+    if Plotter !== nothing
         gridplot(grid, Plotter = Plotter)
     end
 
@@ -331,7 +330,7 @@ function main(;
     end
 
     ################################################################################
-    if test == false && plotting
+    if test == false && (nameof(Plotter) ∈ [:PythonPlot, :PyPlot])
         println("Plotting")
     end
     ################################################################################
@@ -342,14 +341,14 @@ function main(;
         na = Na .* data.F[iphia].(za * (sol[iphia, :] - sol[ipsi, :]))
     end
 
-    if plotting
+    if Plotter !== nothing
 
         Plotter.figure()
-        Plotter.plot(coord, zn .* sol[iphin, :], color = "green", linewidth = 5, label = "\$ v_{\\mathrm{n}}}\$")
-        Plotter.plot(coord, zp .* sol[iphip, :], color = "red", linewidth = 5, linestyle = "--", label = "\$ v_{\\mathrm{p}}}\$")
+        Plotter.plot(coord, zn .* sol[iphin, :], color = "green", linewidth = 5, label = "\$ v_{\\mathrm{n}}\$")
+        Plotter.plot(coord, zp .* sol[iphip, :], color = "red", linewidth = 5, linestyle = "--", label = "\$ v_{\\mathrm{p}}\$")
         Plotter.plot(coord, sol[ipsi, :], color = "blue", linestyle = ":", linewidth = 5, label = "\$ \\psi\$")
         if enableIons
-            Plotter.plot(coord[n:5n], za .* sol[iphia, n:5n], color = "gold", linewidth = 5, linestyle = "--", label = "\$ v_{\\mathrm{a}}}\$")
+            Plotter.plot(coord[n:5n], za .* sol[iphia, n:5n], color = "gold", linewidth = 5, linestyle = "--", label = "\$ v_{\\mathrm{a}}\$")
         end
         Plotter.axvspan(0.0, 1.0, facecolor = [243 / 255 192 / 255 192 / 255])
         Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
@@ -360,13 +359,17 @@ function main(;
         Plotter.ylabel("Potential", fontsize = 17)
         Plotter.tight_layout()
         Plotter.legend(loc = "center right", fontsize = 14)
+
+        current_figure = Plotter.gcf()
+        display(current_figure)
+
         ########################################################
 
         Plotter.figure()
-        Plotter.semilogy(coord, nn, color = "green", linewidth = 5, label = "\$ n_{\\mathrm{n}}}\$")
-        Plotter.semilogy(coord, np, color = "red", linewidth = 5, label = "\$ n_{\\mathrm{p}}}\$")
+        Plotter.semilogy(coord, nn, color = "green", linewidth = 5, label = "\$ n_{\\mathrm{n}}\$")
+        Plotter.semilogy(coord, np, color = "red", linewidth = 5, label = "\$ n_{\\mathrm{p}}\$")
         if enableIons
-            Plotter.semilogy(coord[n:5n], na[n:5n], color = "gold", linewidth = 5, label = "\$ n_{\\mathrm{a}}}\$")
+            Plotter.semilogy(coord[n:5n], na[n:5n], color = "gold", linewidth = 5, label = "\$ n_{\\mathrm{a}}\$")
         end
         Plotter.legend(loc = "center right", fontsize = 14)
         Plotter.xlim(0.0, 7.0)
@@ -378,11 +381,14 @@ function main(;
         Plotter.ylabel("Density", fontsize = 17)
         Plotter.tight_layout()
 
+        current_figure = Plotter.gcf()
+        display(current_figure)
+
     end
 
     return sum(filter(!isnan, sol)) / length(sol)
 
-    if test == false && plotting
+    if test == false && nameof(Plotter) == :PyPlot
         println("*** done\n")
     end
 
@@ -402,25 +408,21 @@ function GenerationStudy(;
         λ = 1.0,              # Debye length
         DirichletVal = 2.0,   # Dirichlet value
         enableIons = false,   # enabling ions
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
         verbose = false
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
-                plotting = false
-            end
-        end
+    if !isnothing(Plotter) && nameof(Plotter) != :PyPlot
+        @warn "We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`."
+
+        Plotter = nothing
     end
 
-    Plotter.rc("font", family = "sans-serif", size = 14)
-    Plotter.rc("mathtext", fontset = "dejavusans")
-    Plotter.close("all")
+    if Plotter !== nothing
+        Plotter.rc("font", family = "sans-serif", size = 14)
+        Plotter.rc("mathtext", fontset = "dejavusans")
+        Plotter.close("all")
+    end
 
     if enableIons && DirichletVal != 1.0
         @warn "Caution, initial value for the ions is only correct for `DirichletVal = 1.0` as the average density need to be equal to Ca.
@@ -528,7 +530,7 @@ function GenerationStudy(;
     end
 
     ###################################
-    if plotting
+    if Plotter !== nothing
         size = 12
         if enableIons
             Plotter.loglog(G0Vec, Ca .* ones(length(G0Vec)), color = "gray", linestyle = ":", linewidth = 4, label = "\$  M_{\\mathrm{a}} \$ ")
@@ -689,7 +691,6 @@ function GenerationStudy(;
 
     end
 
-
     return nothing
 
 end
@@ -698,6 +699,5 @@ function test()
     testval = 0.9289261210695825
     return main(test = true) ≈ testval
 end
-
 
 end # module

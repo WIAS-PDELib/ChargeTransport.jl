@@ -3,10 +3,11 @@
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot</code></pre><p>for convenience</p><pre><code class="language-julia hljs">parametersdir = ChargeTransport.parametersdir</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(;
+using GridVisualize
+using LaTeXStrings # sonst funktioniert includet() nicht</code></pre><p>for convenience</p><pre><code class="language-julia hljs">parametersdir = ChargeTransport.parametersdir</code></pre><p>supported Plotters are GLMakie and PythonPlot you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(;
         n = 5,
-        Plotter = PyPlot,
-        plotting = false, verbose = false, test = false,
+        Plotter = nothing,
+        verbose = false, test = false,
         ########################
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         ########################
@@ -16,9 +17,6 @@ using PyPlot</code></pre><p>for convenience</p><pre><code class="language-julia 
 
     @local_unitfactors μm cm s ns V K ps Hz W m
 
-    if plotting
-        Plotter.close(&quot;all&quot;)
-    end
     ################################################################################
     if test == false
         println(&quot;Define physical parameters and model&quot;)
@@ -112,9 +110,9 @@ using PyPlot</code></pre><p>for convenience</p><pre><code class="language-julia 
     bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18)
     bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title(&quot;Grid&quot;)
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = &quot;Grid&quot;, xlabel = L&quot;\text{space [m]}&quot;, show = true)
     end
 
     if test == false
@@ -233,17 +231,15 @@ using PyPlot</code></pre><p>for convenience</p><pre><code class="language-julia 
     inival = solution
     solutionEQ = inival
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         # add labels for anion vacancy
         label_energy[1, p.iphia] = &quot;\$E_a-q\\psi\$&quot;; label_energy[2, p.iphia] = &quot;\$ - q \\varphi_a\$&quot;; label_BEE[p.iphia] = &quot;\$E_a\$&quot;
         label_density[p.iphia] = &quot;\$ n_a \$&quot;;      label_solution[p.iphia] = &quot;\$ \\varphi_a\$&quot;
 
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, &quot;Initial condition&quot;, label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, &quot;Initial condition&quot;, label_solution)
+        plot_densities!(vis[1, 2], ctsys, solution, &quot;Initial condition&quot;, label_density)
+        plot_solution!(vis[2, 1], ctsys, solution, &quot;Initial condition&quot;, label_solution)
     end
 
     if test == false
@@ -262,14 +258,11 @@ using PyPlot</code></pre><p>for convenience</p><pre><code class="language-julia 
 
     sol = solve(ctsys, inival = inival, times = (0.0, tend), control = control)
 
-    if plotting
+    if Plotter !== nothing
         tsol = sol(tend)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, tsol, &quot;Densities at end time&quot;, label_density)
-        Plotter.tight_layout()
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, tsol, &quot;Solution at end time&quot;, label_solution)
-        Plotter.tight_layout()
+
+        plot_densities!(vis[2, 2], ctsys, tsol, &quot;Densities at end time&quot;, label_density)
+        plot_solution!(vis[3, 1], ctsys, tsol, &quot;Solution at end time&quot;, label_solution)
     end
 
     if test == false
@@ -339,38 +332,89 @@ using PyPlot</code></pre><p>for convenience</p><pre><code class="language-julia 
 
     end
 
-    if plotting
-        Plotter.figure()
-        Plotter.plot([tvalues; tvaluesReverse], [biasValues; biasValuesReverse], marker = &quot;x&quot;)
-        Plotter.xlabel(&quot;time [s]&quot;)
-        Plotter.ylabel(&quot;voltage [V]&quot;)
-        Plotter.grid()
-        tight_layout()
+    if Plotter !== nothing
+        scalarplot!(
+            vis[3, 2],
+            tvalues,
+            biasValues;
+            clear = false,
+            markershape = :cross,
+            markersize = 8,
+            color = &quot;blue&quot;,
+            label = &quot;forward&quot;,
+            legend = :cc,
+            xlabel = L&quot;\text{time [s]}&quot;,
+            ylabel = L&quot;\text{voltage [V]}&quot;,
+            title = &quot;Applied bias over time&quot;
+        )
 
-        Plotter.figure()
-        Plotter.plot(biasValues[2:end], -IV, linewidth = 5, label = &quot;forward&quot;)
-        Plotter.plot(biasValuesReverse[2:end], -IVReverse, linewidth = 5, label = &quot;reverse&quot;)
-        Plotter.grid()
-        Plotter.legend()
-        Plotter.xlabel(&quot;applied bias [V]&quot;)
-        Plotter.ylabel(&quot;total current [A]&quot;)
-        tight_layout()
+        scalarplot!(
+            vis[3, 2],
+            tvaluesReverse,
+            biasValuesReverse;
+            clear = false,
+            markershape = :cross,
+            markersize = 8,
+            color = &quot;orange&quot;,
+            label = &quot;reverse&quot;,
+            legend = :cc
+        )
 
-        Plotter.figure()
+        scalarplot!(
+            vis[4, 1],
+            biasValues[2:end],
+            -IV;
+            linewidth = 2,
+            label = &quot;forward&quot;,
+            legend = :cc,
+            color = &quot;blue&quot;,
+            xlabel = L&quot;\text{applied bias [V]}&quot;,
+            ylabel = L&quot;\text{total current [A]}&quot;,
+            title = &quot;Total current&quot;,
+            clear = false
+        )
+
+        scalarplot!(
+            vis[4, 1],
+            biasValuesReverse[2:end],
+            -IVReverse;
+            linewidth = 2,
+            label = &quot;reverse&quot;,
+            legend = :cc,
+            color = &quot;orange&quot;,
+            clear = false
+        )
+
         if userdefinedGeneration
-            Plotter.plot(coord, data.generationData)
+            scalarplot!(
+                vis[4, 2],
+                coord,
+                data.generationData;
+                xlabel = L&quot;\text{space [m]}&quot;,
+                ylabel = L&quot;photogeneration [$\frac{1}{\text{cm}^3 s}$]&quot;,
+                title = &quot;Photogeneration&quot;
+            )
         else
+            colors = [&quot;blue&quot;, &quot;orange&quot;, &quot;green&quot;]
+
             for ireg in 1:p.numberOfRegions
                 subg = subgrid(grid, [ireg])
-                Plotter.plot(subg[Coordinates]&#39;, BeerLambert(ctsys, ireg, subg[Coordinates])&#39;, label = &quot;region $ireg&quot;)
+                scalarplot!(
+                    vis[4, 2],
+                    subg,
+                    BeerLambert(ctsys, ireg, subg[Coordinates])&#39;;
+                    clear = false,
+                    color = colors[ireg],
+                    label = &quot;region $ireg&quot;,
+                    legend = :cc,
+                    xlabel = L&quot;\text{space [m]}&quot;,
+                    ylabel = L&quot;photogeneration [$\frac{1}{\text{cm}^3 s}$]&quot;,
+                    title = &quot;Photogeneration&quot;
+                )
             end
-
         end
-        Plotter.legend()
-        Plotter.grid()
-        Plotter.xlabel(&quot;space [\$m\$]&quot;)
-        Plotter.ylabel(&quot;photogeneration [\$\\frac{1}{cm^3s}\$]&quot;)
-        Plotter.tight_layout()
+
+        reveal(vis)
     end
 
     if test == false
@@ -432,4 +476,4 @@ function test()
     return main(test = true, vacancyEnergyCalculation = true) ≈ testval &amp;&amp; main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation &amp;&amp; main(test = true, userdefinedGeneration = true) ≈ testval
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex103_PSC_IVMeasurement/">« PSC device with ions and different I-V scan protocols (1D).</a><a class="docs-footer-nextpage" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex103_PSC_IVMeasurement/">« PSC device with ions and different I-V scan protocols (1D).</a><a class="docs-footer-nextpage" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

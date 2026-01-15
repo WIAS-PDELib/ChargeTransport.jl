@@ -4,7 +4,6 @@
 using ChargeTransport
 using ExtendableGrids
 using GridVisualize
-using PyPlot
 
 ###########################################################################
 numberOfColoumns = Dict(
@@ -25,7 +24,7 @@ numberOfRows = Dict(
 ###################################################################
 
 &quot;&quot;&quot; Initializing X and Y coords for the tesca grid&quot;&quot;&quot;
-function tesca_grid(; refinement = 1, showplot = false, airbox = false)
+function tesca_grid(; refinement = 1, Plotter = nothing, airbox = false)
 
     @local_unitfactors μm
 
@@ -80,9 +79,9 @@ function tesca_grid(; refinement = 1, showplot = false, airbox = false)
         grid = subgrid(grid, [1, 2, 3, 4, 5])
     end
 
-    if showplot == true
+    if Plotter !== nothing
         GridVisualize.gridplot(
-            grid, Plotter = PyPlot, linewidth = 1, fontsize = 35, size = (1200, 900),
+            grid; Plotter, linewidth = 1, fontsize = 35, size = (1200, 900),
             legend = :best, show = true, aspect = 4, colorbar = false, title = &quot;Device Geometry, values in [m]&quot;, xlabel = &quot;x-coordinates&quot;, ylabel = &quot;y-coordinates&quot;
         )
     end
@@ -91,7 +90,9 @@ function tesca_grid(; refinement = 1, showplot = false, airbox = false)
 end
 
 function main(;
-        refinement = 1, plotting = false, verbose = false, test = false, unknown_storage = :sparse,
+        refinement = 1,
+        Plotter = nothing,
+        verbose = false, test = false, unknown_storage = :sparse,
         numberOfEigenvalues = 1,
         parameter_set = Params_Laser_simple # choose the parameter set
     )</code></pre><p>parameter</p><pre><code class="language-julia hljs">    p = parameter_set()
@@ -102,7 +103,7 @@ function main(;
     end
     ################################################################################
 
-    grid = tesca_grid(refinement = refinement, showplot = plotting, airbox = false)
+    grid = tesca_grid(; refinement, Plotter, airbox = false)
 
     if test == false
         println(&quot;*** done\n&quot;)
@@ -251,24 +252,26 @@ function main(;
     currentSolution = solution
     inival = solution
 
-    if plotting
-        vis = GridVisualizer(; Plotter = PyPlot, fignumber = 2, resolution = (1200, 900))
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, fignumber = 2, resolution = (1200, 900))
 
         scalarplot!(
-            vis, grid, solution[1, :], Plotter = PyPlot, legend = :best, clear = false, title = &quot;Applied voltage Δu = $maxBias V&quot;,
+            vis, grid, solution[1, :]; Plotter, legend = :best, clear = false, title = &quot;Applied voltage Δu = $maxBias V&quot;,
             xlabel = &quot;cross section space along \$x=0\$ [m]&quot;, ylabel = &quot;potentials [V]&quot;, fontsize = 55, linewidth = 5,
             slice = :x =&gt; 0, label = &quot;\$ \\varphi_n \$&quot;, color = &quot;blue&quot;
         )
 
         scalarplot!(
-            vis, grid, solution[2, :], Plotter = PyPlot, linewidth = 5,
+            vis, grid, solution[2, :], ; Plotter, linewidth = 5,
             slice = :x =&gt; 0, label = &quot;\$ \\varphi_p \$&quot;, clear = false, color = &quot;mediumvioletred&quot;
         )
 
         scalarplot!(
-            vis, grid, solution[3, :], Plotter = PyPlot, linewidth = 5,
+            vis, grid, solution[3, :]; Plotter, linewidth = 5,
             slice = :x =&gt; 0, label = &quot;\$ \\psi \$&quot;, clear = false, color = &quot;darkorange&quot;
         )
+
+        reveal(vis)
     end
 
 
@@ -286,4 +289,4 @@ if test == false
     println(&quot;This message should show when this module is successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex203_LBIC_NonDimensional/">« 2D nondimensionalized LBIC measurement.</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex203_LBIC_NonDimensional/">« 2D nondimensionalized LBIC measurement.</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

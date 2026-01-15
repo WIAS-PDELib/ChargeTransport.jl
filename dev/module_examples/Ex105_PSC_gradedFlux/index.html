@@ -3,7 +3,8 @@
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings
 
 # function for grading the physical parameters
 function grading_parameter!(physicalParameter, coord, regionTransportLayers, regionJunctions, h, heightLayers, lengthLayers, values)
@@ -30,11 +31,8 @@ function grading_parameter!(physicalParameter, coord, regionTransportLayers, reg
     end
 
     return physicalParameter
-end</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
+end</code></pre><p>supported Plotters are GLMakie and PythonPlot you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
-    if plotting
-        Plotter.close(&quot;all&quot;)
-    end
     ################################################################################
     if test == false
         println(&quot;Set up grid and regions&quot;)
@@ -136,9 +134,9 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     bfacemask!(grid, [heightLayers[3]], [heightLayers[3]], bregionIJ2)
     bfacemask!(grid, [heightLayers[4]], [heightLayers[4]], bregionJ2A)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title(&quot;Grid&quot;)
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = &quot;Grid&quot;, xlabel = L&quot;\text{space [m]}&quot;, show = true)
     end
 
     if test == false
@@ -401,15 +399,11 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy = set_plotting_labels(data)
 
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_solution)
+        plot_energies!(vis[1, 2], ctsys, solution, &quot;Equilibrium&quot;, label_energy)
+        plot_densities!(vis[2, 1], ctsys, solution, &quot;Equilibrium&quot;, label_density)</code></pre><p>TODO MO: phip wird nicht angezeigt, auch mit dem ursprünglichen Plotting, stimmt das so?</p><pre><code class="language-julia hljs">        plot_solution!(vis[2, 2], ctsys, solution, &quot;Equilibrium&quot;, label_solution)
     end
 
     if test == false
@@ -438,13 +432,12 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     end # bias loop
 
     # plotting
-    if plotting
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_solution)
+    if Plotter !== nothing
+        plot_energies!(vis[3, 1], ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_energy)
+        plot_densities!(vis[3, 2], ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_density)
+        plot_solution!(vis[4, 1], ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_solution)
+
+        reveal(vis)
     end
 
     if test == false
@@ -465,4 +458,4 @@ if test == false
     println(&quot;This message should show when this module is successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex104_PSC_Photogeneration/">« PSC device with photogeneration rate (1D).</a><a class="docs-footer-nextpage" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex104_PSC_Photogeneration/">« PSC device with photogeneration rate (1D).</a><a class="docs-footer-nextpage" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

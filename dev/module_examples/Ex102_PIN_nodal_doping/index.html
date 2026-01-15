@@ -3,14 +3,12 @@
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)</code></pre><p>unit factors and constants</p><pre><code class="language-julia hljs">    @local_unitfactors μm cm s ns V K ps
+using GridVisualize
+using LaTeXStrings</code></pre><p>supported Plotters are GLMakie and PythonPlot you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)</code></pre><p>unit factors and constants</p><pre><code class="language-julia hljs">    @local_unitfactors μm cm s ns V K ps
     constants = ChargeTransport.constants
 
     eV = constants.q * V
 
-    if plotting
-        Plotter.close(&quot;all&quot;)
-    end
     ################################################################################
     if test == false
         println(&quot;Set up grid and regions&quot;)
@@ -19,8 +17,8 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
 
     # region numbers
     regionAcceptor = 1          # p doped region
-    regionIntrinsic = 2          # intrinsic region
-    regionDonor = 3          # n doped region
+    regionIntrinsic = 2         # intrinsic region
+    regionDonor = 3             # n doped region
     regions = [regionAcceptor, regionIntrinsic, regionDonor]
     numberOfRegions = length(regions)
 
@@ -55,9 +53,9 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
     bfacemask!(grid, [h_pdoping], [h_pdoping], bregionJunction1) # first  inner interface
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title(&quot;Grid&quot;)
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (3, 3), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = &quot;Grid&quot;, xlabel = L&quot;\text{space [m]}&quot;, show = true)
     end
 
     if test == false
@@ -172,12 +170,11 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
         show_params(ctsys)
     end
 
-    if plotting == true
+    if Plotter !== nothing
         ################################################################################
         println(&quot;Plot doping&quot;)
         ################################################################################
-        Plotter.figure()
-        plot_doping(Plotter, grid, paramsnodal)
+        plot_doping!(vis[1, 2], grid, paramsnodal)
         println(&quot;*** done\n&quot;)
     end
 
@@ -207,16 +204,13 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
 
-    if plotting
+    if Plotter !== nothing
         # set legend for plotting routines. Either you can use the predefined labels or write your own.
         label_solution, label_density, label_energy = set_plotting_labels(data)
 
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, &quot;Equilibrium&quot;, label_solution)
+        plot_energies!(vis[1, 3], ctsys, solution, &quot;Equilibrium&quot;, label_energy)
+        plot_densities!(vis[2, 1], ctsys, solution, &quot;Equilibrium&quot;, label_density)
+        plot_solution!(vis[2, 2], ctsys, solution, &quot;Equilibrium&quot;, label_solution)
     end
 
     if test == false
@@ -259,15 +253,14 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
         println(&quot;*** done\n&quot;)
     end
 
-    if plotting # plot solution and IV curve
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_energy)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_solution, plotGridpoints = true)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_density, plotGridpoints = true)
-        Plotter.figure()
-        plot_IV(Plotter, biasValues, IV, &quot;Applied voltage Δu = $(biasValues[end])&quot;, plotGridpoints = true)
+    if Plotter !== nothing # plot solution and IV curve
+
+        plot_energies!(vis[2, 3], ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_energy)
+        plot_densities!(vis[3, 2], ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_density, plotGridpoints = true)
+        plot_solution!(vis[3, 1], ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_solution, plotGridpoints = true)
+        plot_IV!(vis[3, 3], biasValues, IV, &quot;Applied voltage Δu = $(biasValues[end])&quot;, plotGridpoints = true)
+
+        reveal(vis)
     end
 
     testval = solution[15]
@@ -284,4 +277,4 @@ if test == false
     println(&quot;This message should show when the PIN module is successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex101_PIN/">« GaAs diode (1D).</a><a class="docs-footer-nextpage" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex101_PIN/">« GaAs diode (1D).</a><a class="docs-footer-nextpage" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

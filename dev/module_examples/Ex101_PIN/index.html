@@ -3,7 +3,8 @@
 
 using ChargeTransport  # drift-diffusion solver
 using ExtendableGrids  # grid initializer
-using PyPlot           # solution visualizer
+using GridVisualize
+using LaTeXStrings
 
 # This function is used to initialize the grid for a possible extension to other p-i-n devices.
 function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping)
@@ -14,20 +15,17 @@ function initialize_pin_grid(refinementfactor, h_ndoping, h_intrinsic, h_pdoping
     coord = glue(coord, coord_pdoping)
 
     return coord
-end</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
-
-    if plotting
-        Plotter.close(&quot;all&quot;)
-    end
-    ################################################################################
-    if test == false
-        println(&quot;Set up grid and regions&quot;)
-    end
-    ################################################################################</code></pre><p>unit factors</p><pre><code class="language-julia hljs">    @local_unitfactors μm cm s ns V K</code></pre><p>constants</p><pre><code class="language-julia hljs">    constants = ChargeTransport.constants
+end</code></pre><p>supported Plotters are GLMakie and PythonPlot you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)</code></pre><p>unit factors and constants</p><pre><code class="language-julia hljs">    @local_unitfactors μm cm s ns V K
+    constants = ChargeTransport.constants
     (; q, k_B, ε_0) = constants
 
     eV = q * V
 
+    ################################################################################
+    if test == false
+        println(&quot;Set up grid and regions&quot;)
+    end
+    ################################################################################
 
     # region numbers
     regionAcceptor = 1           # p doped region
@@ -50,7 +48,7 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     h_intrinsic = 2.0 * μm
     h_ndoping = 2.0 * μm
     h_total = h_pdoping + h_intrinsic + h_ndoping
-    w_device = 0.5 * μm  # width of device
+    w_device = 0.5 * μm     # width of device
     z_device = 1.0e-4 * cm  # depth of device
     coord = initialize_pin_grid(
         refinementfactor,
@@ -69,14 +67,14 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     # bfacemask! for setting different boundary regions. At exterior boundaries they are
     # automatically set by ExtendableGridsjl. Thus, there the following two lines are actually
     # unneccesarry, but are only written for completeness.
-    bfacemask!(grid, [0.0], [0.0], bregionAcceptor)     # outer left boundary
-    bfacemask!(grid, [h_total], [h_total], bregionDonor)  # outer right boundary
+    bfacemask!(grid, [0.0], [0.0], bregionAcceptor)              # outer left boundary
+    bfacemask!(grid, [h_total], [h_total], bregionDonor)         # outer right boundary
     bfacemask!(grid, [h_pdoping], [h_pdoping], bregionJunction1) # first  inner interface
     bfacemask!(grid, [h_pdoping + h_intrinsic], [h_pdoping + h_intrinsic], bregionJunction2) # second inner interface
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title(&quot;Grid&quot;)
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = &quot;Grid&quot;, xlabel = L&quot;\text{space [m]}&quot;, show = true)
     end
 
     if test == false
@@ -198,7 +196,7 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
         println(&quot;*** done\n&quot;)
     end
 
-    if plotting == true
+    if Plotter !== nothing
         ################################################################################
         println(&quot;Plot electroneutral potential, band-edge energies and doping&quot;)
         ################################################################################
@@ -206,14 +204,14 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
         label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         psi0 = electroNeutralSolution(ctsys)
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, label_BEE)
-        Plotter.figure()
-        plot_doping(Plotter, ctsys, label_density)
-        Plotter.figure()
-        plot_electroNeutralSolutionBoltzmann(Plotter, grid, psi0, ; plotGridpoints = true)
+
+        plot_energies!(vis[1, 2], ctsys, label_BEE)
+        plot_doping!(vis[2, 1], ctsys, label_density)
+        plot_electroNeutralSolutionBoltzmann!(vis[2, 2], grid, psi0; plotGridpoints = true)
+
         println(&quot;*** done\n&quot;)
     end
+
     ################################################################################
     if test == false
         println(&quot;Define control parameters for Solver&quot;)
@@ -280,15 +278,17 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     end
 
     # plot solution and IV curve
-    if plotting
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_energy, plotGridpoints = false)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_solution, plotGridpoints = true)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, &quot;Applied voltage Δu = $(biasValues[end])&quot;, label_density, plotGridpoints = true)
-        Plotter.figure()
-        plot_IV(Plotter, biasValues, IV, &quot;Applied voltage Δu = $(biasValues[end])&quot;, plotGridpoints = true)
+    if Plotter !== nothing
+        ################################################################################
+        println(&quot;Plot results&quot;)
+        ################################################################################
+
+        plot_energies!(vis[3, 1], ctsys, solution, &quot;Energies for applied voltage Δu = $(biasValues[end])&quot;, label_energy; plotGridpoints = true)
+        plot_solution!(vis[3, 2], ctsys, solution, &quot;Solution for applied voltage Δu = $(biasValues[end])&quot;, label_solution; plotGridpoints = true)
+        plot_densities!(vis[4, 1], ctsys, solution, &quot;Carrier densities for applied voltage Δu = $(biasValues[end])&quot;, label_density, plotGridpoints = true)
+        plot_IV!(vis[4, 2], biasValues, IV, &quot;IV curve for applied voltage Δu = $(biasValues[end])&quot;, plotGridpoints = true)
+
+        reveal(vis)
     end
 
     testval = solution[15]
@@ -297,6 +297,7 @@ end</code></pre><p>you can also use other Plotters, if you add them to the examp
     if test == false
         println(&quot;*** done\n&quot;)
     end
+
 
 end #  main
 
@@ -309,4 +310,4 @@ if test == false
     println(&quot;This message should show when the PIN module has successfully recompiled.&quot;)
 end
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../allindex/">« Types, Constructors and Methods</a><a class="docs-footer-nextpage" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../allindex/">« Types, Constructors and Methods</a><a class="docs-footer-nextpage" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D). »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

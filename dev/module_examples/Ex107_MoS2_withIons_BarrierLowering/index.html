@@ -3,11 +3,8 @@
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot</code></pre><p>you can also use other Plotters, if you add them to the example file you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, barrierLowering = true)
-
-    if plotting
-        Plotter.close(&quot;all&quot;)
-    end
+using GridVisualize
+using LaTeXStrings</code></pre><p>supported Plotters are GLMakie and PythonPlot you can set verbose also to true to display some solver information</p><pre><code class="language-julia hljs">function main(; Plotter = nothing, verbose = false, test = false, barrierLowering = true)
 
     ################################################################################
     if test == false
@@ -38,9 +35,9 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
     # set region in grid
     cellmask!(grid, [0.0], [h_flake], regionflake, tol = 1.0e-18)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter)
-        Plotter.title(&quot;Grid&quot;)
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (3, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = &quot;Grid&quot;, xlabel = L&quot;\text{space [m]}&quot;, show = true)
     end
 
     if test == false
@@ -226,16 +223,13 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
     solEQ = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0)
     inival = solEQ
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphix] = &quot;\$E_x-q\\psi\$&quot;; label_energy[2, iphix] = &quot;\$ - q \\varphi_x\$&quot;
         label_density[iphix] = &quot;\$ n_x\$&quot;;       label_solution[iphix] = &quot;\$ \\varphi_x\$&quot;
 
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solEQ, &quot;Equilibrium&quot;, label_density)
-        Plotter.legend()
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solEQ, &quot;Equilibrium&quot;, label_solution)
+        plot_densities!(vis[1, 2], ctsys, solEQ, &quot;Equilibrium&quot;, label_density)
+        plot_solution!(vis[2, 1], ctsys, solEQ, &quot;Equilibrium&quot;, label_solution)
     end
 
     if test == false
@@ -284,22 +278,34 @@ using PyPlot</code></pre><p>you can also use other Plotters, if you add them to 
 
     end
 
-    if plotting
-        Plotter.figure()
-        Plotter.plot(tvalues, biasValues, marker = &quot;x&quot;)
-        Plotter.xlabel(&quot;time [s]&quot;)
-        Plotter.ylabel(&quot;voltage [V]&quot;)
-        Plotter.grid()
-        tight_layout()
+    if Plotter !== nothing
+        scalarplot!(
+            vis[2, 2],
+            tvalues,
+            biasValues;
+            markershape = :cross,
+            markersize = 8,
+            xlabel = L&quot;\text{time [s]}&quot;,
+            ylabel = L&quot;\text{voltage [V]}&quot;,
+            title = &quot;Applied voltage over time&quot;
+        )
 
-        Plotter.figure()
-        Plotter.semilogy(biasValues, abs.(Area .* IV), linewidth = 5, color = &quot;black&quot;)
-        Plotter.grid()
-        Plotter.xlabel(&quot;applied bias [V]&quot;)
-        Plotter.ylabel(&quot;total current [A]&quot;)
-        tight_layout()
+        currentValues = abs.(Area .* IV)
+        mask = currentValues .&gt; 0 # TODO MO: für log, sonst wird nichts geplottet, jetzt wird nur der erste Wert nicht geplottet, ok so?
+        scalarplot!(
+            vis[3, 1],
+            biasValues[mask],
+            currentValues[mask];
+            linewidth = 2,
+            color = &quot;black&quot;,
+            xlabel = L&quot;\text{applied bias [V]}&quot;,
+            ylabel = L&quot;\text{total current [A]}&quot;,
+            title = &quot;Total current&quot;,
+            yscale = :log
+        )
+
+        reveal(vis)
     end
-
 
     testval = sum(filter(!isnan, solEQ)) / length(solEQ)
     return testval
@@ -310,5 +316,4 @@ function test()
     return main(test = true, barrierLowering = true) ≈ -1692.2303837883194
 end
 
-
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex106_PSC_SurfaceRecombination/">« PSC device with surface recombination (1D).</a><a class="docs-footer-nextpage" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex106_PSC_SurfaceRecombination/">« PSC device with surface recombination (1D).</a><a class="docs-footer-nextpage" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

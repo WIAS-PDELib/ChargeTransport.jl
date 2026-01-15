@@ -3,7 +3,8 @@
 
 using ChargeTransport
 using VoronoiFVM
-using ExtendableGrids  # grid initializer</code></pre><p>using PyPlot           # solution visualizer</p><p>region numbers</p><pre><code class="language-julia hljs">region1 = 1
+using ExtendableGrids
+using LaTeXStrings</code></pre><p>region numbers</p><pre><code class="language-julia hljs">region1 = 1
 region2 = 2
 region3 = 3
 regions = [region1, region2, region3]
@@ -38,16 +39,15 @@ Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver 
         parameterStudy = false,
         parseInival = false, inival = Array{Float64, 2},
         #################################
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
         verbose = false, test = false
     )
 
-    if !isnothing(Plotter) &amp;&amp; nameof(Plotter) != :PyPlot
-        @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
-        plotting = false
+    if Plotter !== nothing &amp;&amp; (nameof(Plotter) ∉ [:PythonPlot, :PyPlot])
+        error(&quot;We need PythonPlot as Plotter for this example. Please add PythonPlot to your global environment via the package manager and choose `Plotter = PythonPlot`.&quot;)
     end
 
-    if plotting
+    if Plotter !== nothing
         Plotter.rc(&quot;font&quot;, family = &quot;sans-serif&quot;, size = 14)
         Plotter.rc(&quot;mathtext&quot;, fontset = &quot;dejavusans&quot;)
         Plotter.close(&quot;all&quot;)
@@ -76,7 +76,7 @@ Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver 
     bfacemask!(grid, [0.0], [0.0], bregion1)
     bfacemask!(grid, [h_total], [h_total], bregion2)
 
-    if plotting
+    if Plotter !== nothing
         gridplot(grid, Plotter = Plotter)
     end
 
@@ -262,7 +262,7 @@ Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver 
     end
 
     ################################################################################
-    if test == false &amp;&amp; plotting
+    if test == false &amp;&amp; (nameof(Plotter) ∈ [:PythonPlot, :PyPlot])
         println(&quot;Plotting&quot;)
     end
     ################################################################################
@@ -273,14 +273,14 @@ Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver 
         na = Na .* data.F[iphia].(za * (sol[iphia, :] - sol[ipsi, :]))
     end
 
-    if plotting
+    if Plotter !== nothing
 
         Plotter.figure()
-        Plotter.plot(coord, zn .* sol[iphin, :], color = &quot;green&quot;, linewidth = 5, label = &quot;\$ v_{\\mathrm{n}}}\$&quot;)
-        Plotter.plot(coord, zp .* sol[iphip, :], color = &quot;red&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ v_{\\mathrm{p}}}\$&quot;)
+        Plotter.plot(coord, zn .* sol[iphin, :], color = &quot;green&quot;, linewidth = 5, label = &quot;\$ v_{\\mathrm{n}}\$&quot;)
+        Plotter.plot(coord, zp .* sol[iphip, :], color = &quot;red&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ v_{\\mathrm{p}}\$&quot;)
         Plotter.plot(coord, sol[ipsi, :], color = &quot;blue&quot;, linestyle = &quot;:&quot;, linewidth = 5, label = &quot;\$ \\psi\$&quot;)
         if enableIons
-            Plotter.plot(coord[n:5n], za .* sol[iphia, n:5n], color = &quot;gold&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ v_{\\mathrm{a}}}\$&quot;)
+            Plotter.plot(coord[n:5n], za .* sol[iphia, n:5n], color = &quot;gold&quot;, linewidth = 5, linestyle = &quot;--&quot;, label = &quot;\$ v_{\\mathrm{a}}\$&quot;)
         end
         Plotter.axvspan(0.0, 1.0, facecolor = [243 / 255 192 / 255 192 / 255])
         Plotter.axvspan(1.0, 5.0, facecolor = [233 / 255 226 / 255 215 / 255])
@@ -291,13 +291,17 @@ Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver 
         Plotter.ylabel(&quot;Potential&quot;, fontsize = 17)
         Plotter.tight_layout()
         Plotter.legend(loc = &quot;center right&quot;, fontsize = 14)
+
+        current_figure = Plotter.gcf()
+        display(current_figure)
+
         ########################################################
 
         Plotter.figure()
-        Plotter.semilogy(coord, nn, color = &quot;green&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{n}}}\$&quot;)
-        Plotter.semilogy(coord, np, color = &quot;red&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{p}}}\$&quot;)
+        Plotter.semilogy(coord, nn, color = &quot;green&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{n}}\$&quot;)
+        Plotter.semilogy(coord, np, color = &quot;red&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{p}}\$&quot;)
         if enableIons
-            Plotter.semilogy(coord[n:5n], na[n:5n], color = &quot;gold&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{a}}}\$&quot;)
+            Plotter.semilogy(coord[n:5n], na[n:5n], color = &quot;gold&quot;, linewidth = 5, label = &quot;\$ n_{\\mathrm{a}}\$&quot;)
         end
         Plotter.legend(loc = &quot;center right&quot;, fontsize = 14)
         Plotter.xlim(0.0, 7.0)
@@ -309,11 +313,14 @@ Ca = 7.5</code></pre><p>you can set verbose also to true to display some solver 
         Plotter.ylabel(&quot;Density&quot;, fontsize = 17)
         Plotter.tight_layout()
 
+        current_figure = Plotter.gcf()
+        display(current_figure)
+
     end
 
     return sum(filter(!isnan, sol)) / length(sol)
 
-    if test == false &amp;&amp; plotting
+    if test == false &amp;&amp; nameof(Plotter) == :PyPlot
         println(&quot;*** done\n&quot;)
     end
 
@@ -330,25 +337,21 @@ function GenerationStudy(;
         λ = 1.0,              # Debye length
         DirichletVal = 2.0,   # Dirichlet value
         enableIons = false,   # enabling ions
-        Plotter = nothing, plotting = false,
+        Plotter = nothing,
         verbose = false
     )
 
-    if plotting
-        if isnothing(Plotter)
-            @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
-            plotting = false
-        else
-            if nameof(Plotter) != :PyPlot
-                @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
-                plotting = false
-            end
-        end
+    if !isnothing(Plotter) &amp;&amp; nameof(Plotter) != :PyPlot
+        @warn &quot;We need PyPlot as Plotter for this example. Please add PyPlot to your global environment via the package manager and choose `Plotter = PyPlot`.&quot;
+
+        Plotter = nothing
     end
 
-    Plotter.rc(&quot;font&quot;, family = &quot;sans-serif&quot;, size = 14)
-    Plotter.rc(&quot;mathtext&quot;, fontset = &quot;dejavusans&quot;)
-    Plotter.close(&quot;all&quot;)
+    if Plotter !== nothing
+        Plotter.rc(&quot;font&quot;, family = &quot;sans-serif&quot;, size = 14)
+        Plotter.rc(&quot;mathtext&quot;, fontset = &quot;dejavusans&quot;)
+        Plotter.close(&quot;all&quot;)
+    end
 
     if enableIons &amp;&amp; DirichletVal != 1.0
         @warn &quot;Caution, initial value for the ions is only correct for `DirichletVal = 1.0` as the average density need to be equal to Ca.
@@ -456,7 +459,7 @@ function GenerationStudy(;
     end
 
     ###################################
-    if plotting
+    if Plotter !== nothing
         size = 12
         if enableIons
             Plotter.loglog(G0Vec, Ca .* ones(length(G0Vec)), color = &quot;gray&quot;, linestyle = &quot;:&quot;, linewidth = 4, label = &quot;\$  M_{\\mathrm{a}} \$ &quot;)
@@ -617,7 +620,6 @@ function GenerationStudy(;
 
     end
 
-
     return nothing
 
 end
@@ -627,5 +629,4 @@ function test()
     return main(test = true) ≈ testval
 end
 
-
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS/">« CIGS: stationary with Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_Textured/">2D textured perovskite solar cell. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 14 January 2026 17:05">Wednesday 14 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex108_CIGS/">« CIGS: stationary with Schottky contacts.</a><a class="docs-footer-nextpage" href="../Ex201_PSC_Textured/">2D textured perovskite solar cell. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 15 January 2026 08:33">Thursday 15 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
