@@ -20,17 +20,20 @@ module PSC_2D_unstructuredGrid
     using SimplexGridFactory
     using Triangulate
 
-    ## problem with linux, when including PyPlot not until the end: "ERROR: LoadError: InitError: could not load library "/home/abdel/.julia/artifacts/8cc532f6a1ace8d1b756fc413f4ab340195ec3c3/lib/libgio-2.0.so"/home/abdel/.julia/artifacts/8cc532f6a1ace8d1b756fc413f4ab340195ec3c3/lib/libgobject-2.0.so.0: undefined symbol: g_uri_ref"
-    ## It seems that this problem is common: https://discourse.julialang.org/t/could-not-load-library-librsvg-very-strange-error/21276
-    using PyPlot
-
-    function main(
-            Plotter = PyPlot, ; plotting = false, verbose = false, test = false,
+    function main(;
+            Plotter = nothing, # only Plotter = PythonPlot or Plotter = PyPlot are supported in this example
+            verbose = false, test = false,
             parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
             vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
         )
 
-        PyPlot.close("all")
+        if Plotter !== nothing && (nameof(Plotter) ∉ [:PyPlot, :PythonPlot])
+            error("Plotting in PSC_2D_unstructuredGrid is only possible for Plotter = PythonPlot")
+        end
+
+        if Plotter !== nothing
+            Plotter.close("all")
+        end
 
         ################################################################################
         if test == false
@@ -119,8 +122,8 @@ module PSC_2D_unstructuredGrid
 
         grid = simplexgrid(b)
 
-        if plotting
-            GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt)
+        if Plotter !== nothing
+            GridVisualize.gridplot(grid; Plotter, resolution = (600, 400), linewidth = 0.5, legend = :lt, xlabel = "length [m]", ylabel = "height [m]")
             Plotter.title("Grid")
         end
 
@@ -206,7 +209,7 @@ module PSC_2D_unstructuredGrid
         solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
         inival = solution
 
-        if plotting # currently, plotting the solution was only tested with PyPlot.
+        if Plotter !== nothing
             ipsi = data.index_psi
             X = grid[Coordinates][1, :]
             Y = grid[Coordinates][2, :]
@@ -218,6 +221,9 @@ module PSC_2D_unstructuredGrid
             Plotter.ylabel("height [m]")
             Plotter.zlabel("potential [V]")
             Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
             ################
             Plotter.figure()
             Plotter.surf(X[:], Y[:], solution[p.iphin, :])
@@ -226,6 +232,9 @@ module PSC_2D_unstructuredGrid
             Plotter.ylabel("height [m]")
             Plotter.zlabel("potential [V]")
             Plotter.tight_layout()
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
         end
 
         if test == false
@@ -270,13 +279,16 @@ module PSC_2D_unstructuredGrid
             println("*** done\n")
         end
 
-        if plotting
+        if Plotter !== nothing
             Plotter.figure()
             Plotter.surf(X[:], Y[:], solution[ipsi, :])
             Plotter.title("Electrostatic potential \$ \\psi \$ at end time")
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")
             Plotter.zlabel("potential [V]")
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
             ## ################
             Plotter.figure()
             Plotter.surf(X[:], Y[:], solution[p.iphin, :])
@@ -284,12 +296,18 @@ module PSC_2D_unstructuredGrid
             Plotter.xlabel("length [m]")
             Plotter.ylabel("height [m]")
             Plotter.zlabel("potential [V]")
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
             ## ################
             Plotter.figure()
             Plotter.plot(biasValues[2:end], IV .* (cm)^2 / height, label = "", linewidth = 3, marker = "o")
-            PyPlot.grid()
-            Plotter.ylabel("total current [A]") #
+            Plotter.grid()
+            Plotter.ylabel("total current [A]")
             Plotter.xlabel("Applied Voltage [V]")
+
+            current_figure = Plotter.gcf()
+            display(current_figure)
         end
 
         if test == false

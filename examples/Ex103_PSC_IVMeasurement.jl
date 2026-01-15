@@ -8,20 +8,19 @@ the ion vacancy accumulation is limited by the Fermi-Dirac integral of order -1.
 The time-dependent simulations are performed with abrupt interfaces.
 Two different I-V measurement protocols are included and the corresponding solution vectors
 and the I-V curve after the scan can be depicted.
-
-
 =#
 
 module Ex103_PSC_IVMeasurement
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings
 
-# # you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(;
-        n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false,
+        n = 3, Plotter = nothing, verbose = false, test = false,
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         otherScanProtocol = false,                  # you can choose between two scan protocols
         vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
@@ -29,9 +28,6 @@ function main(;
 
     @local_unitfactors μm cm s ns V K ps Hz
 
-    if plotting
-        Plotter.close("all")
-    end
     ################################################################################
     if test == false
         println("Define physical parameters and model")
@@ -137,9 +133,9 @@ function main(;
     bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18) # first  inner interface
     bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18) # second inner interface
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title("Grid")
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (3, 4), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :none, title = "Grid", xlabel = L"\text{space[m]}", show = true)
     end
 
     if test == false
@@ -204,7 +200,7 @@ function main(;
         println("*** done\n")
     end
 
-    if plotting == true
+    if Plotter !== nothing
         ################################################################################
         println("Plot electroneutral potential, band-edge energies and doping")
         ################################################################################
@@ -240,13 +236,10 @@ function main(;
     solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
     inival = solution
 
-    if plotting
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "Equilibrium", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Equilibrium", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Equilibrium", label_solution)
+    if Plotter !== nothing
+        plot_energies!(vis[1, 2], ctsys, solution, "Equilibrium", label_energy)
+        plot_densities!(vis[1, 3], ctsys, solution, "Equilibrium", label_density)
+        plot_solution!(vis[1, 4], ctsys, solution, "Equilibrium", label_solution)
     end
 
     if test == false
@@ -318,35 +311,88 @@ function main(;
     ## here in res the biasValues and the corresponding current are stored.
     ## res = [biasValues IV];
 
-    if plotting
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage)", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage)", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage)", label_solution)
+    if Plotter !== nothing
+        plot_energies!(vis[2, 1], ctsys, solution, "bias Δu = $(endVoltage)", label_energy)
+        plot_densities!(vis[2, 2], ctsys, solution, "bias Δu = $(endVoltage)", label_density)
+        plot_solution!(vis[2, 3], ctsys, solution, "bias Δu = $(endVoltage)", label_solution)
     end
 
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
-    if plotting
-        Plotter.figure()
-        Plotter.plot(tvalues, biasValues, marker = "o")
-        Plotter.xlabel("time [s]")
-        Plotter.ylabel("bias [V]")
-        Plotter.figure()
-        plot_IV(Plotter, biasValues[2:end], IV, "bias \$\\Delta u\$ = $(endVoltage)")
-        ###############
-        Plotter.figure()
-        semilogy(biasValues[2:end], ISRHn .* (cm^2) .* 1.0e3, linewidth = 5, color = "darkblue", label = "SRH recombination")
-        semilogy(biasValues[2:end], ISRHp .* (cm^2) .* 1.0e3, linewidth = 5, color = "lightblue", linestyle = ":")
-        semilogy(biasValues[2:end], IRadn .* (cm^2) .* 1.0e3, linewidth = 5, color = "darkgreen", label = "Radiative recombination")
-        semilogy(biasValues[2:end], IRadp .* (cm^2) .* 1.0e3, linewidth = 5, color = "lightgreen", linestyle = ":")
+    if Plotter !== nothing
+        scalarplot!(
+            vis[2, 4],
+            tvalues,
+            biasValues,
+            markershape = :circle,
+            xlabel = L"\text{time [s]}",
+            ylabel = L"\text{bias [V]}",
+            title = "Applied voltage over time"
+        )
 
-        PyPlot.grid()
-        PyPlot.legend()
-        PyPlot.xlabel("bias [V]")
-        PyPlot.ylabel("current density [mAcm\$^{-2} \$]")
+        ###############
+        plot_IV!(vis[3, 1], biasValues[2:end], IV, "bias Δu = $(endVoltage)")
+
+        ###############
+        # Plot Recombination
+        # SRH recombination electrons
+        scalarplot!(
+            vis[3, 2],
+            biasValues[2:end],
+            ISRHn .* (cm^2) .* 1.0e3;
+            clear = false,
+            yscale = :log,
+            linewidth = 5,
+            color = :darkblue,
+            label = "SRH recombination (n)",
+            legend = :rb,
+            xlabel = L"\text{bias [V]}",
+            ylabel = L"current density [$\frac{\text{mA}}{\text{cm}^2}$]",
+            title = "Recombination"
+        )
+
+        # SRH recombination holes
+        scalarplot!(
+            vis[3, 2],
+            biasValues[2:end],
+            ISRHp .* (cm^2) .* 1.0e3;
+            clear = false,
+            yscale = :log,
+            linewidth = 5,
+            color = :lightblue,
+            linestyle = :dot,
+            label = "SRH recombination (p)",
+            legend = :rb
+        )
+
+        # Radiative Recombination electrons
+        scalarplot!(
+            vis[3, 2],
+            biasValues[2:end],
+            IRadn .* (cm^2) .* 1.0e3;
+            clear = false,
+            yscale = :log,
+            linewidth = 5,
+            color = :darkgreen,
+            label = "Radiative recombination (n)",
+            legend = :rb
+        )
+
+        # Radiative Recombination holes
+        scalarplot!(
+            vis[3, 2],
+            biasValues[2:end],
+            IRadp .* (cm^2) .* 1.0e3;
+            clear = false,
+            yscale = :log10,
+            linewidth = 2,
+            color = :lightgreen,
+            linestyle = :dot,
+            label = "Radiative recombination (p)",
+            legend = :rb
+        )
+
+        reveal(vis)
     end
 
     if test == false

@@ -17,7 +17,8 @@ module Ex105_PSC_gradedFlux
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings
 
 ## function for grading the physical parameters
 function grading_parameter!(physicalParameter, coord, regionTransportLayers, regionJunctions, h, heightLayers, lengthLayers, values)
@@ -46,13 +47,10 @@ function grading_parameter!(physicalParameter, coord, regionTransportLayers, reg
     return physicalParameter
 end
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test = false, unknown_storage = :sparse)
+function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
 
-    if plotting
-        Plotter.close("all")
-    end
     ################################################################################
     if test == false
         println("Set up grid and regions")
@@ -157,9 +155,9 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test
     bfacemask!(grid, [heightLayers[3]], [heightLayers[3]], bregionIJ2)
     bfacemask!(grid, [heightLayers[4]], [heightLayers[4]], bregionJ2A)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title("Grid")
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false
@@ -430,15 +428,13 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy = set_plotting_labels(data)
 
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "Equilibrium", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Equilibrium", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Equilibrium", label_solution)
+        plot_energies!(vis[1, 2], ctsys, solution, "Equilibrium", label_energy)
+        plot_densities!(vis[2, 1], ctsys, solution, "Equilibrium", label_density)
+        # TODO MO: phip wird nicht angezeigt, auch mit dem ursprünglichen Plotting, stimmt das so?
+        plot_solution!(vis[2, 2], ctsys, solution, "Equilibrium", label_solution)
     end
 
     if test == false
@@ -467,13 +463,12 @@ function main(; n = 2, Plotter = PyPlot, plotting = false, verbose = false, test
     end # bias loop
 
     ## plotting
-    if plotting
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "Applied voltage Δu = $maxBias", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Applied voltage Δu = $maxBias", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Applied voltage Δu = $maxBias", label_solution)
+    if Plotter !== nothing
+        plot_energies!(vis[3, 1], ctsys, solution, "Applied voltage Δu = $maxBias", label_energy)
+        plot_densities!(vis[3, 2], ctsys, solution, "Applied voltage Δu = $maxBias", label_density)
+        plot_solution!(vis[4, 1], ctsys, solution, "Applied voltage Δu = $maxBias", label_solution)
+
+        reveal(vis)
     end
 
     if test == false

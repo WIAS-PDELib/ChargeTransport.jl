@@ -12,17 +12,18 @@ module Ex104_PSC_Photogeneration
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings # sonst funktioniert includet() nicht
 
 # for convenience
 parametersdir = ChargeTransport.parametersdir
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
 function main(;
         n = 5,
-        Plotter = PyPlot,
-        plotting = false, verbose = false, test = false,
+        Plotter = nothing,
+        verbose = false, test = false,
         ########################
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         ########################
@@ -32,9 +33,6 @@ function main(;
 
     @local_unitfactors μm cm s ns V K ps Hz W m
 
-    if plotting
-        Plotter.close("all")
-    end
     ################################################################################
     if test == false
         println("Define physical parameters and model")
@@ -131,9 +129,9 @@ function main(;
     bfacemask!(grid, [p.heightLayers[1]], [p.heightLayers[1]], p.bregionJ1, tol = 1.0e-18)
     bfacemask!(grid, [p.heightLayers[2]], [p.heightLayers[2]], p.bregionJ2, tol = 1.0e-18)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title("Grid")
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (4, 2), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false
@@ -259,17 +257,15 @@ function main(;
     inival = solution
     solutionEQ = inival
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
 
         ## add labels for anion vacancy
         label_energy[1, p.iphia] = "\$E_a-q\\psi\$"; label_energy[2, p.iphia] = "\$ - q \\varphi_a\$"; label_BEE[p.iphia] = "\$E_a\$"
         label_density[p.iphia] = "\$ n_a \$";      label_solution[p.iphia] = "\$ \\varphi_a\$"
 
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Initial condition", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Initial condition", label_solution)
+        plot_densities!(vis[1, 2], ctsys, solution, "Initial condition", label_density)
+        plot_solution!(vis[2, 1], ctsys, solution, "Initial condition", label_solution)
     end
 
     if test == false
@@ -288,14 +284,11 @@ function main(;
 
     sol = solve(ctsys, inival = inival, times = (0.0, tend), control = control)
 
-    if plotting
+    if Plotter !== nothing
         tsol = sol(tend)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, tsol, "Densities at end time", label_density)
-        Plotter.tight_layout()
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, tsol, "Solution at end time", label_solution)
-        Plotter.tight_layout()
+
+        plot_densities!(vis[2, 2], ctsys, tsol, "Densities at end time", label_density)
+        plot_solution!(vis[3, 1], ctsys, tsol, "Solution at end time", label_solution)
     end
 
     if test == false
@@ -365,38 +358,89 @@ function main(;
 
     end
 
-    if plotting
-        Plotter.figure()
-        Plotter.plot([tvalues; tvaluesReverse], [biasValues; biasValuesReverse], marker = "x")
-        Plotter.xlabel("time [s]")
-        Plotter.ylabel("voltage [V]")
-        Plotter.grid()
-        tight_layout()
+    if Plotter !== nothing
+        scalarplot!(
+            vis[3, 2],
+            tvalues,
+            biasValues;
+            clear = false,
+            markershape = :cross,
+            markersize = 8,
+            color = "blue",
+            label = "forward",
+            legend = :cc,
+            xlabel = L"\text{time [s]}",
+            ylabel = L"\text{voltage [V]}",
+            title = "Applied bias over time"
+        )
 
-        Plotter.figure()
-        Plotter.plot(biasValues[2:end], -IV, linewidth = 5, label = "forward")
-        Plotter.plot(biasValuesReverse[2:end], -IVReverse, linewidth = 5, label = "reverse")
-        Plotter.grid()
-        Plotter.legend()
-        Plotter.xlabel("applied bias [V]")
-        Plotter.ylabel("total current [A]")
-        tight_layout()
+        scalarplot!(
+            vis[3, 2],
+            tvaluesReverse,
+            biasValuesReverse;
+            clear = false,
+            markershape = :cross,
+            markersize = 8,
+            color = "orange",
+            label = "reverse",
+            legend = :cc
+        )
 
-        Plotter.figure()
+        scalarplot!(
+            vis[4, 1],
+            biasValues[2:end],
+            -IV;
+            linewidth = 2,
+            label = "forward",
+            legend = :cc,
+            color = "blue",
+            xlabel = L"\text{applied bias [V]}",
+            ylabel = L"\text{total current [A]}",
+            title = "Total current",
+            clear = false
+        )
+
+        scalarplot!(
+            vis[4, 1],
+            biasValuesReverse[2:end],
+            -IVReverse;
+            linewidth = 2,
+            label = "reverse",
+            legend = :cc,
+            color = "orange",
+            clear = false
+        )
+
         if userdefinedGeneration
-            Plotter.plot(coord, data.generationData)
+            scalarplot!(
+                vis[4, 2],
+                coord,
+                data.generationData;
+                xlabel = L"\text{space [m]}",
+                ylabel = L"photogeneration [$\frac{1}{\text{cm}^3 s}$]",
+                title = "Photogeneration"
+            )
         else
+            colors = ["blue", "orange", "green"]
+
             for ireg in 1:p.numberOfRegions
                 subg = subgrid(grid, [ireg])
-                Plotter.plot(subg[Coordinates]', BeerLambert(ctsys, ireg, subg[Coordinates])', label = "region $ireg")
+                scalarplot!(
+                    vis[4, 2],
+                    subg,
+                    BeerLambert(ctsys, ireg, subg[Coordinates])';
+                    clear = false,
+                    color = colors[ireg],
+                    label = "region $ireg",
+                    legend = :cc,
+                    xlabel = L"\text{space [m]}",
+                    ylabel = L"photogeneration [$\frac{1}{\text{cm}^3 s}$]",
+                    title = "Photogeneration"
+                )
             end
-
         end
-        Plotter.legend()
-        Plotter.grid()
-        Plotter.xlabel("space [\$m\$]")
-        Plotter.ylabel("photogeneration [\$\\frac{1}{cm^3s}\$]")
-        Plotter.tight_layout()
+
+        reveal(vis)
     end
 
     if test == false

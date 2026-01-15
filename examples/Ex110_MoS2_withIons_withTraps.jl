@@ -10,11 +10,12 @@ module Ex110_MoS2_withIons_withTraps
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; Plotter = PyPlot, plotting = false, verbose = false, test = false, barrierLowering = true)
+function main(; Plotter = nothing, verbose = false, test = false, barrierLowering = true)
 
 
     ################################################################################
@@ -51,10 +52,9 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     ## set region in grid
     cellmask!(grid, [0.0], [h_flake], regionflake, tol = 1.0e-18)
 
-    if plotting
-        # Plotter.close("all")
-        gridplot(grid, Plotter = Plotter)
-        Plotter.title("Grid")
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (3, 3), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :lt, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false
@@ -283,18 +283,15 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
     inival = copy(solEQ)
 
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphit] = "\$E_t-q\\psi\$"; label_energy[2, iphit] = "\$ - q \\varphi_t\$"
         label_density[iphit] = "\$ n_t\$";       label_solution[iphit] = "\$ \\varphi_t\$"
         label_energy[1, iphix] = "\$E_x-q\\psi\$"; label_energy[2, iphix] = "\$ - q \\varphi_x\$"
         label_density[iphix] = "\$ n_x\$";       label_solution[iphix] = "\$ \\varphi_x\$"
 
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solEQ, "Equilibrium", label_density)
-        Plotter.legend()
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solEQ, "Equilibrium", label_energy)
+        plot_densities!(vis[1, 2], ctsys, solEQ, "Equilibrium", label_density)
+        plot_energies!(vis[1, 3], ctsys, solEQ, "Equilibrium", label_energy)
     end
 
     if test == false
@@ -343,42 +340,52 @@ function main(; Plotter = PyPlot, plotting = false, verbose = false, test = fals
 
     end
 
-    if plotting
-        Plotter.figure()
-        Plotter.plot(tvalues, biasValues, marker = "x")
-        Plotter.xlabel("time [s]")
-        Plotter.ylabel("voltage [V]")
-        Plotter.grid()
-        tight_layout()
+    if Plotter !== nothing
+        scalarplot!(
+            vis[2, 1],
+            tvalues,
+            biasValues;
+            color = :blue,
+            markershape = :cross,
+            markersize = 8,
+            xlabel = L"\text{time [s]}",
+            ylabel = L"\text{voltage [V]}",
+            title = "Applied voltage over time"
+        )
 
-        Plotter.figure()
-        Plotter.semilogy(biasValues, abs.(Area .* IV), linewidth = 5, color = "black")
-        Plotter.grid()
-        Plotter.xlabel("applied bias [V]")
-        Plotter.ylabel("total current [A]")
-        tight_layout()
+        currentValues = abs.(Area .* IV)
+        mask = currentValues .> 0
+
+        scalarplot!(
+            vis[2, 2],
+            biasValues[mask],
+            currentValues[mask];
+            linewidth = 2,
+            color = "black",
+            xlabel = L"\text{applied bias [V]}",
+            ylabel = L"\text{total current [A]}",
+            yscale = :log,
+            title = "Total current"
+        )
     end
-    if plotting
+
+    if Plotter !== nothing
         label_solution, label_density, label_energy = set_plotting_labels(data)
         label_energy[1, iphit] = "\$E_t-q\\psi\$"; label_energy[2, iphit] = "\$ - q \\varphi_t\$"
         label_density[iphit] = "\$ n_t\$";       label_solution[iphit] = "\$ \\varphi_t\$"
         label_energy[1, iphix] = "\$E_x-q\\psi\$"; label_energy[2, iphix] = "\$ - q \\varphi_x\$"
         label_density[iphix] = "\$ n_x\$";       label_solution[iphix] = "\$ \\varphi_x\$"
 
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, sol.u[end], "End of sweep", label_density)
-        Plotter.legend()
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, sol.u[end], "End of sweep", label_energy)
-        Plotter.legend()
+        plot_densities!(vis[3, 1], ctsys, sol.u[end], "End of sweep", label_density)
+        plot_energies!(vis[3, 2], ctsys, sol.u[end], "End of sweep", label_energy)
 
+        reveal(vis)
     end
 
     testval = sum(filter(!isnan, sol.u[end])) / length(sol.u[end])
     return testval
 
 end #  main
-
 
 function test()
     return main(; verbose = "", test = true) ≈ -6894.342164365617

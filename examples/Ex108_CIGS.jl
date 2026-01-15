@@ -10,7 +10,8 @@ module Ex108_CIGS
 
 using ChargeTransport
 using ExtendableGrids
-using PyPlot
+using GridVisualize
+using LaTeXStrings
 
 ## function to initialize the grid for a possible extension to other p-i-n devices.
 function initialize_pin_grid(refinementfactor, h_ndoping, h_pdoping_left, h_pdoping_trap, h_pdoing_right)
@@ -37,13 +38,10 @@ function initialize_pin_grid(refinementfactor, h_ndoping, h_pdoping_left, h_pdop
     return coord
 end
 
-# you can also use other Plotters, if you add them to the example file
+# supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test = false)
+function main(; n = 3, Plotter = nothing, verbose = false, test = false)
 
-    if plotting
-        Plotter.close("all")
-    end
     ################################################################################
     if test == false
         println("Set up grid and regions")
@@ -101,9 +99,10 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     bfacemask!(grid, [h_ndoping + h_pdoping_left], [h_ndoping + h_pdoping_left], bregionALeftATrap, tol = 1.0e-18)
     bfacemask!(grid, [h_ndoping + h_pdoping_left + h_pdoping_trap], [h_ndoping + h_pdoping_left + h_pdoping_trap], bregionATrapARight, tol = 1.0e-18)
 
-    if plotting
-        gridplot(grid, Plotter = Plotter, legend = :lt)
-        Plotter.title("Grid")
+    # TODO MO: Hier habe ich die Legende weggelassen, sonst werden die Bilder nicht richtig angezeigt bei PythonPlot
+    if Plotter !== nothing
+        vis = GridVisualizer(; Plotter, layout = (3, 4), size = (1550, 800))
+        gridplot!(vis[1, 1], grid; Plotter, legend = :none, title = "Grid", xlabel = L"\text{space [m]}", show = true)
     end
 
     if test == false
@@ -299,16 +298,13 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     solution = equilibrium_solve!(ctsys, control = control)
     inival = solution
 
-    if plotting
+    if Plotter !== nothing
         label_solution, label_density, label_energy = set_plotting_labels(data)
 
         ## ##### set legend for plotting routines #####
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "Equilibrium", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "Equilibrium", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "Equilibrium", label_solution)
+        plot_energies!(vis[1, 2], ctsys, solution, "Equilibrium", label_energy)
+        plot_densities!(vis[1, 3], ctsys, solution, "Equilibrium", label_density)
+        plot_solution!(vis[1, 4], ctsys, solution, "Equilibrium", label_solution)
     end
 
     if test == false
@@ -356,26 +352,38 @@ function main(; n = 3, Plotter = PyPlot, plotting = false, verbose = false, test
     staticCapacitance = diff(chargeDensities) ./ diff(biasValues)
 
     ## plot solution and IV curve
-    if plotting
-        Plotter.figure()
-        plot_energies(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage) V", label_energy)
-        Plotter.figure()
-        plot_densities(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage) V", label_density)
-        Plotter.figure()
-        plot_solution(Plotter, ctsys, solution, "bias \$\\Delta u\$ = $(endVoltage) V", label_solution)
-        Plotter.figure()
-        plot_IV(Plotter, biasValues, IV, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
-        Plotter.figure()
-        plot_IV(Plotter, biasValues, chargeDensities, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
-        Plotter.title("Charge density in donor region")
-        Plotter.ylabel("Charge density [C]")
-        Plotter.tight_layout()
-        Plotter.figure()
-        plot_IV(Plotter, biasValues, staticCapacitance, "bias \$\\Delta u\$ = $(biasValues[end]) V", plotGridpoints = true)
-        Plotter.title("Static capacitance in donor region")
-        Plotter.ylabel("Static capacitance [C/V]")
-        Plotter.tight_layout()
+    if Plotter !== nothing
 
+        plot_energies!(vis[2, 1], ctsys, solution, "bias Δu = $(endVoltage) V", label_energy)
+        plot_densities!(vis[2, 2], ctsys, solution, "bias Δu = $(endVoltage) V", label_density)
+        plot_solution!(vis[2, 3], ctsys, solution, "bias Δu = $(endVoltage) V", label_solution)
+        plot_IV!(vis[2, 4], biasValues, IV, "bias Δu = $(biasValues[end]) V", plotGridpoints = true) # total current
+
+        scalarplot!(
+            vis[3, 1],
+            biasValues[1:length(chargeDensities)],
+            chargeDensities;
+            color = :blue,
+            markershape = :circle,
+            markersize = 8,
+            title = "Charge density in donor region",
+            xlabel = L"\text{bias [V]}",
+            ylabel = L"\text{Charge density [C]}"
+        )
+
+        scalarplot!(
+            vis[3, 2],
+            biasValues[1:length(staticCapacitance)],
+            staticCapacitance;
+            color = :blue,
+            markershape = :circle,
+            markersize = 8,
+            title = "Static capacitance in donor region",
+            xlabel = L"\text{bias [V]}",
+            ylabel = L"Static capacitance [$\frac{C}{V}$]"
+        )
+
+        reveal(vis)
     end
 
     if test == false
