@@ -85,7 +85,7 @@ function main(; Plotter = nothing, test = false)
     SRH_Velocity_p = 5.0 * (cm / s)           # Tesca Manual S. 129, VREP = 5.d0 cm/s
 
     # Doping (Simplified, one doping per region, compare gridplot from Tesca)
-    Na_gate = 1.0e16 / cm^3
+    Na_gate = 1.0e15 / cm^3
     Nd_drain = 1.0e20 / cm^3
     Nd_source = 1.0e20 / cm^3
     Na_bulk = 1.0e15 / cm^3
@@ -116,23 +116,8 @@ function main(; Plotter = nothing, test = false)
     y2 = -0.2 * μm              # beginning n-channel (gate region)
     y3 = 0.0 * μm               # top of the device
 
-    # Refinement x-direction
-    # X1 = geomspace(x0, x1, 2.0e-7, 3.0e-8)
-    # X2 = collect(range(x1, x2, length = 4))
-    # X3 = collect(range(x2, x3, length = 4))
-    # X4 = collect(range(x3, x4, length = 20))
-    # X5 = collect(range(x4, x5, length = 4))
-    # X6 = collect(range(x5, x6, length = 4))
-    # X7 = geomspace(x6, x7, 3.0e-8, 2.0e-7)
-    # X_temp = glue(X1, X2)
-    # X_temp = glue(X_temp, X3)
-    # X_temp = glue(X_temp, X4)
-    # X_temp = glue(X_temp, X5)
-    # X_temp = glue(X_temp, X6)
-    # X = glue(X_temp, X7)
-
     # Simple refinement in x-direction
-    X = collect(range(x0, x7, length = 62))
+    X = collect(range(x0, x7, length = 31))
 
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
@@ -161,10 +146,8 @@ function main(; Plotter = nothing, test = false)
 
     if Plotter !== nothing
         Plotter.pygui(true) # Plots as Pop-Ups
-        ChargeTransport.gridplot(grid, Plotter = Plotter, title = "Grid", xlabel = "Width [m]", ylabel = "Height [m]")
+        GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (600, 450), legend = :none, title = "Grid", xlabel = "Width [m]", ylabel = "Height [m]")
     end
-
-    #return
 
     if test == false
         println("*** done\n")
@@ -177,6 +160,7 @@ function main(; Plotter = nothing, test = false)
     ################################################################################
 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
+    #paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
     params.temperature = T
     params.chargeNumbers[iphin] = -1
@@ -246,6 +230,50 @@ function main(; Plotter = nothing, test = false)
 
     # Definition ChargeTransport System
     ctsys = System(grid, data, unknown_storage = :sparse)
+
+    if Plotter !== nothing
+        cellregions = grid[CellRegions]
+        cellValue = zeros(length(cellregions))
+
+        for i in eachindex(cellregions)
+            # determine doping value in cell and number of cell nodes
+            # ToDo: - or +? or consider chargeNumbers
+            cellValue[i] = (params.doping[1, cellregions[i]] - params.doping[2, cellregions[i]]) * 1.0e-6
+        end
+
+        Plotter.figure()
+        m = Plotter.tripcolor(
+            tridata(grid)...,
+            cellValue;
+            shading = "flat",
+            alpha = 0.75,
+            rasterized = true
+        )
+        # statt colorbar:
+        vals = sort(unique(cellValue))
+        cmap = m.get_cmap()
+        norm = m.norm
+        Patch = Plotter.matplotlib.patches.Patch
+
+        handles = [Patch(facecolor = cmap(norm(v)), edgecolor = "k") for v in vals]
+        labels = ["$(v)" for v in vals]
+
+        #Plotter.colorbar(orientation = "vertical", label = " Doping [\$\\mathrm{cm}^{-3}\$]", extend = "both")
+        Plotter.xlabel("Width [m]", fontsize = 12)
+        Plotter.ylabel("Height [m]", fontsize = 12)
+        Plotter.title("Doping Profile", fontsize = 14)
+        ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.tick_params(axis = "x", labelsize = 8)
+        ax.tick_params(axis = "y", labelsize = 8)
+
+        ax.legend(handles, labels, title = "Doping values [cm⁻³]", loc = "lower right", fontsize = 10, title_fontsize = 8)
+
+        Plotter.tight_layout()
+        current_figure = Plotter.gcf()
+        display(current_figure)
+    end
 
     if test == false
         show_params(ctsys)
@@ -488,19 +516,22 @@ function main(; Plotter = nothing, test = false)
         ################################################################################
         # Current Density with PythonPlot
         ################################################################################
-        nf = -VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
+        nf = VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
+        jPsi = nf[:, ipsi, :] ./ ε_0 * εr
+        jPsiAbs = norm.(eachcoll(jPsi))
 
-        vis = GridVisualizer(; Plotter = Plotter, dim = 2, resolution = (400, 400))
+        vis = GridVisualizer(; Plotter = Plotter, resolution = (600, 450), fignumber = 9)
 
         scalarplot!(
             vis,
             grid,
-            solution[1, :];
+            jPsi;
             levels = 10,
             clear = true,
             xlabel = "Width [m]",
             ylabel = "Height [m]",
-            title = "Current Density"
+            title = "Current Density",
+            rasterpoints = 100
         )
 
         vectorplot!(
@@ -508,7 +539,8 @@ function main(; Plotter = nothing, test = false)
             grid,
             nf[:, 1, :];
             clear = false,
-            vscale = 1.5
+            rasterpoints = 100,
+            vscale = 2.5 # ratserpoints = 30 and vscale = 0.5 is also working
         )
 
         reveal(vis)
