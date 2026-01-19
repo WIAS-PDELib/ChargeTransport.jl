@@ -85,10 +85,10 @@ function main(; Plotter = nothing, test = false)
     SRH_Velocity_p = 5.0 * (cm / s)           # Tesca Manual S. 129, VREP = 5.d0 cm/s
 
     # Doping (Simplified, one doping per region, compare gridplot from Tesca)
-    Na_gate = 1.0e15 / cm^3
+    Na_gate = 1.0e16 / cm^3
     Nd_drain = 1.0e20 / cm^3
     Nd_source = 1.0e20 / cm^3
-    Na_bulk = 1.0e15 / cm^3
+    Na_bulk = 1.0e16 / cm^3
 
     # Voltage information
     U_add_gate = 0.55 * V                   # Contact voltage on gate, see mosS.dio file
@@ -232,6 +232,9 @@ function main(; Plotter = nothing, test = false)
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if Plotter !== nothing
+        ################################################################################
+        # Doping Profile with PythonPlot
+        ################################################################################
         cellregions = grid[CellRegions]
         cellValue = zeros(length(cellregions))
 
@@ -261,13 +264,14 @@ function main(; Plotter = nothing, test = false)
         #Plotter.colorbar(orientation = "vertical", label = " Doping [\$\\mathrm{cm}^{-3}\$]", extend = "both")
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Doping Profile", fontsize = 14)
+        Plotter.title("Doping Profile", fontsize = 16)
+
         ax = Plotter.gca()
         ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
         ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
-        ax.tick_params(axis = "x", labelsize = 8)
-        ax.tick_params(axis = "y", labelsize = 8)
-
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
         ax.legend(handles, labels, title = "Doping values [cm⁻³]", loc = "lower right", fontsize = 10, title_fontsize = 8)
 
         Plotter.tight_layout()
@@ -323,19 +327,21 @@ function main(; Plotter = nothing, test = false)
 
         XX = grid[Coordinates][1, :]; YY = grid[Coordinates][2, :]
 
-        Plotter.figure()
-        Plotter.surf(XX[:], YY[:], solution_eq[ipsi, :])
-        Plotter.title("Electrostatic Potential (Equilibrium)", fontsize = 12)
+        fig = Plotter.figure()
+        ax = fig.add_subplot(111, projection = "3d")
+        ax.plot_trisurf(XX[:], YY[:], solution_eq[ipsi, :])
+
+        Plotter.title("Electrostatic Potential (Equilibrium)", fontsize = 16)
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
         Plotter.zlabel("potential [V]", fontsize = 12)
         ax = Plotter.gca()
-        ax.tick_params(axis = "x", labelsize = 8)
-        ax.tick_params(axis = "y", labelsize = 8)
-        ax.tick_params(axis = "z", labelsize = 8)
-        ax.xaxis.get_offset_text().set_fontsize(8)
-        ax.yaxis.get_offset_text().set_fontsize(8)
-        ax.zaxis.get_offset_text().set_fontsize(8)
+        ax.tick_params(axis = "x", labelsize = 10)
+        ax.tick_params(axis = "y", labelsize = 10)
+        ax.tick_params(axis = "z", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        ax.zaxis.get_offset_text().set_fontsize(10)
         current_figure = Plotter.gcf()
         display(current_figure)
 
@@ -355,11 +361,21 @@ function main(; Plotter = nothing, test = false)
             shading = "gouraud", # shading = "flat"
             rasterized = true
         )
+        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
+
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Electron Density (Equilibrium)", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
+        Plotter.title("Electron Density (Equilibrium)", fontsize = 16)
+
         ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        cbar.ax.tick_params(labelsize = 10)
+        cbar.set_label("Density [\$\\mathrm{cm}^{-3}\$]", fontsize = 12)
+
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
@@ -376,14 +392,24 @@ function main(; Plotter = nothing, test = false)
             shading = "gouraud",
             rasterized = true
         )
+        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
+
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Hole Density (Equilibrium)", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
+        Plotter.title("Hole Density (Equilibrium)", fontsize = 16)
+
+        ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        cbar.ax.tick_params(labelsize = 10)
+        cbar.set_label("Density [\$\\mathrm{cm}^{-3}\$]", fontsize = 12)
+
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
-
     end
 
     ################################################################################
@@ -429,15 +455,9 @@ function main(; Plotter = nothing, test = false)
         ## get I-V data
         IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
 
-        current = sum(@view IEdge[1:(end - 1)])
+        current = IEdge[iphin] + IEdge[iphip]
 
-        # current = 0.0
-        # # no displacement as we have steady state, this way last one is taken out as it corresponds to electric potential
-        # for ii in 1:(length(IEdge) - 1)
-        #     current = current + IEdge[ii]
-        # end
-
-        push!(IV_drain, abs.(zaus * current)) # zaus=wide of device, total current
+        push!(IV_drain, abs.(zaus * current)) # zaus=wide of device, total current, zaus ist hier in m??
 
     end
 
@@ -446,33 +466,35 @@ function main(; Plotter = nothing, test = false)
     end
 
     if Plotter !== nothing
-
         ################################################################################
         # Solution with PythonPlot
         ################################################################################
         XX = grid[Coordinates][1, :]; YY = grid[Coordinates][2, :]
 
-        Plotter.figure()
-        Plotter.surf(XX[:], YY[:], solution[ipsi, :])
-        Plotter.title("Electrostatic Potential", fontsize = 12)
+        fig = Plotter.figure()
+        ax = fig.add_subplot(111, projection = "3d")
+        ax.plot_trisurf(XX[:], YY[:], solution[ipsi, :])
+
+        Plotter.title("Electrostatic Potential", fontsize = 16)
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
         Plotter.zlabel("potential [V]", fontsize = 12)
+
         ax = Plotter.gca()
-        ax.tick_params(axis = "x", labelsize = 8)
-        ax.tick_params(axis = "y", labelsize = 8)
-        ax.tick_params(axis = "z", labelsize = 8)
-        ax.xaxis.get_offset_text().set_fontsize(8)
-        ax.yaxis.get_offset_text().set_fontsize(8)
-        ax.zaxis.get_offset_text().set_fontsize(8)
+        ax.tick_params(axis = "x", labelsize = 10)
+        ax.tick_params(axis = "y", labelsize = 10)
+        ax.tick_params(axis = "z", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        ax.zaxis.get_offset_text().set_fontsize(10)
+
+        Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
-
 
         ################################################################################
         # Density plots with PythonPlot
         ################################################################################
-
         # electron density
         nn = Nc .* exp.(params.chargeNumbers[iphin] * (q * (solution[iphin, :] .- solution[ipsi, :]) .+ Ec) ./ (k_B * T))
         nn_cm = nn * 1.0e-6 # Convert to cm, so it is better comparable to Tesca
@@ -485,14 +507,24 @@ function main(; Plotter = nothing, test = false)
             shading = "gouraud",
             rasterized = true
         )
+        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
+
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Electron Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
+        Plotter.title("Electron Density", fontsize = 16)
+
+        ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        cbar.ax.tick_params(labelsize = 10)
+        cbar.set_label("Density [\$\\mathrm{cm}^{-3}\$]", fontsize = 12)
+
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
-
 
         # hole density
         np = Nv .* exp.(params.chargeNumbers[iphip] * (q * (solution[iphip, :] .- solution[ipsi, :]) .+ Ev) ./ (k_B * T))
@@ -505,10 +537,21 @@ function main(; Plotter = nothing, test = false)
             shading = "gouraud",
             rasterized = true
         )
+        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
+
         Plotter.xlabel("Width [m]", fontsize = 12)
         Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Hole Density", fontsize = 12)
-        Plotter.colorbar(orientation = "vertical", label = " Density [\$\\mathrm{cm}^{-3}\$]", extend = "both")
+        Plotter.title("Hole Density", fontsize = 16)
+
+        ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        cbar.ax.tick_params(labelsize = 10)
+        cbar.set_label("Density [\$\\mathrm{cm}^{-3}\$]", fontsize = 12)
+
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
@@ -516,34 +559,55 @@ function main(; Plotter = nothing, test = false)
         ################################################################################
         # Current Density with PythonPlot
         ################################################################################
-        nf = VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
-        jPsi = nf[:, ipsi, :] ./ ε_0 * εr
-        jPsiAbs = norm.(eachcoll(jPsi))
+        nf = -VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
 
-        vis = GridVisualizer(; Plotter = Plotter, resolution = (600, 450), fignumber = 9)
+        j = nf[:, iphin, :] ./ (1.0e4 * zaus) # damit A/ m^2 (zaus ist ja hier in m)
+        jx = j[1, :]; jy = j[2, :]
+        jabs = sqrt.(jx .^ 2 .+ jy .^ 2)
 
-        scalarplot!(
-            vis,
-            grid,
-            jPsi;
-            levels = 10,
-            clear = true,
-            xlabel = "Width [m]",
-            ylabel = "Height [m]",
-            title = "Current Density",
-            rasterpoints = 100
+        # For the arrows
+        coord = grid[Coordinates]
+        x = coord[1, :]; y = coord[2, :]
+
+        L = 0.03 * (maximum(y) - minimum(y))     # length arrows
+        eps = 1.0e-30
+        ux = jx ./ (jabs .+ eps);  uy = jy ./ (jabs .+ eps)
+        idx = 1:10:length(x)
+
+        Plotter.figure()
+        Plotter.tripcolor(
+            tridata(grid)...,
+            jabs,
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e-8, vmax = 1.0e4),
+            shading = "gouraud",
+            rasterized = true
+        )
+        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
+        Plotter.quiver(
+            x[idx], y[idx], (L * ux)[idx], (L * uy)[idx],
+            color = "black",
+            scale = 1.0,
+            angles = "xy",
+            scale_units = "xy",
+            width = 0.002 # thickness arrows
         )
 
-        vectorplot!(
-            vis,
-            grid,
-            nf[:, 1, :];
-            clear = false,
-            rasterpoints = 100,
-            vscale = 2.5 # ratserpoints = 30 and vscale = 0.5 is also working
-        )
+        Plotter.xlabel("Width [m]", fontsize = 12)
+        Plotter.ylabel("Height [m]", fontsize = 12)
+        Plotter.title("Electron Current Density", fontsize = 16)
 
-        reveal(vis)
+        ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+        ax.xaxis.get_offset_text().set_fontsize(10)
+        ax.yaxis.get_offset_text().set_fontsize(10)
+        cbar.ax.tick_params(labelsize = 10)
+        cbar.set_label("|j| [A/cm^2]", fontsize = 12)
+
+        Plotter.tight_layout()
+        current_figure = Plotter.gcf()
+        display(current_figure)
 
         ################################################################################
         # IV Curve with PythonPlot
@@ -551,9 +615,15 @@ function main(; Plotter = nothing, test = false)
         Plotter.figure()
         Plotter.plot(biasValues_drain, IV_drain, marker = "o", markersize = 3) # für Logarithmische Skala: semilogy
         Plotter.grid()
-        Plotter.title("IV Curve", fontsize = 12)
+
+        Plotter.title("IV Curve", fontsize = 16)
         Plotter.xlabel("bias [V]", fontsize = 12)
         Plotter.ylabel("total current [A]", fontsize = 12)
+
+        ax = Plotter.gca()
+        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(1.0))
+        ax.tick_params(axis = "both", which = "major", labelsize = 10)
+
         Plotter.tight_layout()
         current_figure = Plotter.gcf()
         display(current_figure)
