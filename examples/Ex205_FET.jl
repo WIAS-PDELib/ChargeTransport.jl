@@ -117,12 +117,12 @@ function main(; Plotter = nothing, test = false)
     y3 = 0.0 * μm               # top of the device
 
     # Simple refinement in x-direction
-    X = collect(range(x0, x7, length = 31))
+    X = collect(range(x0, x7, length = 241))
 
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
-    Y2 = collect(range(y1, y2, length = 11))
-    Y3 = geomspace(y2, y3, 8.0e-8, 1.0e-10)
+    Y2 = collect(range(y1, y2, length = 21))
+    Y3 = geomspace(y2, y3, 4.0e-8, 1.0e-10)
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
@@ -441,7 +441,7 @@ function main(; Plotter = nothing, test = false)
     # Bias Loop Drain
     # Needed to calculate IV values, placed before loop to avoid allocations
     factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
-    tf = VoronoiFVM.testfunction(factory, [2], [3]) # 2 drain, 3 source
+    tf = VoronoiFVM.testfunction(factory, [bregion_drain], [bregion_source, bregion_bulk])
 
     for Δu_drain in biasValues_drain
 
