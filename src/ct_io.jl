@@ -2,7 +2,7 @@
     read_diodat(filename)
 
 Read scalar vertex functions from  WIAS-TeSCA dios "*.dat" output files.
-Return a dictionary containg the functions found.
+Return a dictionary containing the functions found.
 """
 function read_diodat(fname)
     tks = TokenStream(fname)
