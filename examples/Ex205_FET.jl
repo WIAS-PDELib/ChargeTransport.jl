@@ -57,6 +57,7 @@ function main(; Plotter = nothing, test = false)
     bregion_drain = 2
     bregion_source = 3
     bregion_bulk = 4
+    bregion_neumann = 5 # needed for .dom files
 
     zaus = 15.0e-4 * cm                                 # depth of the device [cm], see mosS.dio file
     thickness_ox = 0.044e-4 * cm                        # oxide thickness on gate [cm], see mosS.dio file
@@ -100,6 +101,11 @@ function main(; Plotter = nothing, test = false)
     end
     ################################################################################
 
+    # Uncomment to read in grid from Tesca and convert it to m for ChargeTransport
+    #grid = simplexgrid("tesca.dom", format = "dom")
+    #grid[Coordinates] *= 1.0e-6
+    #trim!(grid)
+
     # Gridpoints x-direction
     x0 = -1.5 * μm              # beginning left contact (drain)
     x1 = -1.0 * μm              # end left contact (drain)
@@ -117,16 +123,22 @@ function main(; Plotter = nothing, test = false)
     y3 = 0.0 * μm               # top of the device
 
     # Simple refinement in x-direction
-    X = collect(range(x0, x7, length = 241))
+    X = collect(range(x0, x7, length = 61)) # refinement I tested: 31 (no node at Neumann boundary), 61 (1 node), 121 (3 nodes), 241 (7 nodes)
 
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
-    Y2 = collect(range(y1, y2, length = 21))
-    Y3 = geomspace(y2, y3, 4.0e-8, 1.0e-10)
+    Y2 = collect(range(y1, y2, length = 11)) # also tested 11 and then in the following line 8.0e-8, and 21 and 4.0e-8
+    #Y3 = geomspace(y2, y3, 8.0e-8, 1.01e-10)
+    Y3 = collect(range(y2, y3, length = 8))
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
     grid = simplexgrid(X, Y)
+
+    # Uncomment to convert to "real" μm for Tesca and write into .domfile - placed before regions since otherwise material parameter is wrong
+    #grid[Coordinates] *= 1.0e6
+    #trim!(grid)
+    #Base.write("chargetransport.dom", grid, format = "dom", domcodes = (1, -2, -1, -3, 999))
 
     # cell regions
     cellmask!(grid, [x3, y2], [x4, y3], region_gate)
@@ -139,10 +151,10 @@ function main(; Plotter = nothing, test = false)
     bfacemask!(grid, [x0, y3], [x1, y3], bregion_drain)
     bfacemask!(grid, [x6, y3], [x7, y3], bregion_source)
     bfacemask!(grid, [x0, y0], [x7, y0], bregion_bulk)
-    bfacemask!(grid, [x0, y0], [x0, y3], 0)
-    bfacemask!(grid, [x7, y0], [x7, y3], 0)
-    bfacemask!(grid, [x1, y3], [x2, y3], 0)
-    bfacemask!(grid, [x5, y3], [x6, y3], 0)
+    bfacemask!(grid, [x0, y0], [x0, y3], 5)
+    bfacemask!(grid, [x7, y0], [x7, y3], 5)
+    bfacemask!(grid, [x1, y3], [x2, y3], 5)
+    bfacemask!(grid, [x5, y3], [x6, y3], 5)
 
     if Plotter !== nothing
         Plotter.pygui(true) # Plots as Pop-Ups
@@ -160,7 +172,6 @@ function main(; Plotter = nothing, test = false)
     ################################################################################
 
     params = Params(grid[NumCellRegions], grid[NumBFaceRegions], numberOfCarriers)
-    #paramsnodal = ParamsNodal(grid, numberOfCarriers)
 
     params.temperature = T
     params.chargeNumbers[iphin] = -1
@@ -441,7 +452,7 @@ function main(; Plotter = nothing, test = false)
     # Bias Loop Drain
     # Needed to calculate IV values, placed before loop to avoid allocations
     factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
-    tf = VoronoiFVM.testfunction(factory, [bregion_drain], [bregion_source, bregion_bulk])
+    tf = VoronoiFVM.testfunction(factory, [bregion_drain], [bregion_source])
 
     for Δu_drain in biasValues_drain
 
@@ -457,7 +468,7 @@ function main(; Plotter = nothing, test = false)
 
         current = IEdge[iphin] + IEdge[iphip]
 
-        push!(IV_drain, abs.(zaus * current)) # zaus=wide of device, total current, zaus ist hier in m??
+        push!(IV_drain, abs.(zaus * current)) # zaus=wide of device, total current
 
     end
 
@@ -561,7 +572,7 @@ function main(; Plotter = nothing, test = false)
         ################################################################################
         nf = -VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
 
-        j = nf[:, iphin, :] ./ (1.0e4 * zaus) # damit A/ m^2 (zaus ist ja hier in m)
+        j = nf[:, iphin, :] ./ (1.0e4 * zaus) # so that A/ m^2 (zaus in m)
         jx = j[1, :]; jy = j[2, :]
         jabs = sqrt.(jx .^ 2 .+ jy .^ 2)
 
