@@ -22,11 +22,11 @@ function read_diodat(fname)
 
         expecttoken(tks, "type")
         expecttoken(tks, "=")
-        expecttoken(tks, "scalar")
+        typestr = gettoken(tks)
 
         expecttoken(tks, "dimension")
         expecttoken(tks, "=")
-        expecttoken(tks, "1")
+        dim = parse(Int, gettoken(tks))
 
         expecttoken(tks, "location")
         expecttoken(tks, "=")
@@ -44,13 +44,26 @@ function read_diodat(fname)
         expecttoken(tks, ")")
 
         expecttoken(tks, "{")
-        func = zeros(nval)
-        for i in 1:nval
-            func[i] = parse(Float64, gettoken(tks))
+
+        if typestr == "scalar"
+            # read scalar functions
+            func = zeros(nval)
+            for i in 1:nval
+                func[i] = parse(Float64, gettoken(tks))
+            end
+            data[funcname] = func
+            @info "Parsed scalar function $(funcname) valid on $(validity)"
+
+        else
+            # skip vector function for now (not sure for what we need them)
+            for _ in 1:(nval * dim)
+                gettoken(tks)
+            end
+            @info "Skipped $(typestr) function $(funcname)"
         end
+
         expecttoken(tks, "}")
-        @info "Parsed function $(funcname) valid on $(validity)"
-        data[funcname] = func
+
     end
     return data
 end
