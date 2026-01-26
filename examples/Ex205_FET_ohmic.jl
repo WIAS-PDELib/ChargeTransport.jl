@@ -6,7 +6,7 @@ We consider an n-channel Metal-Oxide-Semiconductor (MOS) field effect transistor
 The material is silicon.
 =#
 
-module Ex205_FET
+module Ex205_FET_Ohmic
 
 using ChargeTransport
 using VoronoiFVM          # for IV Curve, Current Density Plot
@@ -20,7 +20,7 @@ function tridata(grid::ExtendableGrid)
     return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
 end
 
-function main(; Plotter = nothing, gateproperty = false, tesca = false, test = false)
+function main(; Plotter = nothing, tesca = false, test = false)
 
     if Plotter !== nothing && nameof(Plotter) !== :PythonPlot
         error("Plotting in Ex205_FET is only possible for Plotter = PythonPlot")
@@ -47,18 +47,19 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
 
     ########## device geometry ##########
     # region numbers
-    region_n = 1 # n-doped region
-    region_p = 2 # p-doped region
+    region_gate = 1
+    region_drain = 2
+    region_source = 3
+    region_bulk = 4
 
     # boundary region numbers
     bregion_gate = 1
     bregion_drain = 2
     bregion_source = 3
     bregion_bulk = 4
-    bregion_neumann = 5
+    bregion_neumann = 5 # needed for .dom files
 
-    zaus = 15.0e-4 * cm                                 # depth of the device [cm], see mosS.dio file
-    thickness_ox = 0.044e-4 * cm                        # oxide thickness on gate [cm], see mosS.dio file
+    zaus = 15.0e-4 * cm                                 # depth of the device [cm], see mosS.dio files
 
     ########## physical values of Si at room temperature ##########
     Ec = 0.562 * eV                                     # conduction band-edge energy, Tesca Manual S. 83
@@ -69,7 +70,6 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     mun = 1030.0 * (cm^2) / (V * s)                     # electron mobility, ioffe \leq 1400, Tesca Manual S.92: 1030
     mup = 495.0 * (cm^2) / (V * s)                      # hole mobility \ioffe \leq 450, Tesaca Manual S. 92: 495
     εr = 11.67 * 1.0                                    # relative dielectric permittivity of Si, Tesca Manual S.21: 11.67
-    εr_ox = 3.8 * 1.0                                   # relative dielectric permittivity of SiO2 at gate, Tesca Manual S. 21. 3.8
     T = 300.0 * K                                       # room temperature
 
     # Recombination parameters (from Tesca)
@@ -80,27 +80,18 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     SRH_TrapDensity_p = 1.09e10 / cm^3        # Tesca Manual S. 128: 1.09d10 1/cm³
     SRH_LifeTime_n = 2.0e-4 * s               # Tesca Manual S. 128, tau_n0 = 2e-4 s
     SRH_LifeTime_p = 2.0e-6 * s               # Tesca Manual S. 128, trau_p0 = 2e-6 s
-    SRH_Velocity_n = 5.0 * (cm / s)           # Tesca Manual S. 129, VREN = 5.d0 cm/s
-    SRH_Velocity_p = 5.0 * (cm / s)           # Tesca Manual S. 129, VREP = 5.d0 cm/s
 
-    # Doping
-    Na = 1.0e16 / cm^3
-    Nd = 1.0e20 / cm^3
-
-    # Voltage information
-    U_add_gate = 0.55 * V                   # Contact voltage on gate, see mosS.dio file
-    qss = 6.0e10 / (cm^2)                   # Surface charge density on gate, see mosS.dio file
+    # Doping (Simplified, one doping per region, compare gridplot from Tesca)
+    Na_gate = 1.0e16 / cm^3
+    Nd_drain = 1.0e20 / cm^3
+    Nd_source = 1.0e20 / cm^3
+    Na_bulk = 1.0e16 / cm^3
 
     ################################################################################
     if test == false
         println("Set up grid and regions")
     end
     ################################################################################
-
-    # Uncomment to read in grid from Tesca and convert it to m for ChargeTransport
-    #grid = simplexgrid("tesca.dom", format = "dom")
-    #grid[Coordinates] *= 1.0e-6
-    #trim!(grid)
 
     # Gridpoints x-direction
     x0 = -1.5 * μm              # beginning left contact (drain)
@@ -119,28 +110,23 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     y3 = 0.0 * μm               # top of the device
 
     # Simple refinement in x-direction
-    X = collect(range(x0, x7, length = 61)) # refinement I tested: 31 (no node at Neumann boundary), 61 (1 node), 121 (3 nodes), 241 (7 nodes)
+    X = collect(range(x0, x7, length = 61))
 
     # Refinement y-direction
     Y1 = collect(range(y0, y1, length = 8))
-    Y2 = collect(range(y1, y2, length = 11)) # also tested 11 and then in the following line 8.0e-8, and 21 and 4.0e-8
-    #Y3 = geomspace(y2, y3, 8.0e-8, 1.01e-10)
-    Y3 = collect(range(y2, y3, length = 8))
+    Y2 = collect(range(y1, y2, length = 11))
+    Y3 = geomspace(y2, y3, 8.0e-8, 1.0e-10)
+    #Y3 = collect(range(y2, y3, length = 8))
     Y12 = glue(Y1, Y2)
     Y = glue(Y12, Y3)
 
     grid = simplexgrid(X, Y)
 
-    # Uncomment to convert to "real" μm for Tesca and write into .domfile - placed before regions since otherwise material parameter is wrong
-    #grid[Coordinates] *= 1.0e6
-    #trim!(grid)
-    #Base.write("chargetransport.dom", grid, format = "dom", domcodes = (1, -2, -1, -3, 999))
-
     # cell regions
-    cellmask!(grid, [x0, y2], [x3, y3], region_n)
-    cellmask!(grid, [x4, y2], [x7, y3], region_n)
-    cellmask!(grid, [x3, y2], [x4, y3], region_p)
-    cellmask!(grid, [x0, y0], [x7, y2], region_p)
+    cellmask!(grid, [x2, y2], [x5, y3], region_gate)
+    cellmask!(grid, [x0, y2], [x2, y3], region_drain)
+    cellmask!(grid, [x5, y2], [x7, y3], region_source)
+    cellmask!(grid, [x0, y0], [x7, y2], region_bulk)
 
     # boundary regions
     bfacemask!(grid, [x2, y3], [x5, y3], bregion_gate)
@@ -154,7 +140,7 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
 
     if Plotter !== nothing
         Plotter.pygui(true) # Plots as Pop-Ups
-        GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (600, 450), title = "Grid", xlabel = "Width [m]", ylabel = "Height [m]")
+        GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (600, 450), legend = :none, title = "Grid", xlabel = "Width [m]", ylabel = "Height [m]")
     end
 
     if test == false
@@ -192,19 +178,11 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
         params.recombinationAuger[iphip, ireg] = Auger_p
     end
 
-    params.recombinationSRHvelocity[iphin, bregion_gate] = SRH_Velocity_n # Surface Recombination just at gate
-    params.recombinationSRHvelocity[iphip, bregion_gate] = SRH_Velocity_p
-
-    for ibreg in 1:grid[NumBFaceRegions] #boundary region data
-        params.dielectricConstantOxide[ibreg] = εr_ox * ε_0
-        params.thicknessOxide[ibreg] = thickness_ox
-        params.surfacechargeDensityGate[ibreg] = qss
-        params.additionalVoltageGate[ibreg] = U_add_gate
-    end
-
-    # doping                                             #     n    p
-    params.doping[iphin, region_n] = Nd                  #   [Nd  0.0;
-    params.doping[iphip, region_p] = Na                  #    0.0  Na]
+    # doping                                                       #     n    p
+    params.doping[iphin, region_drain] = Nd_drain                  #   [Nd  0.0;
+    params.doping[iphin, region_source] = Nd_source                #    Nd  0.0;
+    params.doping[iphip, region_gate] = Na_gate                    #    0.0  Na;
+    params.doping[iphip, region_bulk] = Na_bulk                    #    0.0  Na]
 
     # Initialize Data instance
     data = Data(grid, numberOfCarriers, constants = constants)
@@ -212,7 +190,8 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     data.modelType = Stationary
 
     # statistics
-    data.F .= Boltzmann # Tesca Manual S.84 IFERMI = 0
+    data.F .= FermiDiracOneHalfTeSCA
+    #data.F .= Boltzmann
 
     # recombination
     data.bulkRecombination = set_bulk_recombination(;
@@ -223,65 +202,18 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     )
 
     # boundary model
-    data.boundaryType[bregion_gate] = GateContact
+    data.boundaryType[bregion_gate] = OhmicContact
     data.boundaryType[bregion_drain] = OhmicContact
     data.boundaryType[bregion_source] = OhmicContact
     data.boundaryType[bregion_bulk] = OhmicContact
 
     # flux discretization - depends on statistic (Boltzmann -> Scharfetter Gummel)
-    data.fluxApproximation .= ScharfetterGummel
+    #data.fluxApproximation .= ScharfetterGummel
 
     data.params = params
 
     # Definition ChargeTransport System
     ctsys = System(grid, data, unknown_storage = :sparse)
-
-    if Plotter !== nothing
-        ################################################################################
-        # Doping Profile with PythonPlot
-        ################################################################################
-        cellregions = grid[CellRegions]
-        cellValue = zeros(length(cellregions))
-
-        for i in eachindex(cellregions)
-            # determine doping value in cell and number of cell nodes
-            # ToDo: - or + or consider chargeNumbers
-            cellValue[i] = (params.doping[1, cellregions[i]] - params.doping[2, cellregions[i]]) * 1.0e-6
-        end
-
-        Plotter.figure()
-        m = Plotter.tripcolor(
-            tridata(grid)...,
-            cellValue;
-            shading = "flat",
-            alpha = 0.75,
-            rasterized = true
-        )
-        # instead of color bar
-        vals = sort(unique(cellValue))
-        cmap = m.get_cmap()
-        norm = m.norm
-        Patch = Plotter.matplotlib.patches.Patch
-
-        handles = [Patch(facecolor = cmap(norm(v)), edgecolor = "k") for v in vals]
-        labels = ["$(v)" for v in vals]
-
-        Plotter.xlabel("Width [m]", fontsize = 12)
-        Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("Doping Profile", fontsize = 16)
-
-        ax = Plotter.gca()
-        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
-        ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
-        ax.tick_params(axis = "both", which = "major", labelsize = 10)
-        ax.xaxis.get_offset_text().set_fontsize(10)
-        ax.yaxis.get_offset_text().set_fontsize(10)
-        ax.legend(handles, labels, title = "Doping values [cm⁻³]", loc = "lower right", fontsize = 10, title_fontsize = 8)
-
-        Plotter.tight_layout()
-        current_figure = Plotter.gcf()
-        display(current_figure)
-    end
 
     if test == false
         show_params(ctsys)
@@ -295,8 +227,8 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     ################################################################################
 
     control = ChargeTransport.SolverControl()
-    control.verbose = false
-    control.maxiters = 70 # bei 69 Convergence Error im 5ten Schritt Equilibrium, ohne den damp_growth
+    control.verbose = true
+    control.maxiters = 70
     control.abstol = 1.0e-7
     control.reltol = 1.0e-7
     control.tol_round = 1.0e-7
@@ -361,7 +293,7 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
         Plotter.figure()
         Plotter.tripcolor(
             tridata(grid)..., nn_cm,
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e6, vmax = 1.0e20),
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e5, vmax = 1.0e21),
             shading = "gouraud", # shading = "flat"
             rasterized = true
         )
@@ -421,97 +353,12 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
         println("Bias loop")
     end
     ################################################################################
-
-    if gateproperty
-        maxbias_gate = [0.0, 5.0, 10.0, 15.0]
-
-        biasValues_drain = range(0.0, stop = 5.0, length = 43)
-        I_drain = Dict{Float64, Vector{Float64}}()
-
-        for maxbias in maxbias_gate
-            # Reset contacts to equilibrium biases
-            set_contact!(ctsys, bregion_gate, Δu = 0.0)
-            set_contact!(ctsys, bregion_drain, Δu = 0.0)
-
-            biasValues_gate = range(0.0, stop = maxbias, length = 4)
-
-            inival = copy(solution_eq)
-            solution = copy(solution_eq)
-
-            # Bias Loop Gate
-            for Δu_gate in biasValues_gate
-                println("bias value at gate: Δu = ", Δu_gate, " V")
-                set_contact!(ctsys, bregion_gate, Δu = Δu_gate)
-                solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
-                inival .= solution
-            end
-
-            # Bias Loop Drain
-            factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
-            tf = VoronoiFVM.testfunction(factory, [bregion_drain], [bregion_source])
-
-            Ivalues = Vector{Float64}(undef, length(biasValues_drain))
-
-            for (i, Δu_drain) in enumerate(biasValues_drain)
-
-                println("bias value at drain: Δu = ", Δu_drain, " V")
-                set_contact!(ctsys, bregion_drain, Δu = Δu_drain)
-                solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
-                inival .= solution
-
-                ## get I-V data
-                IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
-                current = IEdge[iphin] + IEdge[iphip]
-
-                Ivalues[i] = abs(zaus * current)
-            end
-            I_drain[maxbias] = Ivalues
-        end
-
-        ################################################################################
-        # IV Curves with PythonPlot
-        ################################################################################
-        Plotter.figure()
-        for maxbias in sort(collect(keys(I_drain)))
-            Plotter.plot(biasValues_drain, I_drain[maxbias], marker = "o", markersize = 2, label = "voltage gate Δu = $(maxbias)")
-        end
-        Plotter.legend(loc = "upper left", fontsize = 10)
-        Plotter.grid()
-
-        Plotter.title("IV Curve", fontsize = 16)
-        Plotter.xlabel("voltage drain [V]", fontsize = 12)
-        Plotter.ylabel("total current drain [A]", fontsize = 12)
-
-        ax = Plotter.gca()
-        ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(1.0))
-        ax.tick_params(axis = "both", which = "major", labelsize = 10)
-
-        Plotter.tight_layout()
-        current_figure = Plotter.gcf()
-        display(current_figure)
-
-        return
-    end
-
-    biasValues_gate = range(0.0, stop = 5.0, length = 4) # 4 Steps in Tesca
     biasValues_drain = range(0.0, stop = 5.0, length = 43) # 12 steps in Tesca, bis length = 42 bricht es nach zwei Schritten ab, war 43
 
     IV_drain = zeros(0)
 
     inival = copy(solution_eq)
     solution = copy(solution_eq)
-
-    # Bias Loop Gate
-    for Δu_gate in biasValues_gate
-
-        println("bias value at gate: Δu = ", Δu_gate, " V")
-
-        set_contact!(ctsys, bregion_gate, Δu = Δu_gate)
-
-        solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
-        inival .= solution
-
-    end
 
     # Bias Loop Drain
     # Needed to calculate IV values, placed before loop to avoid allocations
@@ -578,7 +425,7 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
         Plotter.figure()
         Plotter.tripcolor(
             tridata(grid)..., vcat(nn_cm...),
-            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e3, vmax = 1.0e20),
+            norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e4, vmax = 1.0e21),
             shading = "gouraud",
             rasterized = true
         )
@@ -708,8 +555,8 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
     if tesca
         # Compare results with Tesca results
         # Read in data from diodat file
-        tesca_data_eq = read_diodat("examples/tesca-files/tesca-eq-doping-code.dat")
-        tesca_data = read_diodat("examples/tesca-files/tesca-doping-code.dat")
+        tesca_data_eq = read_diodat("examples/tesca-files/tesca-mosS-eq_dio.dat")
+        tesca_data = read_diodat("examples/tesca-files/tesca-mosS_dio.dat")
 
         tesca_solution_psi_eq = tesca_data_eq["ElectrostaticPotential"]
         tesca_solution_psi = tesca_data["ElectrostaticPotential"]
@@ -718,54 +565,20 @@ function main(; Plotter = nothing, gateproperty = false, tesca = false, test = f
         ct_solution_psi_eq = solution_eq[ipsi, :]
         ct_solution_psi = solution[ipsi, :]
 
-        ################################################################################
-        # Error Equilibrium with PythonPlot
-        ################################################################################
+        # Calculate the error in Equilibrium
+        @assert length(ct_solution_psi_eq) == length(tesca_solution_psi_eq)
+
         err_eq = ct_solution_psi_eq .- tesca_solution_psi_eq
+        @show norm_l2_eq = sqrt(sum(err_eq .^ 2))
+        @show norm_linf_eq = maximum(abs.(err_eq))
 
-        Plotter.figure()
-        Plotter.tripcolor(tridata(grid)..., abs.(err_eq))
-        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
-
-        Plotter.xlabel("Width [m]", fontsize = 12)
-        Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("|Error| in Equilibrium: CT - Tesca ", fontsize = 16)
-
-        ax = Plotter.gca()
-        ax.tick_params(axis = "both", which = "major", labelsize = 10)
-        ax.xaxis.get_offset_text().set_fontsize(10)
-        ax.yaxis.get_offset_text().set_fontsize(10)
-        cbar.ax.tick_params(labelsize = 10)
-        cbar.set_label("|error| [V]", fontsize = 12)
-
-        Plotter.tight_layout()
-        current_figure = Plotter.gcf()
-        display(current_figure)
-
-        ################################################################################
-        # Error with PythonPlot
-        ################################################################################
+        # Calculate the error
+        @assert length(ct_solution_psi) == length(tesca_solution_psi)
 
         err = ct_solution_psi .- tesca_solution_psi
+        @show norm_l2 = sqrt(sum(err .^ 2))
+        @show norm_linf = maximum(abs.(err))
 
-        Plotter.figure()
-        Plotter.tripcolor(tridata(grid)..., abs.(err))
-        cbar = Plotter.colorbar(orientation = "vertical", extend = "both")
-
-        Plotter.xlabel("Width [m]", fontsize = 12)
-        Plotter.ylabel("Height [m]", fontsize = 12)
-        Plotter.title("|Error|: CT - Tesca ", fontsize = 16)
-
-        ax = Plotter.gca()
-        ax.tick_params(axis = "both", which = "major", labelsize = 10)
-        ax.xaxis.get_offset_text().set_fontsize(10)
-        ax.yaxis.get_offset_text().set_fontsize(10)
-        cbar.ax.tick_params(labelsize = 10)
-        cbar.set_label("|error| [V]", fontsize = 12)
-
-        Plotter.tight_layout()
-        current_figure = Plotter.gcf()
-        display(current_figure)
     end
 
     return
