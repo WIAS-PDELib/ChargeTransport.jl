@@ -8,7 +8,7 @@ function read_diodat(fname)
     tks = TokenStream(fname)
     expecttoken(tks, "DF-ISE")
     expecttoken(tks, "text")
-    data = Dict{String, Vector{Float64}}()
+    data = Dict{String, Union{Vector{Float64}, Matrix{Float64}}}()
     while !eof(tks)
         token = gettoken(tks)
         while token != "function" && !eof(tks)
@@ -45,21 +45,36 @@ function read_diodat(fname)
 
         expecttoken(tks, "{")
 
-        if typestr == "scalar"
-            # read scalar functions
-            func = zeros(nval)
-            for i in 1:nval
-                func[i] = parse(Float64, gettoken(tks))
+        function add_entry!(data, funcname, func)
+            key = funcname
+            if haskey(data, key)
+                i = 2
+                key = "$(funcname)_$i"
+                while haskey(data, key)
+                    i = i + 1
+                    key = "$(funcname)_$i"
+                end
             end
-            data[funcname] = func
-            @info "Parsed scalar function $(funcname) valid on $(validity)"
+            data[key] = func
+            return key
+        end
 
-        else
-            # skip vector function for now (not sure for what we need them)
-            for _ in 1:(nval * dim)
-                gettoken(tks)
+        if typestr == "scalar"
+            func = zeros(nval)
+            for ival in 1:nval
+                func[ival] = parse(Float64, gettoken(tks))
             end
-            @info "Skipped $(typestr) function $(funcname)"
+            key = add_entry!(data, funcname, func)
+            @info """Scalar $(key) on $(validity) ∈ $(extrema(func))"""
+        else
+            func = zeros(dim, nval)
+            for ival in 1:nval
+                for idim in 1:dim
+                    func[idim, ival] = parse(Float64, gettoken(tks))
+                end
+            end
+            key = add_entry!(data, funcname, func)
+            @info """Vector $(key) on $(validity) ∈ $(extrema(func, dims = (2,)))"""
         end
 
         expecttoken(tks, "}")
