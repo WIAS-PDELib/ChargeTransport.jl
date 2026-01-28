@@ -851,6 +851,29 @@ function addGeneration!(f, u, node, data)
     return
 end
 
+function addReaction!(f, u, node, data)
+    ###########################################################
+    ####            right-hand side of reaction            ####
+if data.calculationType == OutOfEquilibrium # Reaction only happens when out of Equilibirium
+    if node.region == 2 # The reactions only happen in the perovskite layer.
+        
+        # 1. Calculation
+        d_p = get_density!(u, node, data, 2)
+        
+        # Use Indexing: Get the rate for *this specific node*
+        rate_val = data.params.reactionRates
+        reactionTerm = rate_val * d_p
+
+        # 2. Update Physics (Corrected typo: reactioTerm -> reactionTerm)
+        f[2] = f[2] + reactionTerm #when increase, use "-", since in VoronoiFVM, reaction terms are in LHS
+        f[3] = f[3] - reactionTerm #same above
+        
+    end
+end
+
+    return
+end
+
 """
 $(TYPEDSIGNATURES)
 Function which builds right-hand side of Poisson equation, i.e. which builds
@@ -909,7 +932,7 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Function which builds right-hand side of electric charge carriers.
+Function which builds right-hand side of all carriers.
 """
 function RHSContinuityEquations!(f, u, node, data)
 
@@ -923,6 +946,9 @@ function RHSContinuityEquations!(f, u, node, data)
     addStimulatedRecombination!(f, u, node, data, data.laserModel)
     # dependent on user information concerncing generation
     addGeneration!(f, u, node, data)
+
+    # add the reaction terms on the RHS
+    addReaction!(f, u, node, data)
     return nothing
 
 end

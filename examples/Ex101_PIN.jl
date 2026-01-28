@@ -9,8 +9,6 @@ The simulations are performed out of equilibrium and for the stationary problem.
 By default, we assume a Boltzmann relation between densities and potentials.
 =#
 
-##asdddddddasdqwdsdww
-
 
 module Ex101_PIN
 

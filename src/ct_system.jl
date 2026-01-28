@@ -312,6 +312,11 @@ mutable struct Params
     """
     generationPeak::Float64
 
+    """
+    Parameter for the reactions happens in the semiconductor.
+    """
+    reactionRates::Float64
+
     ###############################################################
     ####              number of boundary regions               ####
     ###############################################################
@@ -1056,10 +1061,9 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     A struct holding the dimensionless physical constants used for the simulations.
     """
     constants::Constants
-
+    
     ###############################################################
     Data{TFuncs, TVoltageFunc, TGenerationData}() where {TFuncs, TVoltageFunc, TGenerationData} = new()
-
 end
 
 

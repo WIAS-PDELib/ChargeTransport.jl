@@ -37,7 +37,7 @@ One input parameter is the boolean plotGridpoints which makes it possible to plo
 which indicate where the nodes are located.
 
 """
-function plot_densities!(visualizer, ctsys, solution, title, label_density, ; plotGridpoints = false)
+function plot_densities!(visualizer, ctsys, solution, title, label_density, ; plotGridpoints = false,legend_pos=:lt, focus= nothing)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
@@ -56,8 +56,12 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
     params = data.params
     colors = ["green", "red", "gold", "purple", "orange"]
     linestyles = [:solid, :dot, :dash, :dashdot, :solid]
-
-    for icc in 1:params.numberOfCarriers
+    if focus== nothing
+        targets=1: params.numberOfCarriers
+    else
+        targets = isa(focus, Number) ? (focus,) : focus
+    end
+    for icc in targets
 
         label_is_plotted = false
 
@@ -74,7 +78,7 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
                 clear = false,
                 color = colors[icc],
                 label = label_is_plotted ? nothing : label_density[icc],
-                legend = :cc,
+                legend = legend_pos,
                 linestyle = linestyles[icc],
                 linewidth = 3,
                 title = title,
@@ -98,7 +102,6 @@ function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGr
 
     return reveal(vis)
 end
-
 """
 $(TYPEDSIGNATURES)
 
