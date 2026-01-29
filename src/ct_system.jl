@@ -1009,6 +1009,12 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     ohmicContactModel::OhmicContactModelType
 
+    """
+    Flag to enable or disable the calculation of reaction terms (generation, recombination)
+    within the physical model.
+    """
+    enableReaction::Bool
+
     ###############################################################
     ####             Templates for DOS and BEE                 ####
     ###############################################################
@@ -1154,6 +1160,7 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.λ3 = 1.0                   # λ3: embedding parameter for electro chemical reaction
     data.generationComplete = false # set this by default to false
     data.ohmicContactModel = OhmicContactDirichlet # OhmicContactRobin also possible
+    data.enableReaction = false # set this by default to false
 
     ###############################################################
     ####             Templates for DOS and BEE                 ####

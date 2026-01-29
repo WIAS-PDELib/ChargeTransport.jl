@@ -854,22 +854,22 @@ end
 function addReaction!(f, u, node, data)
     ###########################################################
     ####            right-hand side of reaction            ####
-if data.calculationType == OutOfEquilibrium # Reaction only happens when out of Equilibirium
-    if node.region == 2 # The reactions only happen in the perovskite layer.
-        
-        # 1. Calculation
-        d_p = get_density!(u, node, data, 2)
-        
-        # Use Indexing: Get the rate for *this specific node*
-        rate_val = data.params.reactionRates
-        reactionTerm = rate_val * d_p
 
-        # 2. Update Physics (Corrected typo: reactioTerm -> reactionTerm)
-        f[2] = f[2] + reactionTerm #when increase, use "-", since in VoronoiFVM, reaction terms are in LHS
-        f[3] = f[3] - reactionTerm #same above
+    if data.calculationType == OutOfEquilibrium && data.enableReaction == true # Reaction only happens when out of Equilibirium
+        if node.region == 2 # The reactions only happen in the perovskite layer.
         
+            # 1. Calculation
+            d_p = get_density!(u, node, data, 2)
+        
+            # Use Indexing: Get the rate for *this specific node*
+            rate_val = data.params.reactionRates
+            reactionTerm = rate_val * d_p
+
+            # 2. Update Physics (Corrected typo: reactioTerm -> reactionTerm)
+            #f[2] = f[2] + reactionTerm #when decreasing, use "+", since in VoronoiFVM, reaction terms are in LHS
+            f[3] = f[3] - reactionTerm #same above 
+        end
     end
-end
 
     return
 end
