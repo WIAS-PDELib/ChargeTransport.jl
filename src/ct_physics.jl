@@ -864,9 +864,9 @@ function addReaction!(f, u, node, data)
             # Use Indexing: Get the rate for *this specific node*
             rate_val = data.params.reactionRates
             reactionTerm = rate_val * d_p
-
+            factor = 1.0
             # 2. Update Physics (Corrected typo: reactioTerm -> reactionTerm)
-            #f[2] = f[2] + reactionTerm #when decreasing, use "+", since in VoronoiFVM, reaction terms are in LHS
+            f[2] = f[2] + reactionTerm*factor #when decreasing, use "+", since in VoronoiFVM, reaction terms are in LHS
             f[3] = f[3] - reactionTerm #same above 
         end
     end
