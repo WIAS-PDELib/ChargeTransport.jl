@@ -1177,7 +1177,7 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.params = Params(grid[NumCellRegions], numberOfBoundaryRegions, numberOfCarriers)
     data.paramsnodal = ParamsNodal(grid, numberOfCarriers)
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
-
+    
     ###############################################################
 
     data.constants = constants
