@@ -449,6 +449,12 @@ mutable struct Params
     for each carrier ``\\alpha`` on each region.
     """
     mobility::Array{Float64, 2}
+    """
+    A 2D array with the corresponding trap distribution width for each trap species and region.
+    """
+    trapDistributionWidth::Array{Float64, 2}
+    
+
 
     
 
@@ -586,6 +592,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.densityOfStates = ones(Float64, numberOfCarriers, numberOfRegions)
     params.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfRegions)
     params.mobility = ones(Float64, numberOfCarriers, numberOfRegions)
+    params.trapDistributionWidth = zeros(Float64, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     #### 2 x number of regions (for electrons and holes only!) ####
