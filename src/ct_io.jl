@@ -1,7 +1,7 @@
 """
     read_diodat(filename)
 
-Read scalar vertex functions from  WIAS-TeSCA dios "*.dat" output files.
+Read scalar and vector vertex functions from  WIAS-TeSCA dios "*.dat" output files.
 Return a dictionary containing the functions found.
 """
 function read_diodat(fname)
@@ -59,10 +59,15 @@ function read_diodat(fname)
             return key
         end
 
+        function parse_or_nan(tks)
+            x = tryparse(Float64, tks)
+            return x === nothing ? NaN : x
+        end
+
         if typestr == "scalar"
             func = zeros(nval)
             for ival in 1:nval
-                func[ival] = parse(Float64, gettoken(tks))
+                func[ival] = parse_or_nan(gettoken(tks))
             end
             key = add_entry!(data, funcname, func)
             @info """Scalar $(key) on $(validity) ∈ $(extrema(func))"""
@@ -70,7 +75,7 @@ function read_diodat(fname)
             func = zeros(dim, nval)
             for ival in 1:nval
                 for idim in 1:dim
-                    func[idim, ival] = parse(Float64, gettoken(tks))
+                    func[idim, ival] = parse_or_nan(gettoken(tks))
                 end
             end
             key = add_entry!(data, funcname, func)
