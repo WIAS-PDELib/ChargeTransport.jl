@@ -185,19 +185,9 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     push!(data.trapCarrierList, enableTraps)
 
-    if(data.F[trapCarrier] == GaussFermi)
-        @show ŝ = data.params.trapDistributionWidth[trapCarrier]/(data.params.temperature*data.constants.k_B)
-        if(ŝ==0.0)
-            @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
-            data.F[trapCarrier] = FermiDiracMinusOne
-        else
-            @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
-            data.F[trapCarrier] = Base.Fix2(GaussFermi, Float64(ŝ))
-        end
+    if (data.F[trapCarrier] !== FermiDiracMinusOne)
+        @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
     end
-    # if (data.F[trapCarrier] !== FermiDiracMinusOne || )
-    #     @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
-    # end
 
     return
 
@@ -351,10 +341,7 @@ mutable struct Params
     ``z_\\alpha`` for all carriers ``\\alpha``.
     """
     chargeNumbers::Array{Float64, 1}
-    """
-    An array with the corresponding trap distribution width for each trap species.
-    """
-    trapDistributionWidth::Array{Float64, 1}
+
 
     ###############################################################
     ####    number of boundary regions x number of carriers    ####
@@ -449,7 +436,10 @@ mutable struct Params
     for each carrier ``\\alpha`` on each region.
     """
     mobility::Array{Float64, 2}
-
+    """
+    A 2D array with the corresponding trap distribution width for each trap species and region.
+    """
+    trapDistributionWidth::Array{Float64, 2}
     
 
 
@@ -559,7 +549,6 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ####                  number of carriers                   ####
     ###############################################################
     params.chargeNumbers = zeros(Float64, numberOfCarriers)
-    params.trapDistributionWidth = zeros(Float64, numberOfCarriers)
 
     ###############################################################
     ####     number of carriers x number of boundary regions   ####
@@ -586,6 +575,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.densityOfStates = ones(Float64, numberOfCarriers, numberOfRegions)
     params.bandEdgeEnergy = zeros(Float64, numberOfCarriers, numberOfRegions)
     params.mobility = ones(Float64, numberOfCarriers, numberOfRegions)
+    params.trapDistributionWidth = zeros(Float64, numberOfCarriers, numberOfRegions)
 
     ###############################################################
     #### 2 x number of regions (for electrons and holes only!) ####

@@ -5,7 +5,6 @@ Type of statistics functions.
 const StandardFuncSet = Union{
     typeof(Boltzmann), typeof(Blakemore), typeof(FermiDiracMinusOne),
     typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA), 
-    typeof(GaussFermi), Base.Fix2{typeof(GaussFermi), Float64},
     typeof(gaussFermi_sHatEquals2), typeof(gaussFermi_sHatEquals4), typeof(gaussFermi_sHatEquals6), typeof(gaussFermi_sHatEquals8), typeof(gaussFermi_sHatEquals10),typeof(gaussFermi_sHatEquals30),
 }
 

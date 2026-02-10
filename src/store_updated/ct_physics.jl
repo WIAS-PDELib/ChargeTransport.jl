@@ -1738,7 +1738,7 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{GaussianDistributedTrap}
 
                     # Compute capture rate by integrating over Gaussian trap distribution
                     βc=etaFunction!(u, node, data, itc)
-                    ξ=sqrt(2)*σ_T[itc]/(k_B*T)
+                    ξ=sqrt(2)*σ_T[itc,node.region]/(k_B*T)
                     captureIntegral = GFI(βc)
                     # I = distributedTrapsIntegral(exp(-βc), ξ)
                     # if(100*abs(captureIntegral - I)/I > 2)
@@ -1749,10 +1749,10 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{GaussianDistributedTrap}
 
                     # Escape computed from detailed balance assuming traps described using FD-minus one
                     # e = s * Nc * exp(zc * (Ec - Et) / (k_B * T)) * nonBoltzmannReductionFactor
-                    βe=βc - σ_T[itc]^2/(k_B*T)^2 # Minus sign because of definition of eta and distribution function?
+                    βe=βc - σ_T[itc,node.region]^2/(k_B*T)^2 # Minus sign because of definition of eta and distribution function?
                     escapeIntegral = GFI(βe)
                     e = s * Nc * exp(zc * (Ec - Et) / (k_B * T)) * nonBoltzmannReductionFactor
-                    e *= exp( 0.5*(σ_T[itc]/(k_B*T))^2 ) 
+                    e *= exp( 0.5*(σ_T[itc,node.region]/(k_B*T))^2 ) 
 
                     # I = distributedTrapsIntegral(exp(-βc + σ_T[itc,node.region]^2/(k_B*T)^2), ξ)
                     # if(100*abs(escapeIntegral - I)/I > 5)

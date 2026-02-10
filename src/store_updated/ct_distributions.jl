@@ -90,7 +90,7 @@ function degenerateLimit(x)
     return x < 0 ? NaN : 4 / (3 * sqrt(pi)) * x^(3 / 2)
 end
 
-function gaussFermi_sHatEquals2(x::Real)
+function gaussFermi_sHatEquals2(x)
     sHat=2
     H = 0.7466947053286296
     K = 0.5565965819658305
@@ -107,7 +107,7 @@ function gaussFermi_sHatEquals2(x::Real)
     return G
 end
 
-function gaussFermi_sHatEquals4(x::Real)
+function gaussFermi_sHatEquals4(x)
     sHat=4
     H = 0.896563421365437
     K = 0.28181676579245685
@@ -123,7 +123,7 @@ function gaussFermi_sHatEquals4(x::Real)
     return G
 end
 
-function gaussFermi_sHatEquals6(x::Real)
+function gaussFermi_sHatEquals6(x)
     sHat=6
     H = 0.9431587310721202
     K = 0.1683730458855388
@@ -140,7 +140,7 @@ function gaussFermi_sHatEquals6(x::Real)
 end
 
 
-function gaussFermi_sHatEquals8(x::Real)
+function gaussFermi_sHatEquals8(x)
     sHat=8
     H = 0.9636458688943249
     K = 0.11249596843700593
@@ -157,7 +157,7 @@ function gaussFermi_sHatEquals8(x::Real)
 end
 
 
-function gaussFermi_sHatEquals10(x::Real)
+function gaussFermi_sHatEquals10(x)
     sHat=10
     H = 0.9745474864965935
     K = 0.08091495970175866
@@ -174,7 +174,7 @@ function gaussFermi_sHatEquals10(x::Real)
 end
 
 
-function gaussFermi_sHatEquals30(x::Real)
+function gaussFermi_sHatEquals30(x)
     sHat=30
     H = 0.9959651235434415
     K = 0.013889673859928786
@@ -190,33 +190,6 @@ function gaussFermi_sHatEquals30(x::Real)
     return G
 end
 
-### Paasch functions
-function PaaschH(s::Real)
-    return sqrt(2)/s * SpecialFunctions.erfcinv( exp( -(s^2) / 2) )
-end
-function PaaschK(s::Real)
-    H=PaaschH(s)
-    return 2 * (1 - H/s * sqrt(2/pi) * exp(1/2 *  s^2 * (1-H^2)) )
-end
-function GaussFermi(x::Real, s::Real)
-    F = x -> generic_gaussFermi(x,PaaschH(s),PaaschK(s),s)
-    return F(x)
-end
-function generic_gaussFermi(x::Real,H::Real,K::Real,s::Real)
-    xp(x) = abs(x)
-    if(xp(x) > s^2)
-        G = exp((s*s/2-xp(x))) / (1.0 + exp(K * (s*s-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(s*sqrt(2)) * H)
-    end
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
-# function gaussFermi(x::Real)
-#     return gaussFermi_2(2)(x)
-# end
 """
 $(TYPEDSIGNATURES)
 
