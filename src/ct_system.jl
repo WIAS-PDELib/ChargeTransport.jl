@@ -186,12 +186,12 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
     push!(data.trapCarrierList, enableTraps)
 
     if(data.F[trapCarrier] == GaussFermi)
-        @show ŝ = data.params.trapDistributionWidth[trapCarrier]/(data.params.temperature*data.constants.k_B)
+        ŝ = data.params.trapDistributionWidth[trapCarrier]/(data.params.temperature*data.constants.k_B)
         if(ŝ==0.0)
             @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
             data.F[trapCarrier] = FermiDiracMinusOne
         else
-            @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
+            # @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
             data.F[trapCarrier] = Base.Fix2(GaussFermi, Float64(ŝ))
         end
     end
