@@ -958,6 +958,12 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     barrierLoweringInfo::BarrierLoweringSpecies
 
+    """
+    Flag to enable or disable the calculation of reaction terms (generation, recombination)
+    within the physical model.
+    """
+    enableReaction::Bool
+
     ###############################################################
     ####                 Numerics information                  ####
     ###############################################################
@@ -1008,12 +1014,6 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     for the electric potential (Dirichlet or Robin)
     """
     ohmicContactModel::OhmicContactModelType
-
-    """
-    Flag to enable or disable the calculation of reaction terms (generation, recombination)
-    within the physical model.
-    """
-    enableReaction::Bool
 
     ###############################################################
     ####             Templates for DOS and BEE                 ####
@@ -1144,6 +1144,8 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.index_psi = numberOfCarriers + 1
     data.barrierLoweringInfo = BarrierLoweringSpecies()
     data.barrierLoweringInfo.BarrierLoweringOn = BarrierLoweringOff # set in general case barrier lowering off
+    data.enableReaction = false # set this by default to false
+
 
     ###############################################################
     ####                 Numerics information                  ####
@@ -1160,7 +1162,6 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.λ3 = 1.0                   # λ3: embedding parameter for electro chemical reaction
     data.generationComplete = false # set this by default to false
     data.ohmicContactModel = OhmicContactDirichlet # OhmicContactRobin also possible
-    data.enableReaction = false # set this by default to false
 
     ###############################################################
     ####             Templates for DOS and BEE                 ####

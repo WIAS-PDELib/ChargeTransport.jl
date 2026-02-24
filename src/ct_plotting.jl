@@ -102,6 +102,74 @@ function plot_densities(Plotter, ctsys, solution, title, label_density, ; plotGr
 
     return reveal(vis)
 end
+
+function video_densities!(visualizer, ctsys, solution, title, label_density, ; plotGridpoints = false,legend_pos=:lt, focus= nothing)
+
+    grid = ctsys.fvmsys.grid
+    data = ctsys.fvmsys.physics.data
+    numberOfRegions = grid[NumCellRegions]
+
+    if dim_space(grid) > 1
+        error("plot_densities is so far only tested in 1D")
+    end
+
+    if plotGridpoints == true
+        marker = :circle
+    else
+        marker = :none
+    end
+
+    params = data.params
+    colors = ["green", "red", "gold", "purple", "orange"]
+    linestyles = [:solid, :dot, :dash, :dashdot, :solid]
+    if focus== nothing
+        targets=1: params.numberOfCarriers
+    else
+        targets = isa(focus, Number) ? (focus,) : focus
+    end
+
+    trange = range(extrema(solution.t)...; length = nframes)
+    movie(visualizer; file = video) do vis
+        for t in trange
+            title = title
+            sol = solution(t)
+
+            for icc in targets
+
+                label_is_plotted = false
+
+                for ireg in 1:numberOfRegions
+                    subg = subgrid(grid, [ireg])
+                    ncc = get_density(solution, ireg, ctsys, icc)
+
+                    ## Note that this implies a 1D plot, for multidimensional plots, you may work with
+                    ## GridVisualize.jl or write your own code.
+                    scalarplot!(
+                        visualizer,
+                        subg,
+                        1.0e-6 .* ncc;
+                        clear = false,
+                        color = colors[icc],
+                        label = label_is_plotted ? nothing : label_density[icc],
+                        legend = legend_pos,
+                        linestyle = linestyles[icc],
+                        linewidth = 3,
+                        title = title,
+                        xlabel = L"\text{space [m]}",
+                        ylabel = L"density [$\frac{1}{\text{cm}^3}$]",
+                        yscale = :log
+                    )
+                    label_is_plotted = true
+
+                end
+            end
+        end
+    end
+
+    return video
+
+end
+
 """
 $(TYPEDSIGNATURES)
 
@@ -439,7 +507,6 @@ function plot_doping!(visualizer, ctsys, label_density)
                 yscale = :symlog
             )
         end
-
     end
 
     # plot different doping values on boundary
@@ -571,7 +638,7 @@ multidimensional plottings are not included.
 One input parameter is the boolean plotGridpoints which makes it possible to plot markers,
 which indicate where the nodes are located.
 """
-function plot_solution!(visualizer, ctsys, solution, title, label_solution; plotGridpoints = false)
+function plot_solution!(visualizer, ctsys, solution, title, label_solution; plotGridpoints = false, focus = nothing)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data

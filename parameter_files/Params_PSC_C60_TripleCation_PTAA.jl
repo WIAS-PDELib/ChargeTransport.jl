@@ -123,7 +123,7 @@
 
 
     ## Reactionrates for test
-    reactionRates=1.0e-18;
+    reactionRates=1e-18;
 
 end
 
