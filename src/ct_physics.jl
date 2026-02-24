@@ -852,26 +852,41 @@ function addGeneration!(f, u, node, data)
 end
 
 function addReaction!(f, u, node, data)
-    ###########################################################
-    ####            right-hand side of reaction            ####
+    # ========================================================= #
+    #              Right-hand side of reaction                  #
+    # ========================================================= #
 
-    if data.calculationType == OutOfEquilibrium && data.enableReaction == true # Reaction only happens when out of Equilibirium
-        if node.region == 2 # The reactions only happen in the perovskite layer.
-        
-            # 1. Calculation
-            d_p = get_density!(u, node, data, 2)
-        
-            # Use Indexing: Get the rate for *this specific node*
-            rate_val = data.params.reactionRates
-            reactionTerm = rate_val * d_p
-            factor = 1.0
-            # 2. Update Physics (Corrected typo: reactioTerm -> reactionTerm)
-            f[2] = f[2] + reactionTerm*factor #when decreasing, use "+", since in VoronoiFVM, reaction terms are in LHS
-            f[3] = f[3] - reactionTerm #same above 
-        end
-    end
+    # 1. Check conditions: Out of equilibrium and reactions enabled, and check region: Only happen in the perovskite layer
+    if data.calculationType == OutOfEquilibrium && data.enableReaction && node.region == 2 
+            reactions = data.params.Reactions
+            
+            # Iterate through each reaction directly
+            for rxn in reactions
+                # --- A. Calculate density multiplications (e.g., [p][V^{+}] or [p][p]) ---
+                d_reactants = 1.0  # Initialize 
+                for n in rxn.Reactants
+                    d_reactants *= get_density!(u, node, data, n)
+                end
+                
+                # --- B. Multiply with reaction rate ---
+                reactionTerm = rxn.k * d_reactants
 
-    return
+                # --- C. Update species equations ---
+                ##For Sum, use "-"/'-'...both looks cute :P
+                # Reactants are consumed (Plus)
+                for n in rxn.Reactants
+                    f[n] = f[n] + reactionTerm 
+                end
+
+                # Products are generated (Minus)
+                for n in rxn.Products
+                    f[n] = f[n] - reactionTerm 
+                end
+                
+            end # end of reactions loop
+    end # end of condition check
+    
+    return nothing
 end
 
 """

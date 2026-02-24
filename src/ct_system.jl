@@ -315,7 +315,8 @@ mutable struct Params
     """
     Parameter for the reactions happens in the semiconductor.
     """
-    reactionRates::Float64
+    Reactions::Vector{@NamedTuple{Reactants::Vector{Int64}, Products::Vector{Int64}, k::Float64}}
+    # Parameter for reactions in semiconductor
 
     ###############################################################
     ####              number of boundary regions               ####
@@ -536,6 +537,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.r0 = 0.0                 # r0 prefactor electro-chemical reaction
     params.prefactor_SRH = 1.0
     params.generationPeak = 0.0     # parameter which shifts Beer-Lambert generation peak
+    params.Reactions = [(Reactants=Int64[], Products=Int64[], k=0.0)] #Parameters about the reactions
 
     ###############################################################
     ####              number of boundary regions               ####

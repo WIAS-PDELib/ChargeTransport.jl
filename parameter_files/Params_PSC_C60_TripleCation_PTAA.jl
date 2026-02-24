@@ -120,11 +120,6 @@
     ## metal offsets
     ΔEFLeft = 0.05 * eV  # offset between metal and ETL
     ΔEFRight = 0.05 * eV # offset between metal and HTL
-
-
-    ## Reactionrates for test
-    reactionRates=1e-18;
-
 end
 
 
@@ -213,9 +208,6 @@ function Params(p::Params_PSC_C60_TripleCation_PTAA)
     params.generationIncidentPhotonFlux = p.incidentPhotonFlux
     params.generationAbsorption = p.absorption
     params.invertedIllumination = -1
-
-    ## reactionRates
-    params.reactionRates = p.reactionRates
 
     return params
 end
