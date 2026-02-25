@@ -1,4 +1,5 @@
  DF-ISE text
+ # Example WIAS-TeSCA output data file for testing read_diodat()
  # filename: mosSave_dio.dat 
  # written: 26 Jan 20 15:56:47 
  # by: ../../build/tesca-gnu-2022-v002 
