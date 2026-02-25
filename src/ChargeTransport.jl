@@ -9,6 +9,7 @@ using ExtendableGrids: ExtendableGrids, BFaceNodes, BFaceRegions, CellNodes,
     CellRegions, Coordinates, ExtendableGrid,
     NumBFaceRegions, NumCellRegions, append!, dim_space,
     num_cellregions, num_nodes, subgrid
+using ExtendableGrids: TokenStream, gettoken, expecttoken
 using ForwardDiff: ForwardDiff
 # visualizer wrapper
 using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
@@ -121,6 +122,10 @@ export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBo
 export plot_solution, plot_IV
 export plot_densities!, plot_energies!, plot_doping!, plot_electroNeutralSolutionBoltzmann!
 export plot_solution!, plot_IV!
+
+#################################################################
+include("ct_io.jl")
+export read_diodat
 
 #################################################################
 
