@@ -61,6 +61,7 @@ export QFModelType, DiscontQF, ContQF
 
 export OuterBoundaryModelType, OuterBoundaryModelType, InterfaceModelType
 export OhmicContact, SchottkyContact, SchottkyBarrierLowering, MixedOhmicSchottkyContact
+export GateContact
 export InterfaceNone, InterfaceRecombination
 
 export OhmicContactModelType, OhmicContactDirichlet, OhmicContactRobin
@@ -132,6 +133,7 @@ export read_diodat
 # parameter set (add new sets to the list below)
 for parameter_set in [
         :Params_Laser_simple,
+        :Params_MOSFET,
         :Params_PSC_PCBM_MAPI_Pedot,
         :Params_PSC_TiO2_MAPI_spiro,
         :Params_PSC_C60_TripleCation_PTAA,

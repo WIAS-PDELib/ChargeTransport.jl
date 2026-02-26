@@ -607,6 +607,35 @@ function breaction!(f, u, bnode, data, ::Type{InterfaceRecombination})
     return
 end
 
+###########################################################################
+###########################################################################
+
+
+"""
+$(TYPEDSIGNATURES)
+Creates boundary conditions for gate contacts. Robin boundary conditions are applied to the electrostatic potential
+    
+``f[\\psi] = \\frac{\\varepsilon_{ox}}{d_{ox}}(u[\\psi] - U_G - U_{add}) - Q_{ss}``,
+
+where ``\\varepsilon_{ox}`` denotes the absolute dielectric permittivity of the oxide and ``d_{ox}`` the thickness of the oxide.
+The term ``U_{add}`` represents the additional voltage occurring at the gate, and ``Q_{ss}`` denotes the charge associated with surface states.
+
+For the quasi Fermi potentials, homogeneous Neumann boundary conditions are implemented.
+"""
+
+# Boundary conditions for Gate contact
+function breaction!(f, u, bnode, data, ::Type{GateContact})
+
+    params = data.params
+    ipsi = data.index_psi
+
+    # Robin boundary condition for electrostatic potential
+    f[ipsi] = (params.dielectricConstantOxide[bnode.region] / params.thicknessOxide[bnode.region]) * (u[ipsi] - params.contactVoltage[bnode.region] - params.additionalVoltage[bnode.region]) - params.surfaceChargeDensity[bnode.region]
+
+    # Homogeneous Neumann boundary conditions for electrons and holes by default
+    return
+end
+
 ##########################################################
 ##########################################################
 

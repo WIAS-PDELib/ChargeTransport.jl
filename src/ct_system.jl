@@ -326,12 +326,33 @@ mutable struct Params
     """
     contactVoltage::Array{Float64, 1}
 
-
     """
     An array containing a constant value for the electric potential
     in case of Dirichlet boundary conditions.
     """
     bψEQ::Array{Float64, 1}
+
+    """
+    An array containing a constant value for the thickness of the oxide.
+    """
+    thicknessOxide::Array{Float64, 1}
+
+    """
+    An array containing a constant value for the charge associated with surface states.
+    """
+    surfaceChargeDensity::Array{Float64, 1}
+
+    """
+    An array containing a constant value for the absolute dielectric permittivity of the oxide.
+    """
+    dielectricConstantOxide::Array{Float64, 1}
+
+    """
+    An array containing a constant value for additional voltage.
+    This voltage is applied on top of the contact voltage (e.g., at gate contacts).
+    """
+    additionalVoltage::Array{Float64, 1}
+
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -378,7 +399,6 @@ mutable struct Params
 
     """
     An array to define the reaction coefficient at internal boundaries.
-
     """
     bReactionCoefficient::Array{Float64, 2}
 
@@ -483,6 +503,7 @@ mutable struct Params
     incident photon flux.
     """
     generationIncidentPhotonFlux::Array{Float64, 1}
+
     """
     A region dependent array for an uniform generation rate.
     """
@@ -538,6 +559,10 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
     params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
     params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
+    params.thicknessOxide = zeros(Float64, numberOfBoundaryRegions)
+    params.surfaceChargeDensity = zeros(Float64, numberOfBoundaryRegions)
+    params.dielectricConstantOxide = zeros(Float64, numberOfBoundaryRegions)
+    params.additionalVoltage = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -1645,6 +1670,14 @@ function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
     ctsys.data.params.contactVoltage[ibreg] = Δu
     return
 
+end
+
+function __set_contact!(ctsys, ibreg, Δu, ::Type{GateContact})
+
+    ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+
+    return
 end
 
 ###########################################################
