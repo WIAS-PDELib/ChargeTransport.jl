@@ -263,13 +263,25 @@ Abstract type for user defined generation.
 """
 abstract type GenerationUserDefined end
 
+"""
+Abstract types for day/night cycles
+"""
+abstract type GenerationSunrise end
+abstract type GenerationSundown end
+abstract type GenerationDark end
+
 ##########################################################
 """
 Possible types for generation model.
 """
 const GenerationModelType = Union{
-    Type{GenerationUniform}, Type{GenerationBeerLambert},
-    Type{GenerationNone}, Type{GenerationUserDefined},
+    Type{GenerationUniform}, 
+    Type{GenerationBeerLambert},
+    Type{GenerationNone}, 
+    Type{GenerationUserDefined},
+    Type{GenerationSunrise},  # New for sunrise
+    Type{GenerationSundown},  # New for sundown
+    Type{GenerationDark}      # New for night time
 }
 ##########################################################
 ##########################################################

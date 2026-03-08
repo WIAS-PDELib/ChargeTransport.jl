@@ -842,7 +842,6 @@ end
 function addGeneration!(f, u, node, data)
 
     generationTerm = generation(data, node, data.generationModel)
-
     for icc in data.electricCarrierList
         icc = data.chargeCarrierList[icc] # based on user index and regularity of solution quantities or integers are used and depicted here
         f[icc] = f[icc] - data.constants.q * data.params.chargeNumbers[icc] * generationTerm
@@ -861,26 +860,26 @@ function addReaction!(f, u, node, data)
             reactions = data.params.Reactions
             
             # Iterate through each reaction directly
-            for rxn in reactions
+            for reaction in reactions
                 # --- A. Calculate density multiplications (e.g., [p][V^{+}] or [p][p]) ---
                 d_reactants = 1.0  # Initialize 
-                for n in rxn.Reactants
-                    d_reactants *= get_density!(u, node, data, n)
+                for ireactant in reaction.Reactants
+                    d_reactants *= get_density!(u, node, data, ireactant)
                 end
                 
                 # --- B. Multiply with reaction rate ---
-                reactionTerm = rxn.k * d_reactants
+                reactionTerm = reaction.k * d_reactants
 
                 # --- C. Update species equations ---
                 ##For Sum, use "-"/'-'...both looks cute :P
                 # Reactants are consumed (Plus)
-                for n in rxn.Reactants
-                    f[n] = f[n] + reactionTerm 
+                for ireactant in reaction.Reactants
+                    f[ireactant] = f[ireactant] + reactionTerm 
                 end
 
                 # Products are generated (Minus)
-                for n in rxn.Products
-                    f[n] = f[n] - reactionTerm 
+                for iproduct in reaction.Products
+                    f[iproduct] = f[iproduct] - reactionTerm 
                 end
                 
             end # end of reactions loop
@@ -1042,9 +1041,71 @@ end
 # continuity equations with a user defined generation rate.
 # only works in 1D till now; adjust node, when multidimensions
 function generation(data, node, ::Type{GenerationUserDefined})
-
     return data.λ2 .* data.generationData[node.index]
+end
 
+# ==============================================================================
+# Generation Model: Sunrise
+# Smoothly ramps up photogeneration from 0 to 1 using a raised cosine function.
+# ==============================================================================
+function generation(data, node, ::Type{GenerationSunrise})
+    params = data.params
+    ireg = node.region
+    current_time = node.time
+    
+    # Overwrite 'node' to extract its spatial coordinate scalar
+    node = node.coord[node.index]
+    
+    # Transient duration parameter (set to 60.0s for testing purposes)
+    # TODO: Consider passing this via 'data.params' in future iterations
+    T = 60.0 
+    
+    # Time clamping prevents numerical overshoot and non-physical oscillations
+    # if the solver evaluates times slightly outside the [0, T] interval.
+    t_safe = clamp(current_time, 0.0, T)
+
+    # Smooth step multiplier: f(0) = 0.0, f(T) = 1.0
+    smooth_factor = 0.5 * (1.0 - cos(pi * t_safe / T))
+    
+    # Standard Beer-Lambert generation scaled by the transient smooth factor
+    return data.λ2 .* params.generationIncidentPhotonFlux[ireg] .* params.generationAbsorption[ireg] .* exp.(- params.invertedIllumination .* params.generationAbsorption[ireg] .* (node .- params.generationPeak)) .* smooth_factor
+end
+
+# ==============================================================================
+# Generation Model: Sundown
+# Smoothly ramps down photogeneration from 1 to 0 using a falling cosine function.
+# ==============================================================================
+function generation(data, node, ::Type{GenerationSundown})
+    params = data.params
+    ireg = node.region
+    current_time = node.time
+    
+    # Overwrite 'node' to extract its spatial coordinate scalar
+    node = node.coord[node.index]
+    
+    # Transient duration parameter (set to 60.0s for testing purposes)
+    # TODO: Consider passing this via 'data.params' in future iterations
+    T = 60.0 
+    
+    # Time clamping enforces strictly steady-state darkness after time T
+    t_safe = clamp(current_time, 0.0, T)
+
+    # Smooth step multiplier: f(0) = 1.0, f(T) = 0.0
+    smooth_factor = 0.5 * (1.0 + cos(pi * t_safe / T))
+    
+    # Standard Beer-Lambert generation scaled by the transient smooth factor
+    return data.λ2 .* params.generationIncidentPhotonFlux[ireg] .* params.generationAbsorption[ireg] .* exp.(- params.invertedIllumination .* params.generationAbsorption[ireg] .* (node .- params.generationPeak)) .* smooth_factor
+end
+
+# ==============================================================================
+# Generation Model: Dark / Night
+# Represents complete darkness or baseline background generation.
+# ==============================================================================
+# Note: This logically duplicates GenerationNone, but maintains architectural 
+# clarity. It also reserves a dedicated namespace in case non-zero dark current 
+# or ambient baseline generation needs to be introduced later.
+function generation(data, node, ::Type{GenerationDark})
+    return 0.0
 end
 
 generation(data, node, ::Type{GenerationNone}) = 0.0

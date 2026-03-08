@@ -75,6 +75,9 @@ export InEquilibrium, OutOfEquilibrium
 
 export GenerationModelType
 export GenerationNone, GenerationBeerLambert, GenerationUniform, GenerationUserDefined
+
+export GenerationSunrise, GenerationSundown, GenerationDark #generation types for day night cycles
+
 export LaserModelType, LaserModelOff, LaserModelOn
 export BarrierLoweringType
 export BarrierLoweringOn, BarrierLoweringOff
@@ -82,7 +85,7 @@ export BarrierLoweringOn, BarrierLoweringOff
 
 include("ct_physics.jl")
 
-export get_BEE, get_DOS, etaFunction, get_density
+export get_BEE, get_DOS, etaFunction, get_density, get_density!
 export breaction!, bstorage!, reaction!, storage!, flux!
 export zeroVoltage
 export BeerLambert
