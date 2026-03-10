@@ -180,7 +180,7 @@ function main(;
     ################################################################################
 
     control = ChargeTransport.SolverControl()
-    control.verbose = false
+    control.verbose = ""
     control.maxiters = 70
     control.abstol = 1.0e-7
     control.reltol = 1.0e-7

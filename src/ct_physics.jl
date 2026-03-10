@@ -629,10 +629,10 @@ function breaction!(f, u, bnode, data, ::Type{GateContact})
     params = data.params
     ipsi = data.index_psi
 
+    # Homogeneous Neumann boundary conditions for electrons and holes by default
     # Robin boundary condition for electrostatic potential
     f[ipsi] = (params.dielectricConstantOxide[bnode.region] / params.thicknessOxide[bnode.region]) * (u[ipsi] - params.contactVoltage[bnode.region] - params.additionalVoltage[bnode.region]) - params.surfaceChargeDensity[bnode.region]
 
-    # Homogeneous Neumann boundary conditions for electrons and holes by default
     return
 end
 
