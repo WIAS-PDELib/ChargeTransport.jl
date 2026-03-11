@@ -76,7 +76,7 @@ export InEquilibrium, OutOfEquilibrium
 export GenerationModelType
 export GenerationNone, GenerationBeerLambert, GenerationUniform, GenerationUserDefined
 
-export GenerationSunrise, GenerationSundown, GenerationDark #generation types for day night cycles
+export GenerationTransitionToLight, GenerationTransitionToDark, GenerationDark #generation types for day night cycles
 
 export LaserModelType, LaserModelOff, LaserModelOn
 export BarrierLoweringType

@@ -266,8 +266,8 @@ abstract type GenerationUserDefined end
 """
 Abstract types for day/night cycles
 """
-abstract type GenerationSunrise end
-abstract type GenerationSundown end
+abstract type GenerationTransitionToLight end
+abstract type GenerationTransitionToDark end
 abstract type GenerationDark end
 
 ##########################################################
@@ -279,8 +279,8 @@ const GenerationModelType = Union{
     Type{GenerationBeerLambert},
     Type{GenerationNone}, 
     Type{GenerationUserDefined},
-    Type{GenerationSunrise},  # New for sunrise
-    Type{GenerationSundown},  # New for sundown
+    Type{GenerationTransitionToLight},  # New for turning on light
+    Type{GenerationTransitionToDark},   # New for turning off light
     Type{GenerationDark}      # New for night time
 }
 ##########################################################

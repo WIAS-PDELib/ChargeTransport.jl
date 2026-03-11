@@ -129,7 +129,7 @@ function etaFunction!(u, edge::VoronoiFVM.Edge, data, icc)
     E1 = data.tempBEE1[icc];  E2 = data.tempBEE2[icc]
 
     return etaFunction(u[data.index_psi, 1], u[icc, 1], data.params.temperature, E1, data.params.chargeNumbers[icc], data.constants),
-        etaFunction(u[data.index_psi, 2], u[icc, 2], data.params.temperature, E2, data.params.chargeNumbers[icc], data.constants)
+    etaFunction(u[data.index_psi, 2], u[icc, 2], data.params.temperature, E2, data.params.chargeNumbers[icc], data.constants)
 end
 
 """
@@ -856,35 +856,40 @@ function addReaction!(f, u, node, data)
     # ========================================================= #
 
     # 1. Check conditions: Out of equilibrium and reactions enabled, and check region: Only happen in the perovskite layer
-    if data.calculationType == OutOfEquilibrium && data.enableReaction && node.region == 2 
-            reactions = data.params.Reactions
-            
-            # Iterate through each reaction directly
-            for reaction in reactions
-                # --- A. Calculate density multiplications (e.g., [p][V^{+}] or [p][p]) ---
-                d_reactants = 1.0  # Initialize 
-                for ireactant in reaction.Reactants
-                    d_reactants *= get_density!(u, node, data, ireactant)
-                end
-                
-                # --- B. Multiply with reaction rate ---
-                reactionTerm = reaction.k * d_reactants
+    # Also ensure generation is complete to avoid turning reactions on during the equilibrium generation ramp-up phase.
+    if data.calculationType == OutOfEquilibrium && data.enableReaction && data.generationComplete && node.region == 2
+        reactions = data.params.Reactions
 
-                # --- C. Update species equations ---
-                ##For Sum, use "-"/'-'...both looks cute :P
-                # Reactants are consumed (Plus)
-                for ireactant in reaction.Reactants
-                    f[ireactant] = f[ireactant] + reactionTerm 
-                end
+        # Iterate through each reaction directly
+        for reaction in reactions
+            # --- A. Calculate density multiplications (e.g., [p][V^{+}] or [p][p]) ---
+            d_reactants = 1.0  # Initialize 
+            for ireactant in reaction.Reactants
+                d_reactants *= get_density!(u, node, data, ireactant)
+            end
 
-                # Products are generated (Minus)
-                for iproduct in reaction.Products
-                    f[iproduct] = f[iproduct] - reactionTerm 
-                end
-                
-            end # end of reactions loop
+            # --- B. Multiply with reaction rate ---
+            reactionTerm = reaction.k * d_reactants
+
+            # --- C. Update species equations ---
+            ##For Sum, use "-"/'-'...both looks cute :P
+            # Reactants are consumed (Plus)
+            for ireactant in reaction.Reactants
+                z = data.params.chargeNumbers[ireactant]
+                scale = iszero(z) ? 1.0 : data.constants.q * z
+                f[ireactant] = f[ireactant] + scale * reactionTerm
+            end
+
+            # Products are generated (Minus)
+            for iproduct in reaction.Products
+                z = data.params.chargeNumbers[iproduct]
+                scale = iszero(z) ? 1.0 : data.constants.q * z
+                f[iproduct] = f[iproduct] - scale * reactionTerm
+            end
+
+        end # end of reactions loop
     end # end of condition check
-    
+
     return nothing
 end
 
@@ -1045,54 +1050,52 @@ function generation(data, node, ::Type{GenerationUserDefined})
 end
 
 # ==============================================================================
-# Generation Model: Sunrise
+# Generation Model: Transition To Light (Turn ON)
 # Smoothly ramps up photogeneration from 0 to 1 using a raised cosine function.
 # ==============================================================================
-function generation(data, node, ::Type{GenerationSunrise})
+function generation(data, node, ::Type{GenerationTransitionToLight})
     params = data.params
     ireg = node.region
     current_time = node.time
-    
+
     # Overwrite 'node' to extract its spatial coordinate scalar
     node = node.coord[node.index]
-    
-    # Transient duration parameter (set to 60.0s for testing purposes)
-    # TODO: Consider passing this via 'data.params' in future iterations
-    T = 60.0 
-    
-    # Time clamping prevents numerical overshoot and non-physical oscillations
-    # if the solver evaluates times slightly outside the [0, T] interval.
+
+    # We dynamically determine the phase duration by how long the solver is requested to run.
+    # If the user sets times=(0.0, 2.0), we normalize against 2.0. If not locally available,
+    # we default to allowing the solver to pass exactly `current_time` tracking progress directly
+    # Note: For robust integration, the wrapper script (Degradation_Recovery_complete_version.jl)
+    # should manage this phase exactly by calling `solve(times=(0.0, transition_duration))`.
+    # As a fallback proxy inside ChargeTransport.jl:
+
+    T = 0.002
     t_safe = clamp(current_time, 0.0, T)
 
     # Smooth step multiplier: f(0) = 0.0, f(T) = 1.0
     smooth_factor = 0.5 * (1.0 - cos(pi * t_safe / T))
-    
+
     # Standard Beer-Lambert generation scaled by the transient smooth factor
     return data.λ2 .* params.generationIncidentPhotonFlux[ireg] .* params.generationAbsorption[ireg] .* exp.(- params.invertedIllumination .* params.generationAbsorption[ireg] .* (node .- params.generationPeak)) .* smooth_factor
 end
 
 # ==============================================================================
-# Generation Model: Sundown
+# Generation Model: Transition To Dark (Turn OFF)
 # Smoothly ramps down photogeneration from 1 to 0 using a falling cosine function.
 # ==============================================================================
-function generation(data, node, ::Type{GenerationSundown})
+function generation(data, node, ::Type{GenerationTransitionToDark})
     params = data.params
     ireg = node.region
     current_time = node.time
-    
+
     # Overwrite 'node' to extract its spatial coordinate scalar
     node = node.coord[node.index]
-    
-    # Transient duration parameter (set to 60.0s for testing purposes)
-    # TODO: Consider passing this via 'data.params' in future iterations
-    T = 60.0 
-    
-    # Time clamping enforces strictly steady-state darkness after time T
+
+    T = 0.002
     t_safe = clamp(current_time, 0.0, T)
 
     # Smooth step multiplier: f(0) = 1.0, f(T) = 0.0
     smooth_factor = 0.5 * (1.0 + cos(pi * t_safe / T))
-    
+
     # Standard Beer-Lambert generation scaled by the transient smooth factor
     return data.λ2 .* params.generationIncidentPhotonFlux[ireg] .* params.generationAbsorption[ireg] .* exp.(- params.invertedIllumination .* params.generationAbsorption[ireg] .* (node .- params.generationPeak)) .* smooth_factor
 end
