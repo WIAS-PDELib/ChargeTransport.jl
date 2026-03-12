@@ -165,7 +165,7 @@ function main(;
     # add parameters to data
     data.params = ChargeTransport.Params(p)
 
-    # Definition ChargeTransport System
+    # definition ChargeTransport System
     ctsys = System(grid, data, unknown_storage = :sparse)
 
     if test == false
@@ -184,6 +184,14 @@ function main(;
     control.maxiters = 50
     control.abstol = 1.0e-8
     control.reltol = 1.0e-8
+
+    control.Δp = 0.2
+    control.Δp_min = 1.0e-3
+    control.Δp_max = 1.0
+    control.Δp_grow = 1.2
+    control.Δp_decrease = 0.5
+    control.Δu_opt = 1.5
+    control.handle_exceptions = true
 
     if test == false
         println("*** done\n")
@@ -207,50 +215,54 @@ function main(;
     end
     ################################################################################
 
-    biasValues_gate = range(0.0, stop = 5.0, length = 4)
-    biasValues_drain = range(0.0, stop = 5.0, length = 43)
-
-    IV_drain = zeros(0)
-
     inival = copy(solution_eq)
     solution = copy(solution_eq)
 
-    # Bias Loop Gate
-    for Δu_gate in biasValues_gate
+    # gate bias: start at 0 V and increase up to 5 V
+    biasValue_gate_range = (0.0, 5.0)
 
-        if test == false
-            println("bias value at gate: Δu = ", Δu_gate, " V")
-        end
-
-        set_contact!(ctsys, p.bregion_gate, Δu = Δu_gate)
-
-        solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
-        inival .= solution
-
+    # callback executed before each embedding step (gate bias)
+    control.pre = (solution, biasValue_gate) -> begin
+        println("bias value at gate: Δu = ", biasValue_gate, "V")
+        set_contact!(ctsys, p.bregion_gate, Δu = biasValue_gate)
+        nothing
     end
 
-    # Bias Loop Drain
+    # solve with parameter embedding (gate bias)
+    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_gate_range)
+    solution = solution_all_biases[end]
+
+    inival .= solution
+
+    # drain bias: start at 0 V and increase up to 5 V
+    biasValue_drain_range = (0.0, 5.0)
+
+    # prepare IV data (drain bias)
+    IV_drain = Float64[]
+    biasValues_drain = Float64[]
     factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
     tf = VoronoiFVM.testfunction(factory, [p.bregion_drain], [p.bregion_source])
 
-    for Δu_drain in biasValues_drain
-
-        if test == false
-            println("bias value at drain: Δu = ", Δu_drain, " V")
-        end
-
-        set_contact!(ctsys, p.bregion_drain, Δu = Δu_drain)
-
-        solution = ChargeTransport.solve(ctsys; inival = inival, control = control)
-        inival .= solution
-
-        ## get I-V data
-        IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
-
-        current = IEdge[p.iphin] + IEdge[p.iphip]
-
-        push!(IV_drain, abs(p.zaus * current))
+    # callback executed before each embedding step (drain bias)
+    control.pre = (solution, biasValue_drain) -> begin
+        println("bias value at drain: Δu = ", biasValue_drain, "V")
+        set_contact!(ctsys, p.bregion_drain, Δu = biasValue_drain)
+        nothing
     end
+
+    # callback executed after each embedding step (drain bias)
+    control.post = (solution, oldsolution, biasValue_drain, Δp) -> begin
+        # get IV data (drain bias)
+        IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
+        current = IEdge[p.iphin] + IEdge[p.iphip]
+        push!(IV_drain, abs(p.zaus * current))
+        push!(biasValues_drain, biasValue_drain)
+        nothing
+    end
+
+    # solve with parameter embedding (drain)
+    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_drain_range)
+    solution = solution_all_biases[end]
 
     if test == false
         println("*** done\n")
