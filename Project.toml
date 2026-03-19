@@ -16,6 +16,12 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
 
+[weakdeps]
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+
+[extensions]
+ChargeTransportPythonPlotExt = "PythonPlot"
+
 [compat]
 Aqua = "0.8.14"
 Compat = "4.18.0"
