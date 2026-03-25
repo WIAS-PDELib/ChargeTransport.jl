@@ -333,26 +333,20 @@ mutable struct Params
     bψEQ::Array{Float64, 1}
 
     """
-    An array containing a constant value for the thickness of the oxide.
+    An array containing constant values for the absolute dielectric permittivity
+    of the oxide at gate contacts.
     """
-    thicknessOxide::Array{Float64, 1}
+    dielectricConstantOxideGate::Array{Float64, 1}
 
     """
-    An array containing a constant value for the charge associated with surface states.
+    An array containing constant values for the oxide thickness at gate contacts.
     """
-    surfaceChargeDensity::Array{Float64, 1}
+    thicknessOxideGate::Array{Float64, 1}
 
     """
-    An array containing a constant value for the absolute dielectric permittivity of the oxide.
+    An array containing constant values for the surface charge density at gate contacts.
     """
-    dielectricConstantOxide::Array{Float64, 1}
-
-    """
-    An array containing a constant value for additional voltage.
-    This voltage is applied on top of the contact voltage (e.g., at gate contacts).
-    """
-    additionalVoltage::Array{Float64, 1}
-
+    surfaceChargeDensityGate::Array{Float64, 1}
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -559,10 +553,9 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
     params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
     params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
-    params.thicknessOxide = zeros(Float64, numberOfBoundaryRegions)
-    params.surfaceChargeDensity = zeros(Float64, numberOfBoundaryRegions)
-    params.dielectricConstantOxide = zeros(Float64, numberOfBoundaryRegions)
-    params.additionalVoltage = zeros(Float64, numberOfBoundaryRegions)
+    params.dielectricConstantOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.thicknessOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.surfaceChargeDensityGate = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####

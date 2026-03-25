@@ -1,7 +1,7 @@
 # Parameters are taken from WIAS-TeSCA (Two-dimensional semiconductor analysis package)
 # WIAS-Publication: https://www.wias-berlin.de/publications/wias-publ/run.jsp?template=abstract&type=TechReport&year=2016&number=14
 
-@kwdef struct Params_MOSFET
+@kwdef struct Params_MOSFET_Si
 
     # physical constants
     constants = ChargeTransport.teSCA_constants
@@ -53,7 +53,7 @@
     # density of states
     Nc = 2.86e19 / (cm^3)
     Nv = 3.1e19 / (cm^3)
-    Nss = 6.0e10 / (cm^2)           # surface state density
+    Nss = 3.2251421571687153e11 / (cm^2)      # surface state density
 
     # mobilities
     mun = 1030.0 * (cm^2) / (V * s)
@@ -76,12 +76,9 @@
     # doping
     Na = 1.0e16 / cm^3
     Nd = 1.0e20 / cm^3
-
-    # additional voltage
-    Uadd = 0.55 * V
 end
 
-function ChargeTransport.Params(p::Params_MOSFET)
+function ChargeTransport.Params(p::Params_MOSFET_Si)
 
     params = ChargeTransport.Params(
         p.numberOfRegions,
@@ -118,10 +115,9 @@ function ChargeTransport.Params(p::Params_MOSFET)
     params.recombinationSRHvelocity[p.iphip, p.bregion_gate] = p.SRH_Velocity_p
 
     # gate-specific parameters
-    params.thicknessOxide[p.bregion_gate] = p.thickness_ox
-    params.surfaceChargeDensity[p.bregion_gate] = p.constants.q * p.Nss
-    params.dielectricConstantOxide[p.bregion_gate] = p.εr_ox * p.constants.ε_0
-    params.additionalVoltage[p.bregion_gate] = p.Uadd
+    params.dielectricConstantOxideGate[p.bregion_gate] = p.εr_ox * p.constants.ε_0
+    params.thicknessOxideGate[p.bregion_gate] = p.thickness_ox
+    params.surfaceChargeDensityGate[p.bregion_gate] = p.constants.q * p.Nss
 
     # doping                                                   #     n    p
     params.doping[p.iphin, p.region_n] = p.Nd                  #   [Nd  0.0;

@@ -613,25 +613,33 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Creates boundary conditions for gate contacts. Robin boundary conditions are applied to the electrostatic potential
+Creates boundary conditions for gate contacts. A Robin boundary condition is applied to the electrostatic potential
     
-``f[\\psi] = \\frac{\\varepsilon_{ox}}{d_{ox}}(u[\\psi] - U_G - U_{add}) - Q_{ss}``,
+``\\varepsilon_\\mathrm{s} \\nabla \\psi \\cdot \\nu + \\frac{\\varepsilon_\\mathrm{ox}}{d_\\mathrm{ox}} (\\psi - U_G) = Q_{ss}``,
 
-where ``\\varepsilon_{ox}`` denotes the absolute dielectric permittivity of the oxide and ``d_{ox}`` the thickness of the oxide.
-The term ``U_{add}`` represents the additional voltage occurring at the gate, and ``Q_{ss}`` denotes the charge associated with surface states.
+where ``\\varepsilon_\\mathrm{ox}`` denotes the absolute dielectric permittivity of the oxide and ``d_\\mathrm{ox}`` the thickness of the oxide.
+The term ``Q_{ss}`` corresponds to the surface charge density at the gate contact.
 
 For the quasi Fermi potentials, homogeneous Neumann boundary conditions are implemented.
+
+Note that an additional reference voltage ``U_{ref}`` can be absorbed into the surface charge term.
+This leads to an effective surface charge density
+
+``Q_{ss}^{'} = Q_{ss} + \\frac{\\varepsilon_\\mathrm{ox}}{d_\\mathrm{ox}} U_{ref}``.
+
+Equivalently, in terms of surface state density,
+
+``Q_{ss}^{'} = q N_{ss}^{'} ``.
 """
 
-# Boundary conditions for Gate contact
 function breaction!(f, u, bnode, data, ::Type{GateContact})
 
     params = data.params
     ipsi = data.index_psi
 
     # Homogeneous Neumann boundary conditions for electrons and holes by default
-    # Robin boundary condition for electrostatic potential
-    f[ipsi] = (params.dielectricConstantOxide[bnode.region] / params.thicknessOxide[bnode.region]) * (u[ipsi] - params.contactVoltage[bnode.region] - params.additionalVoltage[bnode.region]) - params.surfaceChargeDensity[bnode.region]
+    # Robin boundary condition for the electrostatic potential
+    f[ipsi] = (params.dielectricConstantOxideGate[bnode.region] / params.thicknessOxideGate[bnode.region]) * (u[ipsi] - params.contactVoltage[bnode.region]) - params.surfaceChargeDensityGate[bnode.region]
 
     return
 end

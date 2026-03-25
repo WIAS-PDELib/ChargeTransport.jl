@@ -87,7 +87,7 @@ function main(;
         Plotter = nothing,
         test = false,
         grid_refinement = 0,
-        parameter_set = Params_MOSFET
+        parameter_set = Params_MOSFET_Si
     )
 
     if Plotter !== nothing && nameof(Plotter) !== :PythonPlot
@@ -180,13 +180,10 @@ function main(;
     ################################################################################
 
     control = ChargeTransport.SolverControl()
-    control.verbose = ""
-    control.maxiters = 70
-    control.abstol = 1.0e-7
-    control.reltol = 1.0e-7
-    control.tol_round = 1.0e-7
-    control.damp_initial = 0.5
-    control.max_round = 3
+    control.verbose = false
+    control.maxiters = 50
+    control.abstol = 1.0e-8
+    control.reltol = 1.0e-8
 
     if test == false
         println("*** done\n")
@@ -270,7 +267,7 @@ end # main
 
 # function for testing
 function test()
-    testval = 0.4992399114009203
+    testval = 0.49923991140092033
     return main(test = true) ≈ testval
 end
 
@@ -283,7 +280,7 @@ function plotting(p, grid, ctsys, solution, biasValues_drain, IV_drain, Plotter)
     fig = Plotter.figure()
     ax = fig.add_subplot(111, projection = "3d")
     ax.plot_trisurf(XX[:], YY[:], solution[p.ipsi, :])
-    Plotter.title("Electrostatic Potential (Equilibrium)", fontsize = 16)
+    Plotter.title("Electrostatic Potential", fontsize = 16)
     Plotter.xlabel("Width [m]", fontsize = 12)
     Plotter.ylabel("Height [m]", fontsize = 12)
     Plotter.zlabel("potential [V]", fontsize = 12)

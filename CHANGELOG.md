@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added gate-related parameters `thicknessOxide`, `surfaceChargeDensity`, `dielectricConstantOxide`, `additionalVoltage`
+- Added gate-related parameters `thicknessOxideGate`, `surfaceChargeDensityGate`, `dielectricConstantOxideGate`
 - Added new boundary reaction type `GateContact`
 - Added 2D metal-oxide-semiconductor field-effect transistor (MOSFET) example `Ex205_MOSFET.jl`
 
