@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.7.0
+
+### Added
+
+- Added gate-related parameters `thicknessOxideGate`, `surfaceChargeDensityGate`, `dielectricConstantOxideGate`
+- Added new boundary reaction type `GateContact`
+- Added 2D metal-oxide-semiconductor field-effect transistor (MOSFET) example `Ex205_MOSFET.jl`
+
 ## v1.6.0
 
 ### Added
@@ -27,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PyPlot` and `Plots` are also supported, but not recommended
 - all 1D examples are rewritten to use the new plotting routines
 - all 2D examples are still hard-wired to `Py[thon]Plot`, but the users have to provide this package in their own (global) environment
-
 
 ## v1.4.0
 

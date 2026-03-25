@@ -326,12 +326,27 @@ mutable struct Params
     """
     contactVoltage::Array{Float64, 1}
 
-
     """
     An array containing a constant value for the electric potential
     in case of Dirichlet boundary conditions.
     """
     bψEQ::Array{Float64, 1}
+
+    """
+    An array containing constant values for the absolute dielectric permittivity
+    of the oxide at gate contacts.
+    """
+    dielectricConstantOxideGate::Array{Float64, 1}
+
+    """
+    An array containing constant values for the oxide thickness at gate contacts.
+    """
+    thicknessOxideGate::Array{Float64, 1}
+
+    """
+    An array containing constant values for the surface charge density at gate contacts.
+    """
+    surfaceChargeDensityGate::Array{Float64, 1}
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -378,7 +393,6 @@ mutable struct Params
 
     """
     An array to define the reaction coefficient at internal boundaries.
-
     """
     bReactionCoefficient::Array{Float64, 2}
 
@@ -483,6 +497,7 @@ mutable struct Params
     incident photon flux.
     """
     generationIncidentPhotonFlux::Array{Float64, 1}
+
     """
     A region dependent array for an uniform generation rate.
     """
@@ -538,6 +553,9 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
     params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
     params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
+    params.dielectricConstantOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.thicknessOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.surfaceChargeDensityGate = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -1645,6 +1663,14 @@ function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
     ctsys.data.params.contactVoltage[ibreg] = Δu
     return
 
+end
+
+function __set_contact!(ctsys, ibreg, Δu, ::Type{GateContact})
+
+    ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+
+    return
 end
 
 ###########################################################
