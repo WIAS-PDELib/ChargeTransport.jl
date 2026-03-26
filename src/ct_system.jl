@@ -1393,7 +1393,7 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
                 za = data.params.chargeNumbers[icc]
                 Ca = data.params.doping[icc, ireg]
 
-                Ea = trunc((k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * (psi1 + psi2) / 2) / q, digits = 3) * q
+                Ea = trunc((k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * (psi1 + psi2) / 2) / q, digits = 3) * q
 
                 data.params.bandEdgeEnergy[icc, ireg] = Ea
 
@@ -1966,7 +1966,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             za = params.chargeNumbers[icc]
 
             # E0, E1 in eV
-            E0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR) # in eV
+            E0 = k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * 0.5 * (psiL + psiR) # in eV
             E0 = round(E0 / q, digits = 3) * q
 
             # --- Find one correct pair E0, y0 ---
