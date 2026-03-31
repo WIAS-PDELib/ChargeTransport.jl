@@ -185,19 +185,30 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     push!(data.trapCarrierList, enableTraps)
 
-    if(data.F[trapCarrier] == GaussFermi)
+    ## Choose appropriate statistics function
+    ## Detailed balance is only applied to FermiDiracMinusOne or GaussFermi
+    if (! ( typeof(data.F[trapCarrier]) <: TrapFunctionSet ) )#!== FermiDiracMinusOne && data.F[trapCarrier] !== GaussFermi)
+        @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). Please choose FermiDiracMinusOne or GaussFermi.")
+    end
+    # If a GaussFermi model is chosen, check if the width is non-zero and use either Paasch or FermiDiracMinusOne
+    if( typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet)
         ŝ = data.params.trapDistributionWidth[trapCarrier]/(data.params.temperature*data.constants.k_B)
+        if(ŝ<0)
+            @warn "Negative distribution width. Using abs(ŝ)."
+            ŝ=abs(ŝ)
+        end
         if(ŝ==0.0)
-            @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
-            data.F[trapCarrier] = FermiDiracMinusOne
+            if(data.F[trapCarrier]!=FermiDiracMinusOne)
+                @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
+                data.F[trapCarrier] = FermiDiracMinusOne
+            end
+            data.bulkRecombination.bulk_recomb_trap = SingleStateTrap
         else
-            # @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
-            data.F[trapCarrier] = Base.Fix2(GaussFermi, Float64(ŝ))
+            @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
+            data.F[trapCarrier] = GaussFermiPaasch(ŝ) 
+            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrap
         end
     end
-    # if (data.F[trapCarrier] !== FermiDiracMinusOne || )
-    #     @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
-    # end
 
     return
 
@@ -1717,7 +1728,7 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation::Bool = false, verbose::Bool = false, yabstol::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last three are extended-only keywords for vacancyEnergyCalculation = true
+function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation = false, verbose::Bool = false, yabstol::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last three are extended-only keywords for vacancyEnergyCalculation = true
 
     ## by default vacancyEnergyCalculation is false.
     return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
@@ -2016,7 +2027,140 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
     return
 
 end
+function _equilibrium_solve!(::Val{1}, ctsys::System; inival, control, nonlinear_steps, verbose, yabstol, ytol, maxiter)
 
+    verbose=true
+    # do once the equilibrium_solve to have a proper initial value.
+    inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+
+    # --- define save function evaluation for the function, we want to find root of ---
+    function safely_eval_F!(F, E, icc, ireg)
+
+        params.bandEdgeEnergy[icc, ireg] = E
+
+        ii = 0
+        y = 1.0
+        Eafix = false
+        while !Eafix && ii <= 5
+            try
+                @show ii = ii + 1
+                sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+                Eafix = true
+                E = params.bandEdgeEnergy[icc, ireg] # save E, in case it was adjusted due to catch
+                y = F(sol)
+            catch
+                # --- solve with specific value not working? slightly adjust ---
+                E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
+                params.bandEdgeEnergy[icc, ireg] = E_new
+                # println("        save solve")
+                # println("            ", E_new / q)
+
+            end
+        end
+        return E, y
+    end
+
+    data = ctsys.fvmsys.physics.data
+    params = data.params
+
+    iphin = data.bulkRecombination.iphin # integer index of φ_n
+    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    T = params.temperature
+    (; k_B, q) = data.constants
+
+    for iicc in data.ionicCarrierList
+
+        for ireg in iicc.regions
+
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            # --- define function to be minimized ---
+            mOmega = data.regionVolumes[ireg]
+            Avgncc(sol) = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg) / mOmega
+            Ca = params.doping[icc, ireg]
+
+            # difference between integral and doping, where we want to find the zero
+            F(sol) = (Avgncc(sol) - Ca) / Ca
+
+            # --- for initial values for Ea ---
+            Ec = params.bandEdgeEnergy[iphin, ireg ]
+            Ev = params.bandEdgeEnergy[iphip, ireg ]
+            Nc = params.densityOfStates[iphin, ireg ]
+            Nv = params.densityOfStates[iphip, ireg ]
+            C = params.doping[iphin, ireg ] - params.doping[iphip, ireg ]
+            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+            @show psiL = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+            ####################
+            # Ec = params.bandEdgeEnergy[iphin, ireg + 1]
+            # Ev = params.bandEdgeEnergy[iphip, ireg + 1]
+            # Nc = params.densityOfStates[iphin, ireg + 1]
+            # Nv = params.densityOfStates[iphip, ireg + 1]
+            # C = params.doping[iphin, ireg + 1] - params.doping[iphip, ireg + 1]
+            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+            psiR = copy(psiL) #(Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+
+            Na = params.densityOfStates[icc, ireg]
+            za = params.chargeNumbers[icc]
+
+            # E0, E1 in eV
+            @show E0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR) # in eV
+            E0 = round(E0 / q, digits = 3) * q
+
+            # --- Find one correct pair E0, y0 ---
+            E0, y0 = safely_eval_F!(F, E0, icc, ireg)
+
+            # --- Second guess E1 slightly shifted ---
+            E1 = E0 + 0.01 * q
+            E1, y1 = safely_eval_F!(F, E1, icc, ireg)
+
+            if verbose
+                @show E0 / q, y0
+                @show E1 / q, y1
+            end
+
+            for k in 1:maxiter
+
+                # stopping criterion when energies coincide
+                if E1 == E0 && abs(y1) < yabstol # these are 1.0 % error
+                    params.bandEdgeEnergy[icc, ireg] = E1
+
+                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+                    return sol
+                end
+
+                # Secant update
+                E_new = E1 - y1 * (E1 - E0) / (y1 - y0)
+                E_new = round(E_new / q, digits = 3) * q
+
+                E_new, y_new = safely_eval_F!(F, E_new, icc, ireg)
+
+                println("Energy calculation: iter $k: E_new=$(E_new / q), y_new=$y_new")
+                if verbose
+                    println("Energy calculation: iter $k: E_new=$(E_new / q), y_new=$y_new")
+                end
+
+                # stopping criterion
+                if abs(y_new) < ytol
+                    params.bandEdgeEnergy[icc, ireg] = E_new
+
+                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+                    return sol
+                end
+
+                # shift for next secant step
+                E0, y0 = E1, y1
+                E1, y1 = E_new, y_new
+            end
+
+            error("Max iteration exceeded")
+
+        end # each present region for carrier
+
+    end # ionic carrier list
+
+    return
+
+end
 
 ###########################################################
 ###########################################################

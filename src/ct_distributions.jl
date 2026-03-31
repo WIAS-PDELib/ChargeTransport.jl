@@ -90,107 +90,15 @@ function degenerateLimit(x)
     return x < 0 ? NaN : 4 / (3 * sqrt(pi)) * x^(3 / 2)
 end
 
-function gaussFermi_sHatEquals2(x::Real)
-    sHat=2
-    H = 0.7466947053286296
-    K = 0.5565965819658305
-    xp(x) = abs(x)
-    if(xp(x) > sHat^2)
-        G = exp((sHat*sHat/2-xp(x))) / (1.0 + exp(K * (sHat*sHat-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(sHat*sqrt(2)) * H)
-    end
-    # G = xp > 4 ? exp(-abs(2-xp)) * 1.0 / (1.0 + exp(-0.5565965819658305 * abs(-xp + 4.0))) : 0.5 * erfc(xp/(2sqrt(2)) * 0.7466947053286296)
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
+### Approximation of Gauss-Fermi integral using Paasch's method [J. Appl. Phys. 107, 104501 (2010)]
+### Paasch-Scheinert functions
 
-function gaussFermi_sHatEquals4(x::Real)
-    sHat=4
-    H = 0.896563421365437
-    K = 0.28181676579245685
-    xp(x) = abs(x)
-    if(xp(x) > sHat^2)
-        G = exp((sHat*sHat/2-xp(x))) / (1.0 + exp(K * (sHat*sHat-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(sHat*sqrt(2)) * H)
-    end
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
-
-function gaussFermi_sHatEquals6(x::Real)
-    sHat=6
-    H = 0.9431587310721202
-    K = 0.1683730458855388
-    xp(x) = abs(x)
-    if(xp(x) > sHat^2)
-        G = exp((sHat*sHat/2-xp(x))) / (1.0 + exp(K * (sHat*sHat-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(sHat*sqrt(2)) * H)
-    end
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
+"""
+$(TYPEDSIGNATURES)
 
 
-function gaussFermi_sHatEquals8(x::Real)
-    sHat=8
-    H = 0.9636458688943249
-    K = 0.11249596843700593
-    xp(x) = abs(x)
-    if(xp(x) > sHat^2)
-        G = exp((sHat*sHat/2-xp(x))) / (1.0 + exp(K * (sHat*sHat-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(sHat*sqrt(2)) * H)
-    end
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
-
-
-function gaussFermi_sHatEquals10(x::Real)
-    sHat=10
-    H = 0.9745474864965935
-    K = 0.08091495970175866
-    xp(x) = abs(x)
-    if(xp(x) > sHat^2)
-        G = exp((sHat*sHat/2-xp(x))) / (1.0 + exp(K * (sHat*sHat-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(sHat*sqrt(2)) * H)
-    end
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
-
-
-function gaussFermi_sHatEquals30(x::Real)
-    sHat=30
-    H = 0.9959651235434415
-    K = 0.013889673859928786
-    xp(x) = abs(x)
-    if(xp(x) > sHat^2)
-        G = exp((sHat*sHat/2-xp(x))) / (1.0 + exp(K * (sHat*sHat-xp(x)) ))
-    else
-        G = 0.5 * erfc(xp(x)/(sHat*sqrt(2)) * H)
-    end
-    if(x>0)
-        G = 1-G
-    end
-    return G
-end
-
-### Paasch functions
+Paasch-Scheinert approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
+"""
 function PaaschH(s::Real)
     return sqrt(2)/s * SpecialFunctions.erfcinv( exp( -(s^2) / 2) )
 end
@@ -198,12 +106,14 @@ function PaaschK(s::Real)
     H=PaaschH(s)
     return 2 * (1 - H/s * sqrt(2/pi) * exp(1/2 *  s^2 * (1-H^2)) )
 end
-function GaussFermi(x::Real, s::Real)
-    F = x -> generic_gaussFermi(x,PaaschH(s),PaaschK(s),s)
-    return F(x)
+struct GaussFermiPaasch{T} <: Function
+    s::T
 end
-function generic_gaussFermi(x::Real,H::Real,K::Real,s::Real)
+function (GaussFermiPaasch::GaussFermiPaasch{T})(x) where {T}
     xp(x) = abs(x)
+    s= GaussFermiPaasch.s
+    K = PaaschK(s)
+    H = PaaschH(s)
     if(xp(x) > s^2)
         G = exp((s*s/2-xp(x))) / (1.0 + exp(K * (s*s-xp(x)) ))
     else
@@ -213,10 +123,7 @@ function generic_gaussFermi(x::Real,H::Real,K::Real,s::Real)
         G = 1-G
     end
     return G
-end
-# function gaussFermi(x::Real)
-#     return gaussFermi_2(2)(x)
-# end
+end 
 """
 $(TYPEDSIGNATURES)
 
@@ -235,6 +142,8 @@ function plotDistributions(; Plotter = nothing)
     Plotter.semilogy(x, ones(size(x)) / 0.27, "--", label = "\$1/\\gamma=3.\\overline{703}\$", color = (0.6, 0.6, 0.6, 1))
     Plotter.semilogy(x, Blakemore.(x), label = "Blakemore (\$\\gamma=0.27\$)")
     Plotter.semilogy(x, degenerateLimit.(x), label = "degenerate limit")
+    Plotter.semilogy(x, GaussFermiPaasch(1).(x), label = "Gauss-Fermi, ŝ = 1")
+    Plotter.semilogy(x, GaussFermiPaasch(10).(x), label = "Gauss-Fermi, ŝ = 10")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$\\mathcal{F}(\\eta)\$")
@@ -268,6 +177,12 @@ function plotDiffusionEnhancements(; Plotter = nothing)
 
     f = ChargeTransport.degenerateLimit; df = x -> ForwardDiff.derivative(f, x)
     Plotter.semilogy(x, f.(x) ./ df.(x), label = "degenerate limit")
+
+    f = ChargeTransport.GaussFermiPaasch(1); df = x -> ForwardDiff.derivative(f, x)
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi, ŝ = 1")
+
+    f = ChargeTransport.GaussFermiPaasch(10); df = x -> ForwardDiff.derivative(f, x)
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi, ŝ = 10")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$g(\\eta)\$")

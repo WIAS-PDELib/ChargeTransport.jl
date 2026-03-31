@@ -46,8 +46,7 @@ export tiny_penalty_value
 
 include("ct_distributions.jl")
 
-export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermi
-export gaussFermi_sHatEquals2, gaussFermi_sHatEquals4, gaussFermi_sHatEquals6, gaussFermi_sHatEquals8, gaussFermi_sHatEquals10, gaussFermi_sHatEquals30
+export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch
 export FermiDiracOneHalfTeSCA
 ##################################################################
 
