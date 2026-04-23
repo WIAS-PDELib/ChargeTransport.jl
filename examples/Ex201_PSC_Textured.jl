@@ -474,7 +474,7 @@ module Ex201_PSC_Textured
         generationData = zeros(length(grid[Coordinates][1, :]))
 
         i = 0
-        for  coord in eachcol(grid[Coordinates])
+        for coord in eachcol(grid[Coordinates])
             i = i + 1
             x0 = coord[1]
             y0 = coord[2]
