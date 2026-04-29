@@ -109,9 +109,9 @@ end
 struct GaussFermiPaasch{T} <: Function
     s::T
 end
-function (GaussFermiPaasch::GaussFermiPaasch{T})(x) where {T}
+function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     xp(x) = abs(x)
-    s= GaussFermiPaasch.s
+    s = GaussFermiPaasch.s
     K = PaaschK(s)
     H = PaaschH(s)
     if(xp(x) > s^2)
@@ -124,6 +124,133 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x) where {T}
     end
     return G
 end 
+struct GaussFermiNumInt{T} <: Function
+    s::T
+    Et::T
+    kBT::T
+end
+function (GaussFermiNumInt::GaussFermiNumInt{Float64})(x::Real)
+    s = GaussFermiNumInt.s
+    Et = GaussFermiNumInt.Et
+    kBT = GaussFermiNumInt.kBT
+
+    Elower = Et - 4*s
+    Eupper = Et + 4*s
+    dE = ( Eupper - Elower ) / 10001.0
+    v  = sum(gaussfermi_G(E, s, Et, kBT, x) for E in Elower:dE:Eupper) * dE/( sqrt( 2.0 * pi ) * s )
+    #  sum( gaussfermi_G.(Elower:dE:Eupper, s, Et, kBT, x ) ) * dE #quadratureFunction(Elower,Eupper, Base.Fix{2}( Base.Fix{3}( Base.Fix{4}( Base.Fix{5}(gaussfermi_G, x), kBT),Et), s))
+    
+    return v
+end 
+
+# function fittedErf_3(x::Real)
+#     sigma=-0.20269112047236817
+#     return 0.5*erfc(x*sigma)
+# end
+# function GaussFermiNumInt_naïve(x::Real)
+#     q=1.6021e-19
+#     Erange=-10.0*q:0.005*q:10.0*q
+#     dE = Erange[2]-Erange[1]
+#     kBT=4.141947e-21
+#     sigma=3*kBT
+#     Et = -6.63301126476e-19 
+#     G(E)=1/(sqrt(2*pi)*sigma) * exp(-(E-Et)*(E-Et)/(2*sigma*sigma)) * FermiDiracMinusOne(x - (E-Et)/kBT)
+    
+#     # f(x) = FermiDiracMinusOne(x)
+
+#     v=0.0
+#     for i=2:length(Erange)
+#         v = v + dE * (G(Erange[i]) + G(Erange[i-1]))/2
+#     end
+#     return v
+# end
+
+@inline function gaussfermi_G(E::Float64, sigma::Float64, Et::Float64, kBT::Float64, x::Real)
+        return exp(-(E - Et)*(E - Et)/(2*sigma*sigma)) * FermiDiracMinusOne(x - (E - Et)/kBT)
+end
+# struct GaussFermiNumInt{T,U,V} <: Function
+#     s::T
+#     data::U
+#     index::V
+# end
+# function (GaussFermiNumInt::GaussFermiNumInt{T,U,V})(x) where {T,U,V}
+#     data=GaussFermiNumInt.data
+
+#     q=ChargeTransport.constants.q
+#     k_B = ChargeTransport.constants.k_B
+#     kBT=data.params.temperature *k_B
+#     Et = data.params.bandEdgeEnergy[GaussFermiNumInt.index]
+#     sigma = GaussFermiNumInt.s * kBT 
+
+#     Elower = Et - 4*sigma
+#     Eupper = Et + 4*sigma
+#     nPoints= 1000
+#     dE = ( Eupper - Elower ) / ( nPoints-1 )
+
+#     v  = 0.0
+#     i  = 1
+#     while ( Elower + (i)*dE < Eupper - dE)
+#         E = Elower + (i)*dE
+#         v += exp(-(E - Et)*(E - Et)/(2*sigma*sigma)) * FermiDiracMinusOne(x - (E - Et)/kBT) #gaussfermi_G(E, sigma, Et, kBT, x)
+#         i += 1
+#     end
+#     return dE * 1/(sqrt(2π)*sigma) #* (v + gaussfermi_G(Elower, sigma, Et, kBT, x)/2.0 + gaussfermi_G(Eupper, sigma, Et, kBT, x)/2.0 ) 
+# end
+# function GaussFermiNumInt_fast(x::Real)
+#     q=ChargeTransport.constants.q
+#     k_B = ChargeTransport.constants.k_B
+#     kBT=300*k_B
+#     Et = -6.63301126476e-19 
+#     sigma = 2.0 * kBT 
+
+#     Elower = -10 * q
+#     Eupper = 10 * q
+#     dE = 0.005 * q
+
+#     v  = 0.0
+#     i  = 1
+#     while ( Elower + (i)*dE < Eupper - dE)
+#         E = Elower + (i)*dE
+#         v += gaussfermi_G(E, sigma, Et, kBT, x)
+#         i += 1
+#     end
+#     return dE * 1/(sqrt(2π)*sigma) * (v + gaussfermi_G(Elower, sigma, Et, kBT, x)/2.0 + gaussfermi_G(Eupper, sigma, Et, kBT, x)/2.0 ) 
+# end
+function constructGaussFermiNumInt(data, itrap::Int64)
+    data=data
+
+    q=data.constants.q
+    k_B = data.constants.k_B
+    kBT=data.params.temperature *k_B
+    Et = data.params.bandEdgeEnergy[itrap]
+    sigma = data.params.trapDistributionWidth[itrap] 
+    return GaussFermiNumInt{Float64}(sigma, Et, kBT)
+    
+end
+# struct GaussFermiNumInt_fixedType{T} <: Function #,U,V} ,Float64,Float64
+#     Et::T
+#     # sigma::Float64
+#     # kBT::Float64
+# end
+# function (GaussFermiNumInt_fixedType::GaussFermiNumInt_fixedType{T})(x) where {T} #,U,V}
+#     return GaussFermiNumInt_fixedType.Et
+#     # sigma = GaussFermiNumInt_fixedType.sigma
+#     # kBT = GaussFermiNumInt_fixedType.kBT
+    
+#     # Elower = Et - 4*sigma
+#     # Eupper = Et + 4*sigma
+#     # # nPoints= 1000
+#     # dE = ( Eupper - Elower ) / ( 1000.0-1 )
+
+#     # v  = 0.0
+#     # i  = 1
+#     # while ( Elower + (i)*dE < Eupper - dE)
+#     #     E = Elower + (i)*dE
+#     #     v += gaussfermi_G(E, sigma, Et, kBT, x)
+#     #     i += 1
+#     # end
+#     # return dE * 1/(sqrt(2π)*sigma) * (v + gaussfermi_G(Elower, sigma, Et, kBT, x)/2.0 + gaussfermi_G(Eupper, sigma, Et, kBT, x)/2.0 ) 
+# end
 """
 $(TYPEDSIGNATURES)
 

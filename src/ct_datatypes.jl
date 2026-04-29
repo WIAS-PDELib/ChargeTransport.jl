@@ -2,7 +2,9 @@
 Type of statistics functions.
 
 """
-const GaussFermiFunctionSet = Union{GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64},}
+const GaussFermiFunctionSet = Union{
+    GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64}, GaussFermiNumInt{Float64}
+}  
 const TrapFunctionSet = Union{
     typeof(FermiDiracMinusOne),
     GaussFermiFunctionSet

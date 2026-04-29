@@ -1761,6 +1761,27 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{GaussianDistributedTrap}
                     captureFactor = (sign( zc * zt) + 1) / 2 - sign( zc * zt) * captureIntegral
                     escapeFactor  = (sign(-zc * zt) + 1) / 2 - sign(-zc * zt) * escapeIntegral
                     r = Nt * (s * ncc * captureFactor - e * escapeFactor)
+                    # println(r)
+                    
+                    ###
+                    # # r = s * numericalIntegration_trap(itc, βc, ncc,nonBoltzmannReductionFactor, data)
+                    # r = 0.0
+                    # nPoints=100
+                    # Elower = Et - 3*σ_T[itc]
+                    # Eupper = Et + 3*σ_T[itc]
+                    # dE = (Eupper - Elower)/(nPoints-1)
+
+                    # for i=1:nPoints
+                    #     E = Elower + dE * (i-1)
+                    #     η_of_E = βc - (E-Et)/(k_B*T)
+                    #     r_of_E = ncc * (1.0 - FermiDiracMinusOne(η_of_E)) - Nc * nonBoltzmannReductionFactor * exp((E-Ec)/(k_B*T)) * FermiDiracMinusOne(η_of_E)
+                    #     integrand = r_of_E * exp(-(E-Et)^2/(k_B*T))
+                    #     # if(i==1)
+                    #     #     println(E/q, " ", (1.0 - FermiDiracMinusOne(η_of_E) ) * ncc, " ", Nc * nonBoltzmannReductionFactor * exp((E-Ec)/(kBT)) * FermiDiracMinusOne(η_of_E) )
+                    #     # end
+                    #     r = r + integrand
+                    # end
+                    # r = r * dE / ( sqrt( 2 * pi ) * σ_T[itc])
 
                     # For the reaction expression we use the charge of the band as (e.g.) holes can enter
                     # an electron trap from the valence band, and using the trap charge would not capture this.
@@ -1773,6 +1794,135 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{GaussianDistributedTrap}
 
     return
 end
+# """
+# $(TYPEDSIGNATURES)
+# A Gaussian distribution of traps with one state that can either be filled or empty.
+# """
+# function addTrapCaptureEscape!(f, u, node, data, ::Type{GaussianDistributedTrap})
+
+#     (; k_B, q) = data.constants
+
+#     capture = data.params.recombinationTrapCaptureRates
+#     σ_T = data.params.trapDistributionWidth
+#     T = data.params.temperature
+    
+
+#     for icc in data.chargeCarrierList
+#         ncc = get_density!(u, node, data, icc)
+#         Nc = data.params.densityOfStates[icc]
+
+#         # Account for non-Boltzmann statistics in detailed balance to compute escape rate.
+#         # It is assumed that the trap is described using FermiDiracMinusOne. The correction
+#         # is of F(η)/exp(η) where F is the function used in the carrier state equation.
+#         if (data.F[icc] == Boltzmann)
+#             nonBoltzmannReductionFactor = 1.0
+#         else
+#             nonBoltzmannReductionFactor = ncc / (Nc * exp(etaFunction!(u, node, data, icc)))
+#         end
+
+#         Ec = data.params.bandEdgeEnergy[icc]
+#         zc = data.params.chargeNumbers[icc]
+
+#         for iitc in data.trapCarrierList
+#             # add trap carriers only in defined regions (otherwise get NaN error)
+#             if node.region ∈ iitc.regions
+#                 itc = iitc.trapCarrier            # species number chosen by user
+#                 itc = data.chargeCarrierList[itc] # find correct index within chargeCarrierList
+
+#                 # Gauss-Fermi integral function for the width of the distribution
+#                 GFI = data.F[itc]
+#                 s = capture[itc, icc, node.region]
+
+#                 if (s > 0) # Only compute where there is capture
+
+#                     Nt = data.params.densityOfStates[itc]
+#                     Et = data.params.bandEdgeEnergy[itc]
+
+#                     ### Compute capture rate by integrating over Gaussian trap distribution ###
+#                     # The capture and escape rates are integrals of the general form
+#                     # I = ∫ du \exp(-u^2) / (1 + β \exp(√2 ŝ u))
+#                     # where u is a normalized energy, β is of the form \exp(dE/kT) (depends on the process)
+#                     # and ŝ is related to the Gaussian width. As such we can use the Paasch-Scheinert approximation
+#                     # for these processes.
+#                     βc=etaFunction!(u, node, data, itc)
+#                     # ξ=sqrt(2)*σ_T[itc]/(k_B*T)
+#                     # captureIntegral = GFI(βc)
+             
+#                     # zt = data.params.chargeNumbers[itc]
+
+
+#                     # # Escape computed from detailed balance assuming each level in the distribution is 
+#                     # # described using FD-minus one and a single quasi-Fermi level
+#                     # βe=βc - σ_T[itc]^2/(k_B*T)^2 
+#                     # escapeIntegral = GFI(βe)
+#                     # e = s * Nc * exp(zc * (Ec - Et) / (k_B * T)) * nonBoltzmannReductionFactor
+#                     # e *= exp( 0.5*(σ_T[itc]/(k_B*T))^2 ) 
+
+#                     # # Allow for both acceptor and donor trap in one line
+#                     # captureFactor = (sign( zc * zt) + 1) / 2 - sign( zc * zt) * captureIntegral
+#                     # escapeFactor  = (sign(-zc * zt) + 1) / 2 - sign(-zc * zt) * escapeIntegral
+#                     # r = Nt * (s * ncc * captureFactor - e * escapeFactor)
+#                     # println(r)
+                    
+#                     ###
+#                     # r = s * numericalIntegration_trap(itc, βc, ncc,nonBoltzmannReductionFactor, data)
+#                     r = 0.0
+#                     nPoints=100
+#                     Elower = Et - 3*σ_T[itc]
+#                     Eupper = Et + 3*σ_T[itc]
+#                     dE = (Eupper - Elower)/(nPoints-1)
+
+#                     for i=1:nPoints
+#                         E = Elower + dE * (i-1)
+#                         η_of_E = βc - (E-Et)/(k_B*T)
+#                         r_of_E = ncc * (1.0 - FermiDiracMinusOne(η_of_E)) - Nc * nonBoltzmannReductionFactor * exp((E-Ec)/(k_B*T)) * FermiDiracMinusOne(η_of_E)
+#                         integrand = r_of_E * exp(-(E-Et)^2/(k_B*T))
+#                         # if(i==1)
+#                         #     println(E/q, " ", (1.0 - FermiDiracMinusOne(η_of_E) ) * ncc, " ", Nc * nonBoltzmannReductionFactor * exp((E-Ec)/(kBT)) * FermiDiracMinusOne(η_of_E) )
+#                         # end
+#                         r = r + integrand
+#                     end
+#                     r = r * dE / ( sqrt( 2 * pi ) * σ_T[itc])
+
+#                     # For the reaction expression we use the charge of the band as (e.g.) holes can enter
+#                     # an electron trap from the valence band, and using the trap charge would not capture this.
+#                     f[icc] = f[icc] + q * zc * r    #
+#                     f[itc] = f[itc] - q * zc * r    #
+#                 end
+#             end
+#         end
+#     end
+
+#     return
+# end
+# ### Run numerical integration here.. for now. ## Doesn't work. 
+# function numericalIntegration_trap(itc::Int64, η::Real, ncc::Real, nonBoltzmannReductionFactor::Real, data)
+#     (; k_B, q) = data.constants
+#     σ_T = data.params.trapDistributionWidth[itc]
+    
+#     T = data.params.temperature
+#     Et = data.params.bandEdgeEnergy[itc]
+#     Ec = data.params.bandEdgeEnergy[1]
+#     Nc = data.params.densityOfStates[1]
+#     kBT=k_B*T
+#     r = 0.0
+#     nPoints=100
+#     Elower = Et - 3*σ_T
+#     Eupper = Et + 3*σ_T
+#     dE = (Eupper - Elower)/(nPoints-1)
+
+#     for i=1:nPoints
+#         E = Elower + dE * (i-1)
+#         η_of_E = η - (E-Et)/(kBT) 
+#         r_of_E = ncc * (1.0 - FermiDiracMinusOne(η_of_E)) - Nc * nonBoltzmannReductionFactor * exp((E-Ec)/(kBT)) * FermiDiracMinusOne(η_of_E)
+#         integrand = r_of_E * exp(-(E-Et)^2/(kBT))
+#         # if(i==1)
+#         #     println(E/q, " ", (1.0 - FermiDiracMinusOne(η_of_E) ) * ncc, " ", Nc * nonBoltzmannReductionFactor * exp((E-Ec)/(kBT)) * FermiDiracMinusOne(η_of_E) )
+#         # end
+#         r = r + integrand
+#     end
+#     return r * dE / ( sqrt( 2 * pi ) * σ_T)
+# end
 """
 $(TYPEDSIGNATURES)
 Include recombination between bands and traps
