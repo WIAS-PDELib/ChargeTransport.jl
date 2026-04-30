@@ -204,9 +204,9 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
             end
             data.bulkRecombination.bulk_recomb_trap = SingleStateTrap
         else
-            @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
-            data.F[trapCarrier] = GaussFermiPaasch(ŝ) 
-            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrap
+            @info "Gaussian width is $(ŝ). Using numerical integration approximation of Gauss-Fermi integral."
+            data.F[trapCarrier] = constructGaussFermiNumInt(data, trapCarrier) #GaussFermiPaasch(ŝ) 
+            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrapNumInt
         end
     end
 
@@ -305,6 +305,11 @@ mutable struct Params
     """
     invertedIllumination::Int64
 
+    """
+    Number of points to be used in numerical integration of Gauss-Fermi integrals
+    """
+    energyGrid_nPoints::Int64
+
     ###############################################################
     ####                     real numbers                      ####
     ###############################################################
@@ -332,6 +337,7 @@ mutable struct Params
     Parameter for the shift of generation peak of the Beer-Lambert generation profile.
     """
     generationPeak::Float64
+    
 
     ###############################################################
     ####              number of boundary regions               ####
@@ -551,6 +557,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.numberOfBoundaryRegions = numberOfBoundaryRegions
     params.numberOfCarriers = numberOfCarriers
     params.invertedIllumination = 1                       # we assume that light enters from the left.
+    params.energyGrid_nPoints = 10_000
 
     ###############################################################
     ####                     real numbers                      ####
