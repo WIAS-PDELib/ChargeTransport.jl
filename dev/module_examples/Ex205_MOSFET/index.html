@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET). · ChargeTransport.jl</title><meta name="title" content="Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET). · ChargeTransport.jl"/><meta property="og:title" content="Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET). · ChargeTransport.jl"/><meta property="twitter:title" content="Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET). · ChargeTransport.jl"/><meta name="description" content="Documentation for ChargeTransport.jl."/><meta property="og:description" content="Documentation for ChargeTransport.jl."/><meta property="twitter:description" content="Documentation for ChargeTransport.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../general/">ChargeTransport.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../general/">Home</a></li><li><a class="tocitem" href="../../changes/">Changelog</a></li><li><a class="tocitem" href="../../backgroundinfo/">Mathematical drift-diffusion models</a></li><li><span class="tocitem">How to get started</span><ul><li><a class="tocitem" href="../../GaAs/">van Roosbroeck system</a></li><li><a class="tocitem" href="../../PSC/">Perovskite solar cell</a></li></ul></li><li><a class="tocitem" href="../../allindex/">Types, Constructors and Methods</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../Ex101_PIN/">GaAs diode (1D).</a></li><li><a class="tocitem" href="../Ex102_PIN_nodal_doping/">GaAs diode with spatially varying doping (1D).</a></li><li><a class="tocitem" href="../Ex103_PSC_IVMeasurement/">PSC device with ions and different I-V scan protocols (1D).</a></li><li><a class="tocitem" href="../Ex104_PSC_Photogeneration/">PSC device with photogeneration rate (1D).</a></li><li><a class="tocitem" href="../Ex105_PSC_gradedFlux/">Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a></li><li><a class="tocitem" href="../Ex106_PSC_SurfaceRecombination/">PSC device with surface recombination (1D).</a></li><li><a class="tocitem" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering.</a></li><li><a class="tocitem" href="../Ex108_CIGS/">CIGS: stationary with Schottky contacts.</a></li><li><a class="tocitem" href="../Ex109_PSC_NonDimensional/">Nondimensionalized perovskite solar cell.</a></li><li><a class="tocitem" href="../Ex201_PSC_Textured/">2D textured perovskite solar cell.</a></li><li><a class="tocitem" href="../Ex202_PSC_tensorGrid/">PSC device on 2D domain (Tensor grid).</a></li><li><a class="tocitem" href="../Ex203_LBIC_NonDimensional/">2D nondimensionalized LBIC measurement.</a></li><li><a class="tocitem" href="../Ex204_Laser_simple/">Simple laser structure with 5 layers.</a></li><li class="is-active"><a class="tocitem" href>Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET).</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET).</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET).</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WIAS-PDELib/ChargeTransport.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Metal-Oxide-Semiconductor-Field-Effect-Transistor-(MOSFET)."><a class="docs-heading-anchor" href="#Metal-Oxide-Semiconductor-Field-Effect-Transistor-(MOSFET).">Metal-Oxide-Semiconductor Field-Effect Transistor (MOSFET).</a><a id="Metal-Oxide-Semiconductor-Field-Effect-Transistor-(MOSFET).-1"></a><a class="docs-heading-anchor-permalink" href="#Metal-Oxide-Semiconductor-Field-Effect-Transistor-(MOSFET)." title="Permalink"></a></h1><p>(<a href="../Ex205_MOSFET.jl">source code</a>)</p><p>We simulate charge transport in an n-channel MOSFET consisting of a single material, silicon. The drain-source current is controlled by an additional voltage applied at the gate contact. Simulations are performed on a two-dimensional grid.</p><pre><code class="language-julia hljs">module Ex205_MOSFET
+
+using ChargeTransport
+using VoronoiFVM
+using GridVisualize
+using ExtendableGrids</code></pre><p>Generates the grid with refinement level <code>grid_refinement</code>. Resulting node counts:   0 →   930   1 →  3599   2 →  8008   3 → 14157 ... Input parameter <code>p</code> stores all constants and parameters</p><pre><code class="language-julia hljs">function generate_2Dgrid(p; grid_refinement = 0)</code></pre><p>unit factors</p><pre><code class="language-julia hljs">    @local_unitfactors μm</code></pre><p>gridpoints x-direction</p><pre><code class="language-julia hljs">    x0 = -1.5 * μm
+    x1 = -1.0 * μm
+    x2 = -0.9 * μm
+    x3 = -0.8 * μm
+    x4 = 0.8 * μm
+    x5 = 0.9 * μm
+    x6 = 1.0 * μm
+    x7 = 1.5 * μm</code></pre><p>gridpoints y-direction</p><pre><code class="language-julia hljs">    y0 = -2.4 * μm
+    y1 = -0.5 * μm
+    y2 = -0.2 * μm
+    y3 = 0.0 * μm</code></pre><p>refinement in x-direction</p><pre><code class="language-julia hljs">    X = collect(range(x0, x7, length = 31 + grid_refinement * 30))</code></pre><p>refinement in y-direction</p><pre><code class="language-julia hljs">    Y1 = collect(range(y0, y1, length = 20 + grid_refinement * 19))
+    Y2 = collect(range(y1, y3, length = 11 + grid_refinement * 10))
+    Y = glue(Y1, Y2)
+
+    grid = simplexgrid(X, Y)</code></pre><p>cell regions</p><pre><code class="language-julia hljs">    cellmask!(grid, [x0, y2], [x3, y3], p.region_n)
+    cellmask!(grid, [x4, y2], [x7, y3], p.region_n)
+    cellmask!(grid, [x3, y2], [x4, y3], p.region_p)
+    cellmask!(grid, [x0, y0], [x7, y2], p.region_p)</code></pre><p>boundary regions</p><pre><code class="language-julia hljs">    bfacemask!(grid, [x2, y3], [x5, y3], p.bregion_gate)
+    bfacemask!(grid, [x0, y3], [x1, y3], p.bregion_drain)
+    bfacemask!(grid, [x6, y3], [x7, y3], p.bregion_source)
+    bfacemask!(grid, [x0, y0], [x7, y0], p.bregion_bulk)
+    bfacemask!(grid, [x0, y0], [x0, y3], p.bregion_neumann)
+    bfacemask!(grid, [x7, y0], [x7, y3], p.bregion_neumann)
+    bfacemask!(grid, [x1, y3], [x2, y3], p.bregion_neumann)
+    bfacemask!(grid, [x5, y3], [x6, y3], p.bregion_neumann)
+
+    return grid
+end</code></pre><p>THX at JF!!! https://github.com/j-fu/GridVisualize.jl/blob/1f2b299a436b7750702ccca282fa14152d80ebf9/src/pyplot.jl#L86</p><pre><code class="language-julia hljs">function tridata(grid::ExtendableGrid)
+    coord = grid[Coordinates]
+    cellnodes = Matrix(grid[CellNodes])
+    return coord[1, :], coord[2, :], transpose(cellnodes .- 1)
+end
+
+
+function main(;
+        Plotter = nothing,
+        test = false,
+        grid_refinement = 0,
+        parameter_set = Params_MOSFET_Si
+    )
+
+    if Plotter !== nothing &amp;&amp; nameof(Plotter) !== :PythonPlot
+        error(&quot;Plotting only possible for Plotter = PythonPlot&quot;)
+    end
+
+    if Plotter !== nothing
+        Plotter.close(&quot;all&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define physical parameters and model&quot;)
+    end
+    ################################################################################</code></pre><p>unit factors</p><pre><code class="language-julia hljs">    @local_unitfactors μm cm s ns V K</code></pre><p>import constants and parameters from parameter file</p><pre><code class="language-julia hljs">    p = parameter_set()
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Set up grid and regions&quot;)
+    end
+    ################################################################################
+
+    grid = generate_2Dgrid(p, grid_refinement = grid_refinement)
+
+    if Plotter !== nothing
+        GridVisualize.gridplot(grid, Plotter = Plotter, resolution = (600, 450), title = &quot;Grid&quot;, xlabel = &quot;Width [m]&quot;, ylabel = &quot;Height [m]&quot;)
+    end
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define System and fill in information about model&quot;)
+    end
+    ################################################################################</code></pre><p>initialize Data instance</p><pre><code class="language-julia hljs">    data = Data(grid, p.numberOfCarriers, constants = p.constants)</code></pre><p>model</p><pre><code class="language-julia hljs">    data.modelType = Stationary</code></pre><p>statistics</p><pre><code class="language-julia hljs">    data.F .= Boltzmann</code></pre><p>recombination</p><pre><code class="language-julia hljs">    data.bulkRecombination = set_bulk_recombination(;
+        iphin = p.iphin, iphip = p.iphip,
+        bulk_recomb_Auger = true,
+        bulk_recomb_radiative = false,
+        bulk_recomb_SRH = true,
+    )</code></pre><p>boundary model</p><pre><code class="language-julia hljs">    data.boundaryType[p.bregion_gate] = GateContact
+    data.boundaryType[p.bregion_drain] = OhmicContact
+    data.boundaryType[p.bregion_source] = OhmicContact
+    data.boundaryType[p.bregion_bulk] = OhmicContact</code></pre><p>flux discretization - depends on statistic (Boltzmann -&gt; Scharfetter Gummel)</p><pre><code class="language-julia hljs">    data.fluxApproximation .= ScharfetterGummel</code></pre><p>add parameters to data</p><pre><code class="language-julia hljs">    data.params = ChargeTransport.Params(p)</code></pre><p>definition ChargeTransport System</p><pre><code class="language-julia hljs">    ctsys = System(grid, data, unknown_storage = :sparse)
+
+    if test == false
+        show_params(ctsys)
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Define control parameters for Solver&quot;)
+    end
+    ################################################################################
+
+    control = ChargeTransport.SolverControl()
+    control.verbose = false
+    control.maxiters = 50
+    control.abstol = 1.0e-8
+    control.reltol = 1.0e-8
+
+    control.Δp = 0.2
+    control.Δp_min = 1.0e-3
+    control.Δp_max = 1.0
+    control.Δp_grow = 1.2
+    control.Δp_decrease = 0.5
+    control.Δu_opt = 1.5
+    control.handle_exceptions = true
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Compute solution in thermodynamic equilibrium&quot;)
+    end
+    ################################################################################
+
+    solution_eq = equilibrium_solve!(ctsys, control = control)
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    ################################################################################
+    if test == false
+        println(&quot;Bias loop&quot;)
+    end
+    ################################################################################
+
+    inival = copy(solution_eq)
+    solution = copy(solution_eq)</code></pre><p>gate bias: start at 0 V and increase up to 5 V</p><pre><code class="language-julia hljs">    biasValue_gate_range = (0.0, 5.0)</code></pre><p>callback executed before each embedding step (gate bias)</p><pre><code class="language-julia hljs">    control.pre = (solution, biasValue_gate) -&gt; begin
+        println(&quot;bias value at gate: Δu = &quot;, biasValue_gate, &quot;V&quot;)
+        set_contact!(ctsys, p.bregion_gate, Δu = biasValue_gate)
+        nothing
+    end</code></pre><p>solve with parameter embedding (gate bias)</p><pre><code class="language-julia hljs">    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_gate_range)
+    solution = solution_all_biases.u[end]
+
+    inival .= solution</code></pre><p>drain bias: start at 0 V and increase up to 5 V</p><pre><code class="language-julia hljs">    biasValue_drain_range = (0.0, 5.0)</code></pre><p>prepare IV data (drain bias)</p><pre><code class="language-julia hljs">    IV_drain = Float64[]
+    biasValues_drain = Float64[]
+    factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
+    tf = VoronoiFVM.testfunction(factory, [p.bregion_drain], [p.bregion_source])</code></pre><p>callback executed before each embedding step (drain bias)</p><pre><code class="language-julia hljs">    control.pre = (solution, biasValue_drain) -&gt; begin
+        println(&quot;bias value at drain: Δu = &quot;, biasValue_drain, &quot;V&quot;)
+        set_contact!(ctsys, p.bregion_drain, Δu = biasValue_drain)
+        nothing
+    end</code></pre><p>callback executed after each embedding step (drain bias)</p><pre><code class="language-julia hljs">    control.post = (solution, oldsolution, biasValue_drain, Δp) -&gt; begin</code></pre><p>get IV data (drain bias)</p><pre><code class="language-julia hljs">        IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
+        current = IEdge[p.iphin] + IEdge[p.iphip]
+        push!(IV_drain, abs(p.zaus * current))
+        push!(biasValues_drain, biasValue_drain)
+        nothing
+    end</code></pre><p>solve with parameter embedding (drain)</p><pre><code class="language-julia hljs">    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_drain_range)
+    solution = solution_all_biases.u[end]
+
+    if test == false
+        println(&quot;*** done\n&quot;)
+    end
+
+    if Plotter !== nothing
+        plotting(p, grid, ctsys, solution, biasValues_drain, IV_drain, Plotter)
+    end
+
+    testval = sum(solution) / length(solution)
+    return testval
+end # main</code></pre><p>function for testing</p><pre><code class="language-julia hljs">function test()
+    testval = 0.49923991140092033
+    return main(test = true) ≈ testval
+end</code></pre><p>function for plotting</p><pre><code class="language-julia hljs">function plotting(p, grid, ctsys, solution, biasValues_drain, IV_drain, Plotter)
+    XX = grid[Coordinates][1, :]; YY = grid[Coordinates][2, :]
+
+    ########## Surface Electrostatic Potential ##########
+    fig = Plotter.figure()
+    ax = fig.add_subplot(111, projection = &quot;3d&quot;)
+    ax.plot_trisurf(XX[:], YY[:], solution[p.ipsi, :])
+    Plotter.title(&quot;Electrostatic Potential&quot;, fontsize = 16)
+    Plotter.xlabel(&quot;Width [m]&quot;, fontsize = 12)
+    Plotter.ylabel(&quot;Height [m]&quot;, fontsize = 12)
+    Plotter.zlabel(&quot;potential [V]&quot;, fontsize = 12)
+    ax = Plotter.gca()
+    ax.tick_params(axis = &quot;x&quot;, labelsize = 10)
+    ax.tick_params(axis = &quot;y&quot;, labelsize = 10)
+    ax.tick_params(axis = &quot;z&quot;, labelsize = 10)
+    ax.xaxis.get_offset_text().set_fontsize(10)
+    ax.yaxis.get_offset_text().set_fontsize(10)
+    ax.zaxis.get_offset_text().set_fontsize(10)
+    current_figure = Plotter.gcf()
+    display(current_figure)
+
+    ########## Electron Density ##########
+    nn = p.Nc .* exp.(p.zn * (p.constants.q * (solution[p.iphin, :] .- solution[p.ipsi, :]) .+ p.Ec) ./ (p.constants.k_B * p.T))
+    nn_cm = nn * 1.0e-6
+
+    Plotter.figure()
+    Plotter.tripcolor(
+        tridata(grid)..., nn_cm,
+        norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e6, vmax = 1.0e20),
+        shading = &quot;gouraud&quot;,
+        rasterized = true
+    )
+    cbar = Plotter.colorbar(orientation = &quot;vertical&quot;, extend = &quot;both&quot;)
+    Plotter.xlabel(&quot;Width [m]&quot;, fontsize = 12)
+    Plotter.ylabel(&quot;Height [m]&quot;, fontsize = 12)
+    Plotter.title(&quot;Electron Density&quot;, fontsize = 16)
+    ax = Plotter.gca()
+    ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+    ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+    ax.tick_params(axis = &quot;both&quot;, which = &quot;major&quot;, labelsize = 10)
+    ax.xaxis.get_offset_text().set_fontsize(10)
+    ax.yaxis.get_offset_text().set_fontsize(10)
+    cbar.ax.tick_params(labelsize = 10)
+    cbar.set_label(&quot;Density [\$\\mathrm{cm}^{-3}\$]&quot;, fontsize = 12)
+    Plotter.tight_layout()
+    current_figure = Plotter.gcf()
+    display(current_figure)
+
+    ########## Hole Density ##########
+    np = p.Nv .* exp.(p.zp * (p.constants.q * (solution[p.iphip, :] .- solution[p.ipsi, :]) .+ p.Ev) ./ (p.constants.k_B * p.T))
+    np_cm = np * 1.0e-6
+
+    Plotter.figure()
+    Plotter.tripcolor(
+        tridata(grid)..., np_cm,
+        norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e3, vmax = 1.0e16),
+        shading = &quot;gouraud&quot;,
+        rasterized = true
+    )
+    cbar = Plotter.colorbar(orientation = &quot;vertical&quot;, extend = &quot;both&quot;)
+    Plotter.xlabel(&quot;Width [m]&quot;, fontsize = 12)
+    Plotter.ylabel(&quot;Height [m]&quot;, fontsize = 12)
+    Plotter.title(&quot;Hole Density&quot;, fontsize = 16)
+    ax = Plotter.gca()
+    ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+    ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+    ax.tick_params(axis = &quot;both&quot;, which = &quot;major&quot;, labelsize = 10)
+    ax.xaxis.get_offset_text().set_fontsize(10)
+    ax.yaxis.get_offset_text().set_fontsize(10)
+    cbar.ax.tick_params(labelsize = 10)
+    cbar.set_label(&quot;Density [\$\\mathrm{cm}^{-3}\$]&quot;, fontsize = 12)
+    Plotter.tight_layout()
+    current_figure = Plotter.gcf()
+    display(current_figure)
+
+    ########## Current Density ##########
+    nf = -VoronoiFVM.nodeflux(ctsys.fvmsys, solution)
+    j = nf[:, p.iphin, :] ./ (1.0e4 * p.zaus)
+    jx = j[1, :]; jy = j[2, :]
+    jabs = sqrt.(jx .^ 2 .+ jy .^ 2)
+
+    L = 0.03 * (maximum(YY) - minimum(YY))  # length arrows
+    eps = 1.0e-30
+    ux = jx ./ (jabs .+ eps);  uy = jy ./ (jabs .+ eps)
+    idx = 1:1:length(XX)
+
+    Plotter.figure()
+    Plotter.tripcolor(
+        tridata(grid)...,
+        jabs,
+        norm = Plotter.matplotlib.colors.LogNorm(vmin = 1.0e-8, vmax = 1.0e4),
+        shading = &quot;gouraud&quot;,
+        rasterized = true
+    )
+    cbar = Plotter.colorbar(orientation = &quot;vertical&quot;, extend = &quot;both&quot;)
+    Plotter.quiver(
+        XX[idx], YY[idx], (L * ux)[idx], (L * uy)[idx],
+        color = &quot;black&quot;,
+        scale = 1.0,
+        angles = &quot;xy&quot;,
+        scale_units = &quot;xy&quot;,
+        width = 0.002 # thickness arrows
+    )
+    Plotter.xlabel(&quot;Width [m]&quot;, fontsize = 12)
+    Plotter.ylabel(&quot;Height [m]&quot;, fontsize = 12)
+    Plotter.title(&quot;Electron Current Density&quot;, fontsize = 16)
+    ax = Plotter.gca()
+    ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+    ax.yaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(0.5e-6))
+    ax.tick_params(axis = &quot;both&quot;, which = &quot;major&quot;, labelsize = 10)
+    ax.xaxis.get_offset_text().set_fontsize(10)
+    ax.yaxis.get_offset_text().set_fontsize(10)
+    cbar.ax.tick_params(labelsize = 10)
+    cbar.set_label(&quot;|j| [A/cm^2]&quot;, fontsize = 12)
+    Plotter.tight_layout()
+    current_figure = Plotter.gcf()
+    display(current_figure)
+
+    ########## IV Curve ##########
+    Plotter.figure()
+    Plotter.plot(biasValues_drain, IV_drain, marker = &quot;o&quot;, markersize = 3)
+    Plotter.grid()
+
+    Plotter.title(&quot;IV Curve&quot;, fontsize = 16)
+    Plotter.xlabel(&quot;voltage drain [V]&quot;, fontsize = 12)
+    Plotter.ylabel(&quot;total current drain [A]&quot;, fontsize = 12)
+
+    ax = Plotter.gca()
+    ax.xaxis.set_major_locator(Plotter.matplotlib.ticker.MultipleLocator(1.0))
+    ax.tick_params(axis = &quot;both&quot;, which = &quot;major&quot;, labelsize = 10)
+
+    Plotter.tight_layout()
+    current_figure = Plotter.gcf()
+    return display(current_figure)
+end # plotting
+
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex204_Laser_simple/">« Simple laser structure with 5 layers.</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 5 May 2026 07:59">Tuesday 5 May 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
