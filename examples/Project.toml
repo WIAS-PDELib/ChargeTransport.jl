@@ -1,0 +1,12 @@
+[deps]
+ChargeTransport = "25c3eafe-d88c-11e9-3031-f396758f002a"
+ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
+GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+
+[sources]
+ChargeTransport = {path = ".."}
+
+[compat]
+julia = "1.11"
