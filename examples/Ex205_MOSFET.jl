@@ -230,7 +230,7 @@ function main(;
 
     # solve with parameter embedding (gate bias)
     solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_gate_range)
-    solution = solution_all_biases[end]
+    solution = solution_all_biases.u[end]
 
     inival .= solution
 
@@ -262,7 +262,7 @@ function main(;
 
     # solve with parameter embedding (drain)
     solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_drain_range)
-    solution = solution_all_biases[end]
+    solution = solution_all_biases.u[end]
 
     if test == false
         println("*** done\n")
