@@ -46,7 +46,7 @@ export tiny_penalty_value
 
 include("ct_distributions.jl")
 
-export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch, GaussFermiNumInt, constructGaussFermiNumInt
+export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch, GaussFermiSimpson13
 # , fittedErf_3
 # export GaussFermiNumInt, GaussFermiNumInt_naïve, GaussFermiNumInt_fast, constructGaussFermiNumInt
 export FermiDiracOneHalfTeSCA
@@ -96,7 +96,7 @@ export Params, ParamsNodal, ParamsOptical, Data, System
 export BulkRecombination, set_bulk_recombination
 
 export enable_ionic_carrier!
-export enable_trap_carrier!
+export enable_trap_carrier!, constructGaussFermiNumInt
 
 export equilibrium_solve!
 export enable_species!, enable_boundary_species!

@@ -3,16 +3,16 @@ Type of statistics functions.
 
 """
 const GaussFermiFunctionSet = Union{
-    GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64}, GaussFermiNumInt{Float64}
-}  
+    GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64}, GaussFermiSimpson13{Float64},
+}
 const TrapFunctionSet = Union{
     typeof(FermiDiracMinusOne),
-    GaussFermiFunctionSet
+    GaussFermiFunctionSet,
 }
 const StandardFuncSet = Union{
     typeof(Boltzmann), typeof(Blakemore), typeof(FermiDiracMinusOne),
-    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA), 
-    TrapFunctionSet
+    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA),
+    TrapFunctionSet,
 }
 ##########################################################
 
@@ -233,15 +233,13 @@ const SRHModelType = Union{SRHWithoutTrapsType}
 
 abstract type SingleStateTrap end
 abstract type GaussianDistributedTrap end
-abstract type GaussianDistributedTrapNumInt end
-abstract type GaussianDistributedTrapPaasch end
 abstract type NoTrap end
 
 ##########################################################
 """
 Data type for trap model
 """
-const TrapModelType = Union{Type{SingleStateTrap}, Type{GaussianDistributedTrap}, Type{GaussianDistributedTrapPaasch},Type{GaussianDistributedTrapNumInt}, Type{NoTrap}}
+const TrapModelType = Union{Type{SingleStateTrap}, Type{GaussianDistributedTrap}, Type{NoTrap}}
 
 ##########################################################
 ##########################################################

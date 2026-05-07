@@ -92,7 +92,6 @@ end
 
 ### Approximation of Gauss-Fermi integral using Paasch's method [J. Appl. Phys. 107, 104501 (2010)]
 ### Paasch-Scheinert functions
-
 """
 $(TYPEDSIGNATURES)
 
@@ -100,11 +99,11 @@ $(TYPEDSIGNATURES)
 Paasch-Scheinert approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
 """
 function PaaschH(s::Real)
-    return sqrt(2)/s * SpecialFunctions.erfcinv( exp( -(s^2) / 2) )
+    return sqrt(2) / s * SpecialFunctions.erfcinv(exp(-(s^2) / 2))
 end
 function PaaschK(s::Real)
-    H=PaaschH(s)
-    return 2 * (1 - H/s * sqrt(2/pi) * exp(1/2 *  s^2 * (1-H^2)) )
+    H = PaaschH(s)
+    return 2 * (1 - H / s * sqrt(2 / pi) * exp(1 / 2 * s^2 * (1 - H^2)))
 end
 struct GaussFermiPaasch{T} <: Function
     s::T
@@ -114,81 +113,41 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     s = GaussFermiPaasch.s
     K = PaaschK(s)
     H = PaaschH(s)
-    if(xp(x) > s^2)
-        G = exp((s*s/2-xp(x))) / (1.0 + exp(K * (s*s-xp(x)) ))
+    if (xp(x) > s^2)
+        G = exp((s * s / 2 - xp(x))) / (1.0 + exp(K * (s * s - xp(x))))
     else
-        G = 0.5 * erfc(xp(x)/(s*sqrt(2)) * H)
+        G = 0.5 * erfc(xp(x) / (s * sqrt(2)) * H)
     end
-    if(x>0)
-        G = 1-G
+    if (x > 0)
+        G = 1 - G
     end
     return G
-end 
-struct GaussFermiNumInt{T} <: Function
+end
+# Approximate Gauss-Fermi integral using Simpsons rule
+struct GaussFermiSimpson13{T} <: Function
     s::T
     Et::T
     kBT::T
     nPoints::Int64
 end
-function (GaussFermiNumInt::GaussFermiNumInt{Float64})(x::Real)
-    s = GaussFermiNumInt.s
-    Et = GaussFermiNumInt.Et
-    kBT = GaussFermiNumInt.kBT
-    nP = GaussFermiNumInt.nPoints
+function (GaussFermiSimpson13::GaussFermiSimpson13{Float64})(x::Real)
+    s = GaussFermiSimpson13.s
+    Et = GaussFermiSimpson13.Et
+    kBT = GaussFermiSimpson13.kBT
+    nP = Int64(2 * ceil((GaussFermiSimpson13.nPoints) / 2.0) + 1)
 
-    Elower = Et - 4*s
-    Eupper = Et + 4*s
-    dE = ( Eupper - Elower ) / (nP-1.0)
-    v  = sum(gaussfermi_G(E, s, Et, kBT, x) for E in Elower:dE:Eupper) * dE/( sqrt( 2.0 * pi ) * s )
-    #  sum( gaussfermi_G.(Elower:dE:Eupper, s, Et, kBT, x ) ) * dE #quadratureFunction(Elower,Eupper, Base.Fix{2}( Base.Fix{3}( Base.Fix{4}( Base.Fix{5}(gaussfermi_G, x), kBT),Et), s))
-    
+    Elower = Et - 6 * s
+    Eupper = Et + 6 * s
+
+    dE = (Eupper - Elower) / (nP - 1.0)
+
+    v = (2.0 * sum(2.0 * gaussfermi_G(E, s, Et, kBT, x) + gaussfermi_G(E + dE, s, Et, kBT, x) for E in (Elower + dE):(2 * dE):(Eupper - 2 * dE)) + gaussfermi_G(Elower, s, Et, kBT, x) + gaussfermi_G(Eupper, s, Et, kBT, x)) * dE / (3.0 * sqrt(2.0π) * s)
+
     return v
-end 
-
-# function fittedErf_3(x::Real)
-#     sigma=-0.20269112047236817
-#     return 0.5*erfc(x*sigma)
-# end
-
+end
 @inline function gaussfermi_G(E::Float64, sigma::Float64, Et::Float64, kBT::Float64, x::Real)
-        return exp(-(E - Et)*(E - Et)/(2*sigma*sigma)) * FermiDiracMinusOne(x - (E - Et)/kBT)
+    return exp(-(E - Et) * (E - Et) / (2 * sigma * sigma)) * FermiDiracMinusOne(x - (E - Et) / kBT)
 end
-function constructGaussFermiNumInt(data, itrap::Int64)
-    data=data
-
-    q=data.constants.q
-    k_B = data.constants.k_B
-    kBT=data.params.temperature *k_B
-    Et = data.params.bandEdgeEnergy[itrap]
-    sigma = data.params.trapDistributionWidth[itrap] 
-    nPoints = data.params.energyGrid_nPoints
-    return GaussFermiNumInt{Float64}(sigma, Et, kBT, nPoints)
-    
-end
-# struct GaussFermiNumInt_fixedType{T} <: Function #,U,V} ,Float64,Float64
-#     Et::T
-#     # sigma::Float64
-#     # kBT::Float64
-# end
-# function (GaussFermiNumInt_fixedType::GaussFermiNumInt_fixedType{T})(x) where {T} #,U,V}
-#     return GaussFermiNumInt_fixedType.Et
-#     # sigma = GaussFermiNumInt_fixedType.sigma
-#     # kBT = GaussFermiNumInt_fixedType.kBT
-    
-#     # Elower = Et - 4*sigma
-#     # Eupper = Et + 4*sigma
-#     # # nPoints= 1000
-#     # dE = ( Eupper - Elower ) / ( 1000.0-1 )
-
-#     # v  = 0.0
-#     # i  = 1
-#     # while ( Elower + (i)*dE < Eupper - dE)
-#     #     E = Elower + (i)*dE
-#     #     v += gaussfermi_G(E, sigma, Et, kBT, x)
-#     #     i += 1
-#     # end
-#     # return dE * 1/(sqrt(2π)*sigma) * (v + gaussfermi_G(Elower, sigma, Et, kBT, x)/2.0 + gaussfermi_G(Eupper, sigma, Et, kBT, x)/2.0 ) 
-# end
 """
 $(TYPEDSIGNATURES)
 

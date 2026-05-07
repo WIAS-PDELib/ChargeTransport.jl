@@ -22,6 +22,9 @@ end
 
 modname(fname) = splitext(basename(fname))[1]
 
+# Test functions
+include("test_units.jl")
+
 #
 # Include all Julia files in `testdir` whose name starts with `prefix`,
 # Each file `prefixModName.jl` must contain a module named
@@ -58,8 +61,10 @@ function run_all_tests()
     end
 end
 
+run_all_tests()
+
 @testset "Aqua.jl" begin
     Aqua.test_all(ChargeTransport)
 end
 
-run_all_tests()
+#run_all_tests()

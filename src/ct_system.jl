@@ -187,30 +187,43 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     ## Choose appropriate statistics function
     ## Detailed balance is only applied to FermiDiracMinusOne or GaussFermi
-    if (! ( typeof(data.F[trapCarrier]) <: TrapFunctionSet ) )#!== FermiDiracMinusOne && data.F[trapCarrier] !== GaussFermi)
-        @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). Please choose FermiDiracMinusOne or GaussFermi.")
+    if (! (typeof(data.F[trapCarrier]) <: TrapFunctionSet)) 
+        @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). \n Please use one contained in $(TrapFunctionSet)")
     end
-    # If a GaussFermi model is chosen, check if the width is non-zero and use either Paasch or FermiDiracMinusOne
-    if( typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet)
-        ŝ = data.params.trapDistributionWidth[trapCarrier]/(data.params.temperature*data.constants.k_B)
-        if(ŝ<0)
+    # If a GaussFermi model is chosen, check if the width is non-zero.
+    if (typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet)
+        ŝ = data.params.trapDistributionWidth[trapCarrier] / (data.params.temperature * data.constants.k_B)
+        if (ŝ < 0)
             @warn "Negative distribution width. Using abs(ŝ)."
-            ŝ=abs(ŝ)
+            ŝ = abs(ŝ)
         end
-        if(ŝ==0.0)
-            if(data.F[trapCarrier]!=FermiDiracMinusOne)
+        if (ŝ == 0.0)
+            if (data.F[trapCarrier] != FermiDiracMinusOne)
                 @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
                 data.F[trapCarrier] = FermiDiracMinusOne
             end
             data.bulkRecombination.bulk_recomb_trap = SingleStateTrap
         else
             @info "Gaussian width is $(ŝ). Using numerical integration approximation of Gauss-Fermi integral."
-            data.F[trapCarrier] = constructGaussFermiNumInt(data, trapCarrier) #GaussFermiPaasch(ŝ) 
-            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrapNumInt
+            data.F[trapCarrier] = GaussFermiPaasch(ŝ) 
+            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrap 
         end
     end
 
     return
+
+end
+
+function constructGaussFermiNumInt(data, itrap::Int64; structName = GaussFermiSimpson13)
+    data = data
+
+    q = data.constants.q
+    k_B = data.constants.k_B
+    kBT = data.params.temperature * k_B
+    Et = data.params.bandEdgeEnergy[itrap]
+    sigma = data.params.trapDistributionWidth[itrap]
+    nPoints = data.params.energyGrid_nPoints
+    return structName(sigma, Et, kBT, nPoints)
 
 end
 
@@ -337,7 +350,7 @@ mutable struct Params
     Parameter for the shift of generation peak of the Beer-Lambert generation profile.
     """
     generationPeak::Float64
-    
+
 
     ###############################################################
     ####              number of boundary regions               ####
@@ -466,11 +479,6 @@ mutable struct Params
     for each carrier ``\\alpha`` on each region.
     """
     mobility::Array{Float64, 2}
-    
-
-
-    
-
 
 
     ###############################################################
@@ -2036,7 +2044,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
 end
 function _equilibrium_solve!(::Val{1}, ctsys::System; inival, control, nonlinear_steps, verbose, yabstol, ytol, maxiter)
 
-    verbose=true
+    verbose = true
     # do once the equilibrium_solve to have a proper initial value.
     inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
 
@@ -2090,11 +2098,11 @@ function _equilibrium_solve!(::Val{1}, ctsys::System; inival, control, nonlinear
             F(sol) = (Avgncc(sol) - Ca) / Ca
 
             # --- for initial values for Ea ---
-            Ec = params.bandEdgeEnergy[iphin, ireg ]
-            Ev = params.bandEdgeEnergy[iphip, ireg ]
-            Nc = params.densityOfStates[iphin, ireg ]
-            Nv = params.densityOfStates[iphip, ireg ]
-            C = params.doping[iphin, ireg ] - params.doping[iphip, ireg ]
+            Ec = params.bandEdgeEnergy[iphin, ireg]
+            Ev = params.bandEdgeEnergy[iphip, ireg]
+            Nc = params.densityOfStates[iphin, ireg]
+            Nv = params.densityOfStates[iphip, ireg]
+            C = params.doping[iphin, ireg] - params.doping[iphip, ireg]
             Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
             @show psiL = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
             ####################
