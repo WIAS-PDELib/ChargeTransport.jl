@@ -214,7 +214,7 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
 end
 
-function constructGaussFermiNumInt(data, itrap::Int64; structName = GaussFermiSimpson13)
+function constructGaussFermiNumInt(data::Data, itrap::Int64)
     data = data
 
     q = data.constants.q
@@ -223,7 +223,16 @@ function constructGaussFermiNumInt(data, itrap::Int64; structName = GaussFermiSi
     Et = data.params.bandEdgeEnergy[itrap]
     sigma = data.params.trapDistributionWidth[itrap]
     nPoints = data.params.energyGrid_nPoints
-    return structName(sigma, Et, kBT, nPoints)
+
+    if(data.params.trapDistributionWidth[itrap] == 0)
+        @warn "trapDistributionWidth[$(itrap)] is zero. Using Fermi-Dirac minus one"
+        return FermiDiracMinusOne
+    elseif(data.params.trapDistributionWidth[itrap] < 0)
+        @warn "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
+        data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
+    end
+
+    return GaussFermiSimpson13(sigma, Et, kBT, nPoints)
 
 end
 

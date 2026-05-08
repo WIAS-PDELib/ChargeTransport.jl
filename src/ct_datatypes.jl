@@ -3,7 +3,7 @@ Type of statistics functions.
 
 """
 const GaussFermiFunctionSet = Union{
-    GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64}, GaussFermiSimpson13{Float64},
+    GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64}, GaussFermiSimpson13,
 }
 const TrapFunctionSet = Union{
     typeof(FermiDiracMinusOne),

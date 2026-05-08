@@ -124,13 +124,13 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     return G
 end
 # Approximate Gauss-Fermi integral using Simpsons rule
-struct GaussFermiSimpson13{T} <: Function
-    s::T
-    Et::T
-    kBT::T
+struct GaussFermiSimpson13 <: Function
+    s::Float64
+    Et::Float64
+    kBT::Float64
     nPoints::Int64
 end
-function (GaussFermiSimpson13::GaussFermiSimpson13{Float64})(x::Real)
+function (GaussFermiSimpson13::GaussFermiSimpson13)(x::Real)
     s = GaussFermiSimpson13.s
     Et = GaussFermiSimpson13.Et
     kBT = GaussFermiSimpson13.kBT
