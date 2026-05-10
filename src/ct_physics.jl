@@ -851,45 +851,60 @@ function addGeneration!(f, u, node, data)
 end
 
 function addReaction!(f, u, node, data)
-    # ========================================================= #
-    #              Right-hand side of reaction                  #
-    # ========================================================= #
+    if data.calculationType == OutOfEquilibrium && data.enableReaction &&
+       data.generationComplete && node.region == 2
+        if data.enableDependentReaction
+            _add_dependent_reaction!(f, u, node, data)
+        else
+            _add_constant_reaction!(f, u, node, data)
+        end
+    end
+    return nothing
+end
 
-    # 1. Check conditions: Out of equilibrium and reactions enabled, and check region: Only happen in the perovskite layer
-    # Also ensure generation is complete to avoid turning reactions on during the equilibrium generation ramp-up phase.
-    if data.calculationType == OutOfEquilibrium && data.enableReaction && data.generationComplete && node.region == 2
-        reactions = data.params.Reactions
+function _add_constant_reaction!(f, u, node, data)
+    reactions = data.params.Reactions
+    for reaction in reactions
+        d_reactants = 1.0
+        for ireactant in reaction.Reactants
+            d_reactants *= get_density!(u, node, data, ireactant)
+        end
+        reactionTerm = reaction.k * d_reactants
+        for ireactant in reaction.Reactants
+            z = data.params.chargeNumbers[ireactant]
+            scale = iszero(z) ? 1.0 : data.constants.q * z
+            f[ireactant] = f[ireactant] + scale * reactionTerm
+        end
+        for iproduct in reaction.Products
+            z = data.params.chargeNumbers[iproduct]
+            scale = iszero(z) ? 1.0 : data.constants.q * z
+            f[iproduct] = f[iproduct] - scale * reactionTerm
+        end
+    end
+    return nothing
+end
 
-        # Iterate through each reaction directly
-        for reaction in reactions
-            # --- A. Calculate density multiplications (e.g., [p][V^{+}] or [p][p]) ---
-            d_reactants = 1.0  # Initialize 
-            for ireactant in reaction.Reactants
-                d_reactants *= get_density!(u, node, data, ireactant)
-            end
-
-            # --- B. Multiply with reaction rate ---
-            reactionTerm = reaction.k * d_reactants
-
-            # --- C. Update species equations ---
-            ##For Sum, use "-"/'-'...both looks cute :P
-            # Reactants are consumed (Plus)
-            for ireactant in reaction.Reactants
-                z = data.params.chargeNumbers[ireactant]
-                scale = iszero(z) ? 1.0 : data.constants.q * z
-                f[ireactant] = f[ireactant] + scale * reactionTerm
-            end
-
-            # Products are generated (Minus)
-            for iproduct in reaction.Products
-                z = data.params.chargeNumbers[iproduct]
-                scale = iszero(z) ? 1.0 : data.constants.q * z
-                f[iproduct] = f[iproduct] - scale * reactionTerm
-            end
-
-        end # end of reactions loop
-    end # end of condition check
-
+function _add_dependent_reaction!(f, u, node, data)
+    reactions = data.params.Reactions
+    modifier = data.reactionRateModifier
+    for (idx, reaction) in enumerate(reactions)
+        d_reactants = 1.0
+        for ireactant in reaction.Reactants
+            d_reactants *= get_density!(u, node, data, ireactant)
+        end
+        k_eff = modifier(u, node, data, idx, reaction.k, d_reactants)
+        reactionTerm = k_eff * d_reactants
+        for ireactant in reaction.Reactants
+            z = data.params.chargeNumbers[ireactant]
+            scale = iszero(z) ? 1.0 : data.constants.q * z
+            f[ireactant] = f[ireactant] + scale * reactionTerm
+        end
+        for iproduct in reaction.Products
+            z = data.params.chargeNumbers[iproduct]
+            scale = iszero(z) ? 1.0 : data.constants.q * z
+            f[iproduct] = f[iproduct] - scale * reactionTerm
+        end
+    end
     return nothing
 end
 

@@ -79,7 +79,7 @@
     ## effective densities of density of states
     Nn = [1.0e26, 2.2e24, 1.0e26] ./ (m^3)
     Np = [1.0e26, 2.2e24, 1.0e26] ./ (m^3)
-    Na = [0.0, 1.0e27, 0.0] ./ (m^3)
+    Na = [0.0, 1.0e26, 0.0] ./ (m^3)
 
     Da = 5.0e-14
     ## mobilities

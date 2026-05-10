@@ -966,6 +966,23 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     enableReaction::Bool
 
+    """
+    Flag to enable per-node density-dependent reaction rate modification.
+    When true, `reactionRateModifier` is called for each reaction at each node.
+    When false, the constant-rate path is used (no overhead).
+    """
+    enableDependentReaction::Bool
+
+    """
+    Optional function to compute a modified rate constant per-node per-reaction.
+    Signature: (u, node, data, rxn_idx::Int, base_k::Float64, d_reactants::Float64) -> Float64
+    Returns the effective k to use for this reaction term.
+    Called only when `enableDependentReaction == true`.
+    `d_reactants` is the pre-computed product of reactant densities — for a single-reactant
+    reaction it IS that species' density, avoiding a redundant `get_density!` call.
+    """
+    reactionRateModifier::Union{Nothing, Function}
+
     ###############################################################
     ####                 Numerics information                  ####
     ###############################################################
@@ -1147,6 +1164,8 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.barrierLoweringInfo = BarrierLoweringSpecies()
     data.barrierLoweringInfo.BarrierLoweringOn = BarrierLoweringOff # set in general case barrier lowering off
     data.enableReaction = false # set this by default to false
+    data.enableDependentReaction = false
+    data.reactionRateModifier = nothing
 
 
     ###############################################################
