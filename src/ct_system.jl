@@ -975,11 +975,12 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
 
     """
     Optional function to compute a modified rate constant per-node per-reaction.
-    Signature: (u, node, data, rxn_idx::Int, base_k::Float64, d_reactants::Float64) -> Float64
+    Signature: (rxn_idx::Int, base_k::Float64, reactant_densities::Vector{Float64}) -> Float64
     Returns the effective k to use for this reaction term.
     Called only when `enableDependentReaction == true`.
-    `d_reactants` is the pre-computed product of reactant densities — for a single-reactant
-    reaction it IS that species' density, avoiding a redundant `get_density!` call.
+    `reactant_densities` is a species-indexed vector of length `numberOfCarriers`,
+    initialized to 1.0 everywhere. Only the entries at `reaction.Reactants` indices
+    are set to actual densities — use the species index (e.g. `p.iphia`) to access them.
     """
     reactionRateModifier::Union{Nothing, Function}
 

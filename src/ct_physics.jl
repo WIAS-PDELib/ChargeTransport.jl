@@ -129,7 +129,7 @@ function etaFunction!(u, edge::VoronoiFVM.Edge, data, icc)
     E1 = data.tempBEE1[icc];  E2 = data.tempBEE2[icc]
 
     return etaFunction(u[data.index_psi, 1], u[icc, 1], data.params.temperature, E1, data.params.chargeNumbers[icc], data.constants),
-    etaFunction(u[data.index_psi, 2], u[icc, 2], data.params.temperature, E2, data.params.chargeNumbers[icc], data.constants)
+        etaFunction(u[data.index_psi, 2], u[icc, 2], data.params.temperature, E2, data.params.chargeNumbers[icc], data.constants)
 end
 
 """
@@ -852,7 +852,7 @@ end
 
 function addReaction!(f, u, node, data)
     if data.calculationType == OutOfEquilibrium && data.enableReaction &&
-       data.generationComplete && node.region == 2
+            data.generationComplete && node.region == 2
         if data.enableDependentReaction
             _add_dependent_reaction!(f, u, node, data)
         else
@@ -887,13 +887,17 @@ end
 function _add_dependent_reaction!(f, u, node, data)
     reactions = data.params.Reactions
     modifier = data.reactionRateModifier
+    T = eltype(u)
+    reactant_densities = ones(T, data.params.numberOfCarriers)
+
     for (idx, reaction) in enumerate(reactions)
-        d_reactants = 1.0
         for ireactant in reaction.Reactants
-            d_reactants *= get_density!(u, node, data, ireactant)
+            reactant_densities[ireactant] = get_density!(u, node, data, ireactant)
         end
-        k_eff = modifier(u, node, data, idx, reaction.k, d_reactants)
+        k_eff = modifier(idx, reaction.k, reactant_densities .* 1e-6)
+        d_reactants = prod(reactant_densities[reaction.Reactants])
         reactionTerm = k_eff * d_reactants
+
         for ireactant in reaction.Reactants
             z = data.params.chargeNumbers[ireactant]
             scale = iszero(z) ? 1.0 : data.constants.q * z
@@ -904,6 +908,7 @@ function _add_dependent_reaction!(f, u, node, data)
             scale = iszero(z) ? 1.0 : data.constants.q * z
             f[iproduct] = f[iproduct] - scale * reactionTerm
         end
+        reactant_densities = ones(T, data.params.numberOfCarriers)
     end
     return nothing
 end
@@ -1119,8 +1124,8 @@ end
 # Generation Model: Dark / Night
 # Represents complete darkness or baseline background generation.
 # ==============================================================================
-# Note: This logically duplicates GenerationNone, but maintains architectural 
-# clarity. It also reserves a dedicated namespace in case non-zero dark current 
+# Note: This logically duplicates GenerationNone, but maintains architectural
+# clarity. It also reserves a dedicated namespace in case non-zero dark current
 # or ambient baseline generation needs to be introduced later.
 function generation(data, node, ::Type{GenerationDark})
     return 0.0
