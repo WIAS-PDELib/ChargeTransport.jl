@@ -888,14 +888,16 @@ function _add_dependent_reaction!(f, u, node, data)
     reactions = data.params.Reactions
     modifier = data.reactionRateModifier
     T = eltype(u)
-    reactant_densities = ones(T, data.params.numberOfCarriers)
+    carrier_densities = ones(T, data.params.numberOfCarriers)
+
+    # Fill all carrier densities so the modifier can inspect any species
+    for icarrier in 1:data.params.numberOfCarriers
+        carrier_densities[icarrier] = get_density!(u, node, data, icarrier)
+    end
 
     for (idx, reaction) in enumerate(reactions)
-        for ireactant in reaction.Reactants
-            reactant_densities[ireactant] = get_density!(u, node, data, ireactant)
-        end
-        k_eff = modifier(idx, reaction.k, reactant_densities .* 1e-6)
-        d_reactants = prod(reactant_densities[reaction.Reactants])
+        k_eff = modifier(idx, reaction.k, carrier_densities .* 1e-6)
+        d_reactants = prod(carrier_densities[reaction.Reactants])
         reactionTerm = k_eff * d_reactants
 
         for ireactant in reaction.Reactants
@@ -908,7 +910,6 @@ function _add_dependent_reaction!(f, u, node, data)
             scale = iszero(z) ? 1.0 : data.constants.q * z
             f[iproduct] = f[iproduct] - scale * reactionTerm
         end
-        reactant_densities = ones(T, data.params.numberOfCarriers)
     end
     return nothing
 end
