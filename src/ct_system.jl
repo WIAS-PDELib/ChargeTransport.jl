@@ -187,7 +187,7 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     ## Choose appropriate statistics function
     ## Detailed balance is only applied to FermiDiracMinusOne or GaussFermi
-    if (! (typeof(data.F[trapCarrier]) <: TrapFunctionSet)) 
+    if (! (typeof(data.F[trapCarrier]) <: TrapFunctionSet))
         @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). \n Please use one contained in $(TrapFunctionSet)")
     end
     # If a GaussFermi model is chosen, check if the width is non-zero.
@@ -204,9 +204,9 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
             end
             data.bulkRecombination.bulk_recomb_trap = SingleStateTrap
         else
-            @info "Gaussian width is $(ŝ). Using numerical integration approximation of Gauss-Fermi integral."
-            data.F[trapCarrier] = GaussFermiPaasch(ŝ) 
-            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrap 
+            @info "Gaussian width of trap distribution $(trapCarrier) is $(ŝ). "
+            data.F[trapCarrier] = GaussFermiPaasch(ŝ)
+            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrap
         end
     end
 
@@ -214,22 +214,34 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
 end
 
-function constructGaussFermiNumInt(data::Data, itrap::Int64)
-    data = data
+"""
+$(SIGNATURES)
 
-    q = data.constants.q
-    k_B = data.constants.k_B
+This method takes the user information concerning present trap charge carriers,
+builds a statistics function for the species itrap which computes the Gauss-Fermi integral with simpsons 1/3 rule.
+"""
+function constructGaussFermiNumInt(data, itrap::Int64)
+
+    # Physical parameters
+    (; k_B, q) = data.constants
     kBT = data.params.temperature * k_B
     Et = data.params.bandEdgeEnergy[itrap]
     sigma = data.params.trapDistributionWidth[itrap]
-    nPoints = data.params.energyGrid_nPoints
 
-    if(data.params.trapDistributionWidth[itrap] == 0)
+    # Numerical integration parameters
+    nPoints = data.params.numberOfEnergyPoints
+
+    # Sanity checks before setting up function
+    if (data.params.trapDistributionWidth[itrap] == 0)
         @warn "trapDistributionWidth[$(itrap)] is zero. Using Fermi-Dirac minus one"
         return FermiDiracMinusOne
-    elseif(data.params.trapDistributionWidth[itrap] < 0)
+    elseif (data.params.trapDistributionWidth[itrap] < 0)
         @warn "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
         data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
+    end
+    if (nPoints < 1)
+        @warn "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
+        nPoints = 1000
     end
 
     return GaussFermiSimpson13(sigma, Et, kBT, nPoints)
@@ -330,7 +342,7 @@ mutable struct Params
     """
     Number of points to be used in numerical integration of Gauss-Fermi integrals
     """
-    energyGrid_nPoints::Int64
+    numberOfEnergyPoints::Int64
 
     ###############################################################
     ####                     real numbers                      ####
@@ -574,7 +586,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.numberOfBoundaryRegions = numberOfBoundaryRegions
     params.numberOfCarriers = numberOfCarriers
     params.invertedIllumination = 1                       # we assume that light enters from the left.
-    params.energyGrid_nPoints = 10_000
+    params.numberOfEnergyPoints = 10_000
 
     ###############################################################
     ####                     real numbers                      ####

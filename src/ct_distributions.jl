@@ -92,12 +92,6 @@ end
 
 ### Approximation of Gauss-Fermi integral using Paasch's method [J. Appl. Phys. 107, 104501 (2010)]
 ### Paasch-Scheinert functions
-"""
-$(TYPEDSIGNATURES)
-
-
-Paasch-Scheinert approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
-"""
 function PaaschH(s::Real)
     return sqrt(2) / s * SpecialFunctions.erfcinv(exp(-(s^2) / 2))
 end
@@ -108,6 +102,12 @@ end
 struct GaussFermiPaasch{T} <: Function
     s::T
 end
+"""
+$(TYPEDSIGNATURES)
+
+Paasch-Scheinert approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
+For details on function see Paasch and Scheinert, J. Appl. Phys 107, 104501 (2010)
+"""
 function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     xp(x) = abs(x)
     s = GaussFermiPaasch.s
@@ -123,6 +123,12 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     end
     return G
 end
+"""
+$(TYPEDEF)
+
+Struct containing information for numerical integration of Gauss-Fermi integral. 
+Can be constructed automatically from ctsys.data using constructGaussFermiNumInt(data, itrap::Int64).
+"""
 # Approximate Gauss-Fermi integral using Simpsons rule
 struct GaussFermiSimpson13 <: Function
     s::Float64
@@ -130,6 +136,12 @@ struct GaussFermiSimpson13 <: Function
     kBT::Float64
     nPoints::Int64
 end
+"""
+$(TYPEDSIGNATURES)
+
+
+Simpson's 1/3 quadrature rule approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
+"""
 function (GaussFermiSimpson13::GaussFermiSimpson13)(x::Real)
     s = GaussFermiSimpson13.s
     Et = GaussFermiSimpson13.Et
