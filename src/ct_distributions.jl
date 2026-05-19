@@ -1,5 +1,3 @@
-using ForwardDiff
-using SpecialFunctions
 """
 $(TYPEDSIGNATURES)
 
@@ -109,7 +107,7 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     if (xp(x) > s^2)
         G = exp((s * s / 2 - xp(x))) / (1.0 + exp(K * (s * s - xp(x))))
     else
-        G = 0.5 * erfc(xp(x) / (s * sqrt(2)) * H)
+        G = 0.5 * SpecialFunctions.erfc(xp(x) / (s * sqrt(2)) * H)
     end
     if (x > 0)
         G = 1 - G
@@ -117,7 +115,7 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     return G
 end
 function PaaschH(s::Real)
-    return sqrt(2) / s * SpecialFunctions.erfcinv(exp(-(s^2) / 2))
+    return sqrt(2) / s * erfcinv(exp(-(s^2) / 2))
 end
 function PaaschK(s::Real)
     H = PaaschH(s)
@@ -169,7 +167,7 @@ function plotDistributions(; Plotter = nothing)
 
     Plotter.close()
 
-    x = -5:0.1:700
+    x = -5:0.1:10
 
     Plotter.semilogy(x, FermiDiracOneHalfBednarczyk.(x), label = "\$F_{1/2}  \$ (Bednarczyk)")
     Plotter.semilogy(x, FermiDiracOneHalfTeSCA.(x), label = "\$F_{1/2} \$ (TeSCA)")
@@ -177,8 +175,10 @@ function plotDistributions(; Plotter = nothing)
     Plotter.semilogy(x, ones(size(x)) / 0.27, "--", label = "\$1/\\gamma=3.\\overline{703}\$", color = (0.6, 0.6, 0.6, 1))
     Plotter.semilogy(x, Blakemore.(x), label = "Blakemore (\$\\gamma=0.27\$)")
     Plotter.semilogy(x, degenerateLimit.(x), label = "degenerate limit")
-    Plotter.semilogy(x, GaussFermiPaasch(1).(x), label = "Gauss-Fermi, ŝ = 1")
-    Plotter.semilogy(x, GaussFermiPaasch(10).(x), label = "Gauss-Fermi, ŝ = 10")
+    Plotter.semilogy(x, GaussFermiPaasch(1).(x), label = "Gauss-Fermi (Paasch), ŝ = 1")
+    Plotter.semilogy(x, GaussFermiSimpson13(1, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle="dotted")
+    Plotter.semilogy(x, GaussFermiPaasch(10).(x), label = "Gauss-Fermi (Paasch), ŝ = 10")
+    Plotter.semilogy(x, GaussFermiSimpson13(10, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle="dotted")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$\\mathcal{F}(\\eta)\$")
@@ -214,10 +214,16 @@ function plotDiffusionEnhancements(; Plotter = nothing)
     Plotter.semilogy(x, f.(x) ./ df.(x), label = "degenerate limit")
 
     f = ChargeTransport.GaussFermiPaasch(1); df = x -> ForwardDiff.derivative(f, x)
-    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi, ŝ = 1")
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Paasch), ŝ = 1")
+
+    f = ChargeTransport.GaussFermiSimpson13(1, 0, 1, 1000); df = x -> ForwardDiff.derivative(f, x)
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle="dotted")
 
     f = ChargeTransport.GaussFermiPaasch(10); df = x -> ForwardDiff.derivative(f, x)
-    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi, ŝ = 10")
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Paasch), ŝ = 10")
+
+    f = ChargeTransport.GaussFermiSimpson13(10, 0, 1, 1000); df = x -> ForwardDiff.derivative(f, x)
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle="dotted")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$g(\\eta)\$")
