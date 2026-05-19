@@ -231,15 +231,14 @@ const SRHModelType = Union{SRHWithoutTrapsType}
 
 ##########################################################
 
-abstract type SingleStateTrap end
-abstract type GaussianDistributedTrap end
+abstract type TrapCaptureEscape end
 abstract type NoTrap end
 
 ##########################################################
 """
 Data type for trap model
 """
-const TrapModelType = Union{Type{SingleStateTrap}, Type{GaussianDistributedTrap}, Type{NoTrap}}
+const TrapModelType = Union{Type{TrapCaptureEscape}, Type{NoTrap}}
 
 ##########################################################
 ##########################################################

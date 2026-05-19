@@ -202,13 +202,12 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
                 @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
                 data.F[trapCarrier] = FermiDiracMinusOne
             end
-            data.bulkRecombination.bulk_recomb_trap = SingleStateTrap
         else
             @info "Gaussian width of trap distribution $(trapCarrier) is $(ŝ). "
             data.F[trapCarrier] = GaussFermiPaasch(ŝ)
-            data.bulkRecombination.bulk_recomb_trap = GaussianDistributedTrap
         end
     end
+    data.bulkRecombination.bulk_recomb_trap = TrapCaptureEscape
 
     return
 
@@ -218,9 +217,9 @@ end
 $(SIGNATURES)
 
 This method takes the user information concerning present trap charge carriers,
-builds a statistics function for the species itrap which computes the Gauss-Fermi integral with simpsons 1/3 rule.
+builds a statistics function for the species itrap which computes the Gauss-Fermi integral with Simpsons 1/3 rule.
 """
-function constructGaussFermiNumInt(data, itrap::Int64)
+function constructGaussFermiSimpson13(data, itrap::Int64)
 
     # Physical parameters
     (; k_B, q) = data.constants
@@ -239,7 +238,7 @@ function constructGaussFermiNumInt(data, itrap::Int64)
         @warn "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
         data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
     end
-    if (nPoints < 1)
+    if (nPoints < 2)
         @warn "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
         nPoints = 1000
     end

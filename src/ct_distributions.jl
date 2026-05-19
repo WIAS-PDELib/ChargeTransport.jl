@@ -92,22 +92,15 @@ end
 
 ### Approximation of Gauss-Fermi integral using Paasch's method [J. Appl. Phys. 107, 104501 (2010)]
 ### Paasch-Scheinert functions
-function PaaschH(s::Real)
-    return sqrt(2) / s * SpecialFunctions.erfcinv(exp(-(s^2) / 2))
-end
-function PaaschK(s::Real)
-    H = PaaschH(s)
-    return 2 * (1 - H / s * sqrt(2 / pi) * exp(1 / 2 * s^2 * (1 - H^2)))
-end
-struct GaussFermiPaasch{T} <: Function
-    s::T
-end
 """
 $(TYPEDSIGNATURES)
 
 Paasch-Scheinert approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
 For details on function see Paasch and Scheinert, J. Appl. Phys 107, 104501 (2010)
 """
+struct GaussFermiPaasch{T} <: Function
+    s::T
+end
 function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     xp(x) = abs(x)
     s = GaussFermiPaasch.s
@@ -123,11 +116,18 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
     end
     return G
 end
+function PaaschH(s::Real)
+    return sqrt(2) / s * SpecialFunctions.erfcinv(exp(-(s^2) / 2))
+end
+function PaaschK(s::Real)
+    H = PaaschH(s)
+    return 2 * (1 - H / s * sqrt(2 / pi) * exp(1 / 2 * s^2 * (1 - H^2)))
+end
 """
 $(TYPEDEF)
 
 Struct containing information for numerical integration of Gauss-Fermi integral. 
-Can be constructed automatically from ctsys.data using constructGaussFermiNumInt(data, itrap::Int64).
+Can be constructed automatically from ctsys.data using constructGaussFermiSimpson13(data, itrap::Int64).
 """
 # Approximate Gauss-Fermi integral using Simpsons rule
 struct GaussFermiSimpson13 <: Function
@@ -138,7 +138,6 @@ struct GaussFermiSimpson13 <: Function
 end
 """
 $(TYPEDSIGNATURES)
-
 
 Simpson's 1/3 quadrature rule approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
 """

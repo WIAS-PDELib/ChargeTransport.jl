@@ -14,6 +14,8 @@ using ForwardDiff: ForwardDiff
 using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
 # for interpolation of data
 using Interpolations: Interpolations, Gridded, Linear
+# for latex labels
+using LaTeXStrings: @L_str, LaTeXString
 # local units and constants
 using LessUnitful: @local_unitfactors, @ufac_str, @ph_str
 # printing
@@ -47,8 +49,6 @@ export tiny_penalty_value
 include("ct_distributions.jl")
 
 export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch, GaussFermiSimpson13
-# , fittedErf_3
-# export GaussFermiNumInt, GaussFermiNumInt_naïve, GaussFermiNumInt_fast, constructGaussFermiNumInt
 export FermiDiracOneHalfTeSCA
 ##################################################################
 
@@ -96,7 +96,7 @@ export Params, ParamsNodal, ParamsOptical, Data, System
 export BulkRecombination, set_bulk_recombination
 
 export enable_ionic_carrier!
-export enable_trap_carrier!, constructGaussFermiNumInt
+export enable_trap_carrier!, constructGaussFermiSimpson13
 
 export equilibrium_solve!
 export enable_species!, enable_boundary_species!
@@ -119,7 +119,8 @@ include("ct_plotting.jl")
 export set_plotting_labels
 export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBoltzmann
 export plot_solution, plot_IV
-
+export plot_densities!, plot_energies!, plot_doping!, plot_electroNeutralSolutionBoltzmann!
+export plot_solution!, plot_IV!
 #################################################################
 
 # parameter set (add new sets to the list below)
