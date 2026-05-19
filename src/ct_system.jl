@@ -194,7 +194,7 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
     if (typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet)
         ŝ = data.params.trapDistributionWidth[trapCarrier] / (data.params.temperature * data.constants.k_B)
         if (ŝ < 0)
-            @warn "Negative distribution width. Using abs(ŝ)."
+            @info "Negative distribution width. Using abs(ŝ)."
             ŝ = abs(ŝ)
         end
         if (ŝ == 0.0)
@@ -203,7 +203,6 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
                 data.F[trapCarrier] = FermiDiracMinusOne
             end
         else
-            @info "Gaussian width of trap distribution $(trapCarrier) is $(ŝ). "
             data.F[trapCarrier] = GaussFermiPaasch(ŝ)
         end
     end
@@ -232,14 +231,14 @@ function constructGaussFermiSimpson13(data, itrap::Int64)
 
     # Sanity checks before setting up function
     if (data.params.trapDistributionWidth[itrap] == 0)
-        @warn "trapDistributionWidth[$(itrap)] is zero. Using Fermi-Dirac minus one"
+        @info "trapDistributionWidth[$(itrap)] is zero. Using Fermi-Dirac minus one"
         return FermiDiracMinusOne
     elseif (data.params.trapDistributionWidth[itrap] < 0)
-        @warn "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
+        @info "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
         data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
     end
     if (nPoints < 2)
-        @warn "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
+        @info "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
         nPoints = 1000
     end
 
