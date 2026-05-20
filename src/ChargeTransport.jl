@@ -24,7 +24,7 @@ using Printf: @printf
 # for interpolation of data
 using Roots: Roots, find_zero
 # for using in computation of distribution functions
-using SpecialFunctions
+using SpecialFunctions: erfc, erfcinv
 # PDE solver with a FVM spatial discretization
 using VoronoiFVM: VoronoiFVM, ContinuousQuantity, DiscontinuousQuantity,
     TestFunctionFactory, boundary_dirichlet!, fbernoulli_pm, physics!,
