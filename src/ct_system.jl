@@ -391,12 +391,27 @@ mutable struct Params
     """
     contactVoltage::Array{Float64, 1}
 
-
     """
     An array containing a constant value for the electric potential
     in case of Dirichlet boundary conditions.
     """
     bψEQ::Array{Float64, 1}
+
+    """
+    An array containing constant values for the absolute dielectric permittivity
+    of the oxide at gate contacts.
+    """
+    dielectricConstantOxideGate::Array{Float64, 1}
+
+    """
+    An array containing constant values for the oxide thickness at gate contacts.
+    """
+    thicknessOxideGate::Array{Float64, 1}
+
+    """
+    An array containing constant values for the surface charge density at gate contacts.
+    """
+    surfaceChargeDensityGate::Array{Float64, 1}
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -446,7 +461,6 @@ mutable struct Params
 
     """
     An array to define the reaction coefficient at internal boundaries.
-
     """
     bReactionCoefficient::Array{Float64, 2}
 
@@ -551,6 +565,7 @@ mutable struct Params
     incident photon flux.
     """
     generationIncidentPhotonFlux::Array{Float64, 1}
+
     """
     A region dependent array for an uniform generation rate.
     """
@@ -607,6 +622,9 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
     params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
     params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
+    params.dielectricConstantOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.thicknessOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.surfaceChargeDensityGate = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -1445,7 +1463,7 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
                 za = data.params.chargeNumbers[icc]
                 Ca = data.params.doping[icc, ireg]
 
-                Ea = trunc((k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * (psi1 + psi2) / 2) / q, digits = 3) * q
+                Ea = trunc((k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * (psi1 + psi2) / 2) / q, digits = 3) * q
 
                 data.params.bandEdgeEnergy[icc, ireg] = Ea
 
@@ -1715,6 +1733,14 @@ function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
     ctsys.data.params.contactVoltage[ibreg] = Δu
     return
 
+end
+
+function __set_contact!(ctsys, ibreg, Δu, ::Type{GateContact})
+
+    ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+
+    return
 end
 
 ###########################################################
@@ -2010,7 +2036,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             za = params.chargeNumbers[icc]
 
             # E0, E1 in eV
-            E0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR) # in eV
+            E0 = k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * 0.5 * (psiL + psiR) # in eV
             E0 = round(E0 / q, digits = 3) * q
 
             # --- Find one correct pair E0, y0 ---

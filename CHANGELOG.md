@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -----------------------------------------------------------------------------------------------
 
+## v1.7.1
+
+### Fixed
+- internal vacancy energy calculation now works for charge numbers beyond one
+
+
+## v1.7.0
+
+### Added
+
+- Added gate-related parameters `thicknessOxideGate`, `surfaceChargeDensityGate`, `dielectricConstantOxideGate`
+- Added new boundary reaction type `GateContact`
+- Added 2D metal-oxide-semiconductor field-effect transistor (MOSFET) example `Ex205_MOSFET.jl`
+
+## v1.6.0
+
+### Added
+
+- New method `read_diodat(filename)`: Read functions from  WIAS-TeSCA dios "*.dat" output files
+
 ## v1.5.0
 
 ### Removed
@@ -22,7 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PyPlot` and `Plots` are also supported, but not recommended
 - all 1D examples are rewritten to use the new plotting routines
 - all 2D examples are still hard-wired to `Py[thon]Plot`, but the users have to provide this package in their own (global) environment
-
 
 ## v1.4.0
 

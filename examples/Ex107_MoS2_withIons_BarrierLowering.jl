@@ -315,7 +315,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
         )
 
         currentValues = abs.(Area .* IV)
-        mask = currentValues .> 0 # TODO MO: für log, sonst wird nichts geplottet, jetzt wird nur der erste Wert nicht geplottet, ok so?
+        mask = currentValues .> 0
         scalarplot!(
             vis[3, 1],
             biasValues[mask],

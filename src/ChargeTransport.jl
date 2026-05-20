@@ -9,6 +9,7 @@ using ExtendableGrids: ExtendableGrids, BFaceNodes, BFaceRegions, CellNodes,
     CellRegions, Coordinates, ExtendableGrid,
     NumBFaceRegions, NumCellRegions, append!, dim_space,
     num_cellregions, num_nodes, subgrid
+using ExtendableGrids: TokenStream, gettoken, expecttoken
 using ForwardDiff: ForwardDiff
 # visualizer wrapper
 using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
@@ -62,6 +63,7 @@ export QFModelType, DiscontQF, ContQF
 
 export OuterBoundaryModelType, OuterBoundaryModelType, InterfaceModelType
 export OhmicContact, SchottkyContact, SchottkyBarrierLowering, MixedOhmicSchottkyContact
+export GateContact
 export InterfaceNone, InterfaceRecombination
 
 export OhmicContactModelType, OhmicContactDirichlet, OhmicContactRobin
@@ -124,10 +126,15 @@ export plot_solution, plot_IV
 export plot_densities!, plot_energies!, plot_doping!, plot_electroNeutralSolutionBoltzmann!
 export plot_solution!, plot_IV!
 #################################################################
+include("ct_io.jl")
+export read_diodat
+
+#################################################################
 
 # parameter set (add new sets to the list below)
 for parameter_set in [
         :Params_Laser_simple,
+        :Params_MOSFET_Si,
         :Params_PSC_PCBM_MAPI_Pedot,
         :Params_PSC_TiO2_MAPI_spiro,
         :Params_PSC_C60_TripleCation_PTAA,
