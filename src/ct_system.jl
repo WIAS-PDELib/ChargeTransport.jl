@@ -191,19 +191,19 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
     ## Choose appropriate statistics function
     #########################################
     ## Detailed balance is only applied to FermiDiracMinusOne or GaussFermi
-    if (! (typeof(data.F[trapCarrier]) <: TrapFunctionSet))
+    if ! (typeof(data.F[trapCarrier]) <: TrapFunctionSet)
         @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). \n Please use one contained in $(TrapFunctionSet)")
     end
 
     # If a GaussFermi model is chosen, check if the width is non-zero.
-    if (typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet)
+    if typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet
         ŝ = data.params.trapDistributionWidth[trapCarrier] / (data.params.temperature * data.constants.k_B)
-        if (ŝ < 0)
+        if ŝ < 0
             @info "Negative distribution width. Using abs(ŝ)."
             ŝ = abs(ŝ)
         end
-        if (ŝ == 0.0)
-            if (data.F[trapCarrier] != FermiDiracMinusOne)
+        if abs(ŝ) < 1e-12
+            if data.F[trapCarrier] != FermiDiracMinusOne
                 @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
                 data.F[trapCarrier] = FermiDiracMinusOne
             end
@@ -235,15 +235,15 @@ function constructGaussFermiSimpson13(data, itrap::Int64)
     nPoints = data.params.numberOfEnergyPoints
 
     # Sanity checks before setting up function
-    if (data.params.trapDistributionWidth[itrap] == 0)
+    if data.params.trapDistributionWidth[itrap] == 0
         @info "trapDistributionWidth[$(itrap)] is zero. Using Fermi-Dirac minus one"
         return FermiDiracMinusOne
-    elseif (data.params.trapDistributionWidth[itrap] < 0)
+    elseif data.params.trapDistributionWidth[itrap] < 0
         @info "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
         data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
     end
 
-    if (nPoints < 2)
+    if nPoints < 2
         @info "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
         nPoints = 1000
     end
