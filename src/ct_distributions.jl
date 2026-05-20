@@ -100,7 +100,7 @@ struct GaussFermiPaasch{T} <: Function
     s::T
 end
 function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
-    s = GaussFermiPaasch.s
+
     function PaaschH(s::Real)
         return sqrt(2) / s * erfcinv(exp(-(s^2) / 2))
     end
@@ -108,6 +108,8 @@ function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
         H = PaaschH(s)
         return 2 * (1 - H / s * sqrt(2 / pi) * exp(1 / 2 * s^2 * (1 - H^2)))
     end
+
+    s = GaussFermiPaasch.s
     K = PaaschK(s)
     H = PaaschH(s)
     if abs(x) > s^2
@@ -139,6 +141,11 @@ $(TYPEDSIGNATURES)
 Simpson's 1/3 quadrature rule approximation of Gauss-Fermi integral parameterized by s = sigma/k_BT (the gaussian width in units of thermal energy).
 """
 function (GaussFermiSimpson13::GaussFermiSimpson13)(x::Real)
+
+    @inline function gaussfermi_G(E::Float64, sigma::Float64, Et::Float64, kBT::Float64, x::Real)
+        return exp(-(E - Et) * (E - Et) / (2 * sigma * sigma)) * FermiDiracMinusOne(x - (E - Et) / kBT)
+    end
+
     s = GaussFermiSimpson13.s
     Et = GaussFermiSimpson13.Et
     kBT = GaussFermiSimpson13.kBT
@@ -152,9 +159,6 @@ function (GaussFermiSimpson13::GaussFermiSimpson13)(x::Real)
     v = (2.0 * sum(2.0 * gaussfermi_G(E, s, Et, kBT, x) + gaussfermi_G(E + dE, s, Et, kBT, x) for E in (Elower + dE):(2 * dE):(Eupper - 2 * dE)) + gaussfermi_G(Elower, s, Et, kBT, x) + gaussfermi_G(Eupper, s, Et, kBT, x)) * dE / (3.0 * sqrt(2.0π) * s)
 
     return v
-end
-@inline function gaussfermi_G(E::Float64, sigma::Float64, Et::Float64, kBT::Float64, x::Real)
-    return exp(-(E - Et) * (E - Et) / (2 * sigma * sigma)) * FermiDiracMinusOne(x - (E - Et) / kBT)
 end
 """
 $(TYPEDSIGNATURES)
