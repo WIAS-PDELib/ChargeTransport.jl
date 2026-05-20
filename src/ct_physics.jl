@@ -1705,7 +1705,7 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{TrapCaptureEscape})
                 itc = data.chargeCarrierList[itc] # find correct index within chargeCarrierList
                 s = capture[itc, icc, node.region]
 
-                if (s > 0) # Only compute where there is capture
+                if s > 0 # Only compute where there is capture
                     zt = data.params.chargeNumbers[itc]
 
                     ntc = get_density!(u, node, data, itc)

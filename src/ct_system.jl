@@ -202,9 +202,10 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
             @info "Negative distribution width. Using abs(ŝ)."
             ŝ = abs(ŝ)
         end
-        if abs(ŝ) < 1e-12
+        # Soln to Gauss-Fermi integral very well approximated by FermiDiracMinusOne, and narrow widths can cause numerical problems
+        if abs(ŝ) < 1.0e-6
             if data.F[trapCarrier] != FermiDiracMinusOne
-                @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
+                @info "Very narrow Gaussian width. Using Fermi-Dirac minus one statistics."
                 data.F[trapCarrier] = FermiDiracMinusOne
             end
         else
