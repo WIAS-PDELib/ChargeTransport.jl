@@ -224,7 +224,7 @@ $(SIGNATURES)
 This method takes the user information concerning present trap charge carriers,
 builds a statistics function for the species itrap which computes the Gauss-Fermi integral with Simpsons 1/3 rule.
 """
-function constructGaussFermiSimpson13(data, itrap::Int64)
+function constructGaussFermiSimpson13!(data, itrap::Int64)
 
     # Physical parameters
     (; k_B, q) = data.constants
@@ -236,9 +236,10 @@ function constructGaussFermiSimpson13(data, itrap::Int64)
     nPoints = data.params.numberOfEnergyPoints
 
     # Sanity checks before setting up function
-    if data.params.trapDistributionWidth[itrap] == 0
-        @info "trapDistributionWidth[$(itrap)] is zero. Using Fermi-Dirac minus one"
-        return FermiDiracMinusOne
+    if abs(data.params.trapDistributionWidth[itrap]) / kBT < 1.0e-6
+        @info "trapDistributionWidth[$(itrap)] is very small. Using Fermi-Dirac minus one"
+        data.F[itrap] = FermiDiracMinusOne
+        return
     elseif data.params.trapDistributionWidth[itrap] < 0
         @info "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
         data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
@@ -249,7 +250,8 @@ function constructGaussFermiSimpson13(data, itrap::Int64)
         nPoints = 1000
     end
 
-    return GaussFermiSimpson13(sigma, Et, kBT, nPoints)
+    data.F[itrap] = GaussFermiSimpson13(sigma, Et, kBT, nPoints)
+    return
 
 end
 
