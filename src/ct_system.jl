@@ -185,11 +185,16 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     push!(data.trapCarrierList, enableTraps)
 
+    data.bulkRecombination.bulk_recomb_trap = TrapCaptureEscape
+
+    #########################################
     ## Choose appropriate statistics function
+    #########################################
     ## Detailed balance is only applied to FermiDiracMinusOne or GaussFermi
     if (! (typeof(data.F[trapCarrier]) <: TrapFunctionSet))
         @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). \n Please use one contained in $(TrapFunctionSet)")
     end
+
     # If a GaussFermi model is chosen, check if the width is non-zero.
     if (typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet)
         ŝ = data.params.trapDistributionWidth[trapCarrier] / (data.params.temperature * data.constants.k_B)
@@ -206,7 +211,7 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
             data.F[trapCarrier] = GaussFermiPaasch(ŝ)
         end
     end
-    data.bulkRecombination.bulk_recomb_trap = TrapCaptureEscape
+    #########################################
 
     return
 
@@ -237,6 +242,7 @@ function constructGaussFermiSimpson13(data, itrap::Int64)
         @info "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
         data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
     end
+
     if (nPoints < 2)
         @info "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
         nPoints = 1000

@@ -1684,11 +1684,9 @@ function addTrapCaptureEscape!(f, u, node, data, ::Type{TrapCaptureEscape})
                     occupationFactor = (sign(zc * zt) + 1) / 2 + sign(-zc * zt) * ntc / Nt
 
                     # The reaction rate is rewritten in a more convenient form, namely (zc=zt)
-                    # r = Nt s Nc γ exp( zc * (Ec - Et)/kT ) * f(η) * ( 1 - exp( zc * q/kBT * (φₙ - φₜ) ) )
+                    # r = Nt s * (1-f(η)) * ( 1 - exp( zc * q/kBT * (φₜ - φₙ) ) )
                     # or (zc=-zt)
-                    # r = Nt s Nc γ exp( zc * (Ec - Et)/kT ) * (1 - f(η)) * ( 1 - exp( zc * q/kBT * (φₙ - φₜ) ) )
-                    # r = Nt * (s * Nc * nonBoltzmannReductionFactor * exp(zc / (k_B * T) * (Ec - Et)))
-                    # r *= occupationFactor * (exp(zc / (k_B * T) * q * (u[icc] - u[itc])) - 1.0)
+                    # r = Nt s * f(η) * ( 1 - exp( zc * q/kBT * (φₜ - φₙ) ) )
                     r = Nt * (s * ncc * occupationFactor) * (1.0 - exp(zc / (k_B * T) * q * (u[itc] - u[icc])))
 
                     # For the reaction expression we use the charge of the band as (e.g.) holes can enter

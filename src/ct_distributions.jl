@@ -176,9 +176,9 @@ function plotDistributions(; Plotter = nothing)
     Plotter.semilogy(x, Blakemore.(x), label = "Blakemore (\$\\gamma=0.27\$)")
     Plotter.semilogy(x, degenerateLimit.(x), label = "degenerate limit")
     Plotter.semilogy(x, GaussFermiPaasch(1).(x), label = "Gauss-Fermi (Paasch), ŝ = 1")
-    Plotter.semilogy(x, GaussFermiSimpson13(1, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle="dotted")
+    Plotter.semilogy(x, GaussFermiSimpson13(1, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle = "dotted")
     Plotter.semilogy(x, GaussFermiPaasch(10).(x), label = "Gauss-Fermi (Paasch), ŝ = 10")
-    Plotter.semilogy(x, GaussFermiSimpson13(10, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle="dotted")
+    Plotter.semilogy(x, GaussFermiSimpson13(10, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle = "dotted")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$\\mathcal{F}(\\eta)\$")
@@ -217,13 +217,13 @@ function plotDiffusionEnhancements(; Plotter = nothing)
     Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Paasch), ŝ = 1")
 
     f = ChargeTransport.GaussFermiSimpson13(1, 0, 1, 1000); df = x -> ForwardDiff.derivative(f, x)
-    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle="dotted")
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle = "dotted")
 
     f = ChargeTransport.GaussFermiPaasch(10); df = x -> ForwardDiff.derivative(f, x)
     Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Paasch), ŝ = 10")
 
     f = ChargeTransport.GaussFermiSimpson13(10, 0, 1, 1000); df = x -> ForwardDiff.derivative(f, x)
-    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle="dotted")
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle = "dotted")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$g(\\eta)\$")
