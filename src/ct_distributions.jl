@@ -100,24 +100,19 @@ struct GaussFermiPaasch{T} <: Function
     s::T
 end
 function (GaussFermiPaasch::GaussFermiPaasch{T})(x::Real) where {T}
-
-    function PaaschH(s::Real)
+    function H(s::Real)
         return sqrt(2) / s * erfcinv(exp(-(s^2) / 2))
     end
-    function PaaschK(s::Real)
-        H = PaaschH(s)
-        return 2 * (1 - H / s * sqrt(2 / pi) * exp(1 / 2 * s^2 * (1 - H^2)))
+    function K(s::Real)
+        return 2 * (1 - H(s) / s * sqrt(2 / pi) * exp(1 / 2 * s^2 * (1 - H(s)^2)))
     end
-
     s = GaussFermiPaasch.s
-    K = PaaschK(s)
-    H = PaaschH(s)
-    if abs(x) > s^2
-        G = exp((s * s / 2 - abs(x))) / (1.0 + exp(K * (s * s - abs(x))))
+    if (abs(x) > s^2)
+        G = exp((s * s / 2 - abs(x))) / (1.0 + exp(K(s) * (s * s - abs(x))))
     else
-        G = 0.5 * erfc(abs(x) / (s * sqrt(2)) * H)
+        G = 0.5 * erfc(abs(x) / (s * sqrt(2)) * H(s))
     end
-    if x > 0
+    if (x > 0)
         G = 1 - G
     end
     return G
