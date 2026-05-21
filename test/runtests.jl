@@ -22,6 +22,9 @@ end
 
 modname(fname) = splitext(basename(fname))[1]
 
+# Test functions
+include("test_units.jl")
+
 #
 # Include all Julia files in `testdir` whose name starts with `prefix`,
 # Each file `prefixModName.jl` must contain a module named
@@ -46,6 +49,15 @@ end
 
 function run_all_tests()
     return @time begin
+
+        @testset "IO" begin
+            data = read_diodat(joinpath(@__DIR__, "data", "mosSave_dio.dat"))
+            @test length(data["DopingConcentration"]) == 993
+            @test length(data["BoronConcentration"]) == 993
+            @test length(data["PhosphorusConcentration"]) == 993
+        end
+
+
         # @testset "Basictest" begin
         #     run_tests_from_directory(@__DIR__,"test_")
         # end
@@ -57,6 +69,7 @@ function run_all_tests()
         end
     end
 end
+
 
 @testset "Aqua.jl" begin
     Aqua.test_all(ChargeTransport)

@@ -2,13 +2,18 @@
 Type of statistics functions.
 
 """
+const GaussFermiFunctionSet = Union{
+    GaussFermiPaasch{Int64}, GaussFermiPaasch{Float64}, GaussFermiSimpson13,
+}
+const TrapFunctionSet = Union{
+    typeof(FermiDiracMinusOne),
+    GaussFermiFunctionSet,
+}
 const StandardFuncSet = Union{
     typeof(Boltzmann), typeof(Blakemore), typeof(FermiDiracMinusOne),
-    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA), 
-    typeof(GaussFermi), Base.Fix2{typeof(GaussFermi), Float64},
-    typeof(gaussFermi_sHatEquals2), typeof(gaussFermi_sHatEquals4), typeof(gaussFermi_sHatEquals6), typeof(gaussFermi_sHatEquals8), typeof(gaussFermi_sHatEquals10),typeof(gaussFermi_sHatEquals30),
+    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA),
+    TrapFunctionSet,
 }
-
 ##########################################################
 
 """
@@ -56,6 +61,8 @@ abstract type MixedOhmicSchottkyContact end
 
 abstract type SchottkyBarrierLowering end
 
+abstract type GateContact end
+
 ############    inner boundary conditions     ############
 """
 $(TYPEDEF)
@@ -74,7 +81,7 @@ abstract type InterfaceRecombination end
 """
 Possible types of outer boundary model.
 """
-const OuterBoundaryModelType = Union{Type{OhmicContact}, Type{SchottkyContact}, Type{SchottkyBarrierLowering}, Type{MixedOhmicSchottkyContact}}
+const OuterBoundaryModelType = Union{Type{OhmicContact}, Type{SchottkyContact}, Type{SchottkyBarrierLowering}, Type{MixedOhmicSchottkyContact}, Type{GateContact}}
 
 
 """
@@ -226,15 +233,14 @@ const SRHModelType = Union{SRHWithoutTrapsType}
 
 ##########################################################
 
-abstract type SingleStateTrap end
-abstract type GaussianDistributedTrap end
+abstract type TrapCaptureEscape end
 abstract type NoTrap end
 
 ##########################################################
 """
 Data type for trap model
 """
-const TrapModelType = Union{Type{SingleStateTrap}, Type{GaussianDistributedTrap}, Type{NoTrap}}
+const TrapModelType = Union{Type{TrapCaptureEscape}, Type{NoTrap}}
 
 ##########################################################
 ##########################################################

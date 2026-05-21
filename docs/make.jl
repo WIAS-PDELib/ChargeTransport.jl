@@ -19,6 +19,7 @@ modules = modules = [
     "Ex202_PSC_tensorGrid.jl",
     "Ex203_LBIC_NonDimensional.jl",
     "Ex204_Laser_simple.jl",
+    "Ex205_MOSFET.jl",
 ]
 
 

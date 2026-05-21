@@ -167,7 +167,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
         bulk_recomb_Auger = false,
         bulk_recomb_radiative = false,
         bulk_recomb_SRH = false,
-        bulk_recomb_trap = ChargeTransport.SingleStateTrap    # Set trap type to a singe-state trap
+        bulk_recomb_trap = ChargeTransport.TrapCaptureEscape    # Set trap type to capture and escape model
     )
     if barrierLowering
         data.boundaryType[bregionLeft] = SchottkyBarrierLowering

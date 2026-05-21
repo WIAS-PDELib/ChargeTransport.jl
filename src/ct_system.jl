@@ -185,20 +185,75 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
 
     push!(data.trapCarrierList, enableTraps)
 
-    if(data.F[trapCarrier] == GaussFermi)
-        @show ŝ = data.params.trapDistributionWidth[trapCarrier]/(data.params.temperature*data.constants.k_B)
-        if(ŝ==0.0)
-            @info "Gaussian width is zero. Using Fermi-Dirac minus one statistics."
-            data.F[trapCarrier] = FermiDiracMinusOne
-        else
-            @info "Gaussian width is $(ŝ). Using Paasch approximation of Gauss-Fermi integral."
-            data.F[trapCarrier] = Base.Fix2(GaussFermi, Float64(ŝ))
-        end
+    data.bulkRecombination.bulk_recomb_trap = TrapCaptureEscape
+
+    #########################################
+    ## Choose appropriate statistics function
+    #########################################
+    ## Detailed balance is only applied to FermiDiracMinusOne or GaussFermi
+    if ! (typeof(data.F[trapCarrier]) <: TrapFunctionSet)
+        @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). \n Please use one contained in $(TrapFunctionSet)")
     end
     # if (data.F[trapCarrier] !== FermiDiracMinusOne || )
     #     @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
     # end
 
+    # If a GaussFermi model is chosen, check if the width is non-zero.
+    if typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet
+        ŝ = data.params.trapDistributionWidth[trapCarrier] / (data.params.temperature * data.constants.k_B)
+        if ŝ < 0
+            @info "Negative distribution width. Using abs(ŝ)."
+            ŝ = abs(ŝ)
+        end
+        # Soln to Gauss-Fermi integral very well approximated by FermiDiracMinusOne, and narrow widths can cause numerical problems
+        if abs(ŝ) < 1.0e-6
+            if data.F[trapCarrier] != FermiDiracMinusOne
+                @info "Very narrow Gaussian width. Using Fermi-Dirac minus one statistics."
+                data.F[trapCarrier] = FermiDiracMinusOne
+            end
+        else
+            data.F[trapCarrier] = GaussFermiPaasch(ŝ)
+        end
+    end
+    #########################################
+
+    return
+
+end
+
+"""
+$(SIGNATURES)
+
+This method takes the user information concerning present trap charge carriers,
+builds a statistics function for the species itrap which computes the Gauss-Fermi integral with Simpsons 1/3 rule.
+"""
+function constructGaussFermiSimpson13!(data, itrap::Int64)
+
+    # Physical parameters
+    (; k_B, q) = data.constants
+    kBT = data.params.temperature * k_B
+    Et = data.params.bandEdgeEnergy[itrap]
+    sigma = data.params.trapDistributionWidth[itrap]
+
+    # Numerical integration parameters
+    nPoints = data.params.numberOfEnergyPoints
+
+    # Sanity checks before setting up function
+    if abs(data.params.trapDistributionWidth[itrap]) / kBT < 1.0e-6
+        @info "trapDistributionWidth[$(itrap)] is very small. Using Fermi-Dirac minus one"
+        data.F[itrap] = FermiDiracMinusOne
+        return
+    elseif data.params.trapDistributionWidth[itrap] < 0
+        @info "trapDistributionWidth[$(itrap)] is negative. Using absolute value"
+        data.params.trapDistributionWidth[itrap] = abs(data.params.trapDistributionWidth[itrap])
+    end
+
+    if nPoints < 2
+        @info "numberOfEnergyPoints = $(nPoints). Defaulting to 1000"
+        nPoints = 1000
+    end
+
+    data.F[itrap] = GaussFermiSimpson13(sigma, Et, kBT, nPoints)
     return
 
 end
@@ -294,6 +349,11 @@ mutable struct Params
     """
     invertedIllumination::Int64
 
+    """
+    Number of points to be used in numerical integration of Gauss-Fermi integrals
+    """
+    numberOfEnergyPoints::Int64
+
     ###############################################################
     ####                     real numbers                      ####
     ###############################################################
@@ -322,6 +382,7 @@ mutable struct Params
     """
     generationPeak::Float64
 
+
     ###############################################################
     ####              number of boundary regions               ####
     ###############################################################
@@ -336,12 +397,27 @@ mutable struct Params
     """
     contactVoltage::Array{Float64, 1}
 
-
     """
     An array containing a constant value for the electric potential
     in case of Dirichlet boundary conditions.
     """
     bψEQ::Array{Float64, 1}
+
+    """
+    An array containing constant values for the absolute dielectric permittivity
+    of the oxide at gate contacts.
+    """
+    dielectricConstantOxideGate::Array{Float64, 1}
+
+    """
+    An array containing constant values for the oxide thickness at gate contacts.
+    """
+    thicknessOxideGate::Array{Float64, 1}
+
+    """
+    An array containing constant values for the surface charge density at gate contacts.
+    """
+    surfaceChargeDensityGate::Array{Float64, 1}
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -391,7 +467,6 @@ mutable struct Params
 
     """
     An array to define the reaction coefficient at internal boundaries.
-
     """
     bReactionCoefficient::Array{Float64, 2}
 
@@ -499,6 +574,7 @@ mutable struct Params
     incident photon flux.
     """
     generationIncidentPhotonFlux::Array{Float64, 1}
+
     """
     A region dependent array for an uniform generation rate.
     """
@@ -538,6 +614,7 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.numberOfBoundaryRegions = numberOfBoundaryRegions
     params.numberOfCarriers = numberOfCarriers
     params.invertedIllumination = 1                       # we assume that light enters from the left.
+    params.numberOfEnergyPoints = 10_000
 
     ###############################################################
     ####                     real numbers                      ####
@@ -554,6 +631,9 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     params.SchottkyBarrier = zeros(Float64, numberOfBoundaryRegions)
     params.contactVoltage = zeros(Float64, numberOfBoundaryRegions)
     params.bψEQ = zeros(Float64, numberOfBoundaryRegions)
+    params.dielectricConstantOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.thicknessOxideGate = zeros(Float64, numberOfBoundaryRegions)
+    params.surfaceChargeDensityGate = zeros(Float64, numberOfBoundaryRegions)
 
     ###############################################################
     ####                  number of carriers                   ####
@@ -1392,7 +1472,7 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
                 za = data.params.chargeNumbers[icc]
                 Ca = data.params.doping[icc, ireg]
 
-                Ea = trunc((k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * (psi1 + psi2) / 2) / q, digits = 3) * q
+                Ea = trunc((k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * (psi1 + psi2) / 2) / q, digits = 3) * q
 
                 data.params.bandEdgeEnergy[icc, ireg] = Ea
 
@@ -1662,6 +1742,14 @@ function __set_contact!(ctsys, ibreg, Δu, ::Type{MixedOhmicSchottkyContact})
     ctsys.data.params.contactVoltage[ibreg] = Δu
     return
 
+end
+
+function __set_contact!(ctsys, ibreg, Δu, ::Type{GateContact})
+
+    ctsys.fvmsys.physics.data.params.contactVoltage[ibreg] = Δu
+    ctsys.data.params.contactVoltage[ibreg] = Δu
+
+    return
 end
 
 ###########################################################
@@ -1957,7 +2045,7 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             za = params.chargeNumbers[icc]
 
             # E0, E1 in eV
-            E0 = k_B * T * log((Ca / Na) / (1 - Ca / Na)) + za * q * 0.5 * (psiL + psiR) # in eV
+            E0 = k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * 0.5 * (psiL + psiR) # in eV
             E0 = round(E0 / q, digits = 3) * q
 
             # --- Find one correct pair E0, y0 ---
@@ -2014,7 +2102,6 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
     return
 
 end
-
 
 ###########################################################
 ###########################################################

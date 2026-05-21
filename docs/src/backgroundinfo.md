@@ -68,7 +68,54 @@ with the negative gradients of the quasi Fermi potentials as driving forces. Usi
     The unknowns in `ChargeTransport.jl` are always defined as the quasi Fermi potentials $ \varphi_\alpha$ and the electric potential $\psi$.
 
 ## Boundary conditions
-Currently, ohmic contacts, Schottky contacts and Schottky barrier lowering boundary conditions are implemented. For further model information, please look closer to the types, constructors and methods section.
+Currently, ohmic contacts, Schottky contacts, Schottky barrier lowering and gate contact boundary conditions are implemented. For further model information, please look closer to the types, constructors and methods section.
+
+Gate contacts are modeled by Robin boundary conditions for the electrostatic potential and homogeneous Neumann boundary conditions for the quasi Fermi potentials
+```math
+\begin{aligned}
+    \varepsilon_s \nabla \psi(\mathbf{x}, t) \cdot \boldsymbol{\nu} + \frac{\varepsilon_\text{ox}}{d_\text{ox}}(\psi(\mathbf{x}, t) - U_\text{G}(t)) &= Q_\text{ss},\\
+    \mathbf{j}_n(\mathbf{x}, t) \cdot \boldsymbol{\nu} &= 0, \\
+    \mathbf{j}_p(\mathbf{x}, t) \cdot \boldsymbol{\nu} &= 0 \\
+\end{aligned}
+```
+
+for all $\mathbf{x} \in \Gamma_\text{G}$ and $t \in [0,T]$. Here, $\varepsilon_\text{ox} = \varepsilon_0 \varepsilon_\text{r, ox}$ denotes the absolute dielectric permittivity of the oxide and $d_\text{ox}$ the thickness of the oxide. The right-hand side $Q_\text{ss} = qN_\text{ss}$ denotes the surface-state charge density at the interface and $\boldsymbol{\nu}$ is the outer normal vector of the semiconductor domain at the interface.
+
+For the derivation of the Robin boundary condition, we consider the gate contact region in more detail (see Figure). We distinguish two separate domains: the semiconductor domain $\Omega_\text{s}$ and the oxide layer $\Omega_\text{ox}$ characterizing the gate contact.
+
+<p align="center">
+  <img src="images/Gate-boundary-condition.png" width="300"/>
+</p>
+
+In the subdomains we have
+```math
+\begin{aligned}
+    - \nabla \cdot (\varepsilon_\text{s} \nabla \psi_\text{s}(\mathbf{x}, t)) &= q (C + p - n) && \text{in } \Omega_\text{s}, \\
+- \nabla \cdot (\varepsilon_\text{ox}  \nabla \psi_\text{ox}(\mathbf{x}, t)) &= 0 && \text{in } \Omega_\text{ox}.
+\end{aligned}
+```
+
+Integrating and applying Gauss theorem at the interface $\Gamma_\text{I} := \partial \Omega_\text{ox} \cap \partial \Omega_\text{s}$, yields
+```math
+\begin{aligned}
+    \int_{\Gamma_\text{I}} (\varepsilon_\text{s} \nabla \psi_\text{s}(\mathbf{x}, t) \cdot \boldsymbol{\nu} - \varepsilon_\text{ox} \nabla \psi_\text{ox}(\mathbf{x}, t) \cdot \boldsymbol{\nu}) \ ds = - \int_\Omega \rho \ d \mathbf{x},
+\end{aligned}
+```
+
+which leads to the law of Gauss (concerning the electric field) in differential form
+```math
+\begin{aligned}
+     \varepsilon_\text{s} \nabla \psi_\text{s}(\mathbf{x}, t) \cdot \boldsymbol{\nu} - \varepsilon_\text{ox} \nabla \psi_\text{ox}(\mathbf{x}, t) \cdot \boldsymbol{\nu} = Q_\text{ss}.
+\end{aligned}
+```
+
+Assuming a one-dimensional potential drop across the oxide in normal direction, we approximate
+```math
+\nabla \psi_{\text{ox}}(\mathbf{x}, t) \cdot \boldsymbol{\nu}
+= \frac{U_{\text{G}}(t) - \psi_{\text{s}}(\mathbf{x}, t)}{d_{\text{ox}}}
+```
+
+and thus with $\psi(\mathbf{x}, t) = \psi_\text{s}(\mathbf{x}, t)$ we obtain the desired boundary condition.
 
 ## Background literature
 

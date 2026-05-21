@@ -9,6 +9,7 @@ using ExtendableGrids: ExtendableGrids, BFaceNodes, BFaceRegions, CellNodes,
     CellRegions, Coordinates, ExtendableGrid,
     NumBFaceRegions, NumCellRegions, append!, dim_space,
     num_cellregions, num_nodes, subgrid
+using ExtendableGrids: TokenStream, gettoken, expecttoken
 using ForwardDiff: ForwardDiff
 # visualizer wrapper
 using GridVisualize: GridVisualize, GridVisualizer, reveal, scalarplot!
@@ -20,6 +21,8 @@ using LessUnitful: @local_unitfactors, @ufac_str, @ph_str
 using Printf: @printf
 # for interpolation of data
 using Roots: Roots, find_zero
+# for using in computation of distribution functions
+using SpecialFunctions: erfc, erfcinv
 # PDE solver with a FVM spatial discretization
 using VoronoiFVM: VoronoiFVM, ContinuousQuantity, DiscontinuousQuantity,
     TestFunctionFactory, boundary_dirichlet!, fbernoulli_pm, physics!,
@@ -46,8 +49,7 @@ export tiny_penalty_value
 
 include("ct_distributions.jl")
 
-export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermi
-export gaussFermi_sHatEquals2, gaussFermi_sHatEquals4, gaussFermi_sHatEquals6, gaussFermi_sHatEquals8, gaussFermi_sHatEquals10, gaussFermi_sHatEquals30
+export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch, GaussFermiSimpson13
 export FermiDiracOneHalfTeSCA
 ##################################################################
 
@@ -59,6 +61,7 @@ export QFModelType, DiscontQF, ContQF
 
 export OuterBoundaryModelType, OuterBoundaryModelType, InterfaceModelType
 export OhmicContact, SchottkyContact, SchottkyBarrierLowering, MixedOhmicSchottkyContact
+export GateContact
 export InterfaceNone, InterfaceRecombination
 
 export OhmicContactModelType, OhmicContactDirichlet, OhmicContactRobin
@@ -95,7 +98,7 @@ export Params, ParamsNodal, ParamsOptical, Data, System
 export BulkRecombination, set_bulk_recombination
 
 export enable_ionic_carrier!
-export enable_trap_carrier!
+export enable_trap_carrier!, constructGaussFermiSimpson13!
 
 export equilibrium_solve!
 export enable_species!, enable_boundary_species!
@@ -118,12 +121,18 @@ include("ct_plotting.jl")
 export set_plotting_labels
 export plot_densities, plot_energies, plot_doping, plot_electroNeutralSolutionBoltzmann
 export plot_solution, plot_IV
+export plot_densities!, plot_energies!, plot_doping!, plot_electroNeutralSolutionBoltzmann!
+export plot_solution!, plot_IV!
+#################################################################
+include("ct_io.jl")
+export read_diodat
 
 #################################################################
 
 # parameter set (add new sets to the list below)
 for parameter_set in [
         :Params_Laser_simple,
+        :Params_MOSFET_Si,
         :Params_PSC_PCBM_MAPI_Pedot,
         :Params_PSC_TiO2_MAPI_spiro,
         :Params_PSC_C60_TripleCation_PTAA,
