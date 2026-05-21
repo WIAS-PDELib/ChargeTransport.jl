@@ -194,9 +194,6 @@ function enable_trap_carrier!(data; trapCarrier::Int64, regions::Array{Int64, 1}
     if ! (typeof(data.F[trapCarrier]) <: TrapFunctionSet)
         @warn("Escape rate computed using detailed balance is not yet implemented for traps whose occupation is modeled with $(data.F[trapCarrier]). \n Please use one contained in $(TrapFunctionSet)")
     end
-    # if (data.F[trapCarrier] !== FermiDiracMinusOne || )
-    #     @warn("Escape rate computed using detailed balance is only implemented for traps whose occupation is modeled with a Fermi-Dirac of order -1")
-    # end
 
     # If a GaussFermi model is chosen, check if the width is non-zero.
     if typeof(data.F[trapCarrier]) <: GaussFermiFunctionSet
@@ -524,9 +521,6 @@ mutable struct Params
     for each carrier ``\\alpha`` on each region.
     """
     mobility::Array{Float64, 2}
-
-    
-
 
 
     ###############################################################
