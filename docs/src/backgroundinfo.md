@@ -83,9 +83,7 @@ for all $\mathbf{x} \in \Gamma_\text{G}$ and $t \in [0,T]$. Here, $\varepsilon_\
 
 For the derivation of the Robin boundary condition, we consider the gate contact region in more detail (see Figure). We distinguish two separate domains: the semiconductor domain $\Omega_\text{s}$ and the oxide layer $\Omega_\text{ox}$ characterizing the gate contact.
 
-<p align="center">
-  <img src="images/Gate-boundary-condition.png" width="300"/>
-</p>
+![GateBoundary](images/Gate-boundary-condition.png)
 
 In the subdomains we have
 ```math
