@@ -718,8 +718,8 @@ reaction terms for concrete calculation type and bulk recombination model.
 """
 function reaction!(f, u, node, data)
     reaction!(f, u, node, data, data.calculationType)
-    data.customReaction(f,u,node,data)
-    nothing
+    data.customReaction(f, u, node, data)
+    return nothing
 end
 """
 $(TYPEDSIGNATURES)
