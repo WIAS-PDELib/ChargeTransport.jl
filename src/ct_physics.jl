@@ -716,8 +716,11 @@ Master reaction! function. This is the function which enters VoronoiFVM and hand
 reaction terms for concrete calculation type and bulk recombination model.
 
 """
-reaction!(f, u, node, data) = reaction!(f, u, node, data, data.calculationType)
-
+function reaction!(f, u, node, data)
+    reaction!(f, u, node, data, data.calculationType)
+    data.customReaction(f,u,node,data)
+    nothing
+end
 """
 $(TYPEDSIGNATURES)
 Reaction in case of equilibrium, i.e. no generation and recombination is considered.
