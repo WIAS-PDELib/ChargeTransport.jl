@@ -1161,7 +1161,7 @@ mutable struct Data{
     """
         Custom user defined reaction. Empty by default.
     """
-    customReaction::TCustomReaction
+    customReaction!::TCustomReaction
 
     ###############################################################
     Data{TFuncs, TVoltageFunc, TGenerationData, TParamsUser, TCustomReaction}() where {TFuncs, TVoltageFunc, TGenerationData, TParamsUser, TCustomReaction} = new()
@@ -1185,7 +1185,7 @@ function Data(
         generationData = [0.0],
         statfunctions::Type{TFuncs} = StandardFuncSet,
         paramsuser = nothing,
-        customReaction = (y, u, node, data) -> nothing,
+        customReaction! = (y, u, node, data) -> nothing,
         numberOfEigenvalues = 0
     ) where {TFuncs}
 
@@ -1204,7 +1204,7 @@ function Data(
     TypeGenerationData = typeof(generationData)
 
     # construct a data struct
-    data = Data{TFuncs, TypeVoltageFunc, TypeGenerationData, typeof(paramsuser), typeof(customReaction)}()
+    data = Data{TFuncs, TypeVoltageFunc, TypeGenerationData, typeof(paramsuser), typeof(customReaction!)}()
 
     ###############################################################
     ####                   model information                   ####
@@ -1282,7 +1282,7 @@ function Data(
     data.paramsnodal = ParamsNodal(grid, numberOfCarriers)
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
     data.paramsuser = paramsuser
-    data.customReaction = customReaction
+    data.customReaction! = customReaction!
     ###############################################################
 
     data.constants = constants
