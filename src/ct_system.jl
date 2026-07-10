@@ -946,7 +946,12 @@ but also all physical parameters for a drift-diffusion simulation of a semicondu
 $(TYPEDFIELDS)
 
 """
-mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationData <: Union{Array{Float64, 1}, Array{Float64, 2}, Array{Float64, 3}, Function}}
+mutable struct Data{
+        TFuncs <: Function,
+        TVoltageFunc <: Function,
+        TGenerationData <: Union{Array{Float64, 1}, Array{Float64, 2}, Array{Float64, 3}, Function},
+        TParamsUser, TCustomReaction,
+    }
 
     ###############################################################
     ####                   model information                   ####
@@ -1148,8 +1153,18 @@ mutable struct Data{TFuncs <: Function, TVoltageFunc <: Function, TGenerationDat
     """
     constants::Constants
 
+    """
+    A struct for user defined parameters. `nothing` by default.    
+    """
+    paramsuser::TParamsUser
+
+    """
+        Custom user defined reaction. Empty by default.
+    """
+    customReaction::TCustomReaction
+
     ###############################################################
-    Data{TFuncs, TVoltageFunc, TGenerationData}() where {TFuncs, TVoltageFunc, TGenerationData} = new()
+    Data{TFuncs, TVoltageFunc, TGenerationData, TParamsUser, TCustomReaction}() where {TFuncs, TVoltageFunc, TGenerationData, TParamsUser, TCustomReaction} = new()
 
 end
 
@@ -1163,7 +1178,16 @@ including the physical parameters, but also some numerical information
 are located.
 
 """
-function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]], generationData = [0.0], statfunctions::Type{TFuncs} = StandardFuncSet, numberOfEigenvalues = 0) where {TFuncs}
+function Data(
+        grid, numberOfCarriers;
+        constants = ChargeTransport.constants,
+        contactVoltageFunction = [zeroVoltage for i in 1:grid[NumBFaceRegions]],
+        generationData = [0.0],
+        statfunctions::Type{TFuncs} = StandardFuncSet,
+        paramsuser = nothing,
+        customReaction = (y, u, node, data) -> nothing,
+        numberOfEigenvalues = 0
+    ) where {TFuncs}
 
     numberOfBoundaryRegions = grid[NumBFaceRegions]
     numberOfRegions = grid[NumCellRegions]
@@ -1180,7 +1204,7 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     TypeGenerationData = typeof(generationData)
 
     # construct a data struct
-    data = Data{TFuncs, TypeVoltageFunc, TypeGenerationData}()
+    data = Data{TFuncs, TypeVoltageFunc, TypeGenerationData, typeof(paramsuser), typeof(customReaction)}()
 
     ###############################################################
     ####                   model information                   ####
@@ -1257,7 +1281,8 @@ function Data(grid, numberOfCarriers; constants = ChargeTransport.constants, con
     data.params = Params(grid[NumCellRegions], numberOfBoundaryRegions, numberOfCarriers)
     data.paramsnodal = ParamsNodal(grid, numberOfCarriers)
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
-
+    data.paramsuser = paramsuser
+    data.customReaction = customReaction
     ###############################################################
 
     data.constants = constants
