@@ -57,6 +57,14 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
     colors = ["green", "red", "gold", "purple", "orange"]
     linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
+    xlimits = extrema(grid[Coordinates])
+    limits = [Inf, -Inf]
+    for icc in 1:params.numberOfCarriers, ireg in 1:numberOfRegions
+        ncc = get_density(solution, ireg, ctsys, icc)
+        limits[1] = min(limits[1], minimum(1.0e-6 .* ncc))
+        limits[2] = max(limits[2], maximum(1.0e-6 .* ncc))
+    end
+
     for icc in 1:params.numberOfCarriers
 
         label_is_plotted = false
@@ -71,6 +79,8 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
                 visualizer,
                 subg,
                 1.0e-6 .* ncc;
+                xlimits,
+                limits,
                 clear = false,
                 color = colors[icc],
                 label = label_is_plotted ? nothing : label_density[icc],
@@ -135,6 +145,30 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
     colors = ["green", "red", "gold", "purple", "orange"]
     linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
+    xlimits = extrema(grid[Coordinates])
+    limits = [Inf, -Inf]
+    begin # we need the value range before plotting, so iterate through the data
+        for icc in data.electricCarrierList, ireg in 1:data.params.numberOfRegions
+            subg = subgrid(grid, [ireg])
+            Ecc = get_BEE(icc, ireg, ctsys)
+            solpsi = view(solution[data.index_psi, :], subg)
+            solcc = view(solution[icc, :], subg)
+            limits[1] = min(limits[1], minimum(Ecc ./ q .- solpsi), minimum(-solcc))
+            limits[2] = max(limits[2], maximum(Ecc ./ q .- solpsi), maximum(-solcc))
+        end
+        for iicc in data.ionicCarrierList, ireg in 1:data.params.numberOfRegions
+            icc = iicc.ionicCarrier
+            if ireg ∈ iicc.regions
+                subg = subgrid(grid, [ireg])
+                Ecc = get_BEE(icc, ireg, ctsys)
+                solpsi = view(solution[data.index_psi, :], subg)
+                solcc = view(solution[icc, :], subg)
+                limits[1] = min(limits[1], minimum(data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q)), minimum(data.params.chargeNumbers[icc] .* solcc))
+                limits[2] = max(limits[2], maximum(data.params.chargeNumbers[icc] .* (solpsi .- Ecc ./ q)), maximum(data.params.chargeNumbers[icc] .* solcc))
+            end
+        end
+    end
+
     for icc in data.electricCarrierList
 
         #grids = Array{ExtendableGrid, 1}(undef, numberOfRegions)
@@ -154,6 +188,8 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 visualizer,
                 subg,
                 Ecc ./ q .- solpsi;
+                xlimits,
+                limits,
                 markershape = marker,
                 title = title,
                 xlabel = L"\text{space [m]}",
@@ -198,8 +234,6 @@ function plot_energies!(visualizer, ctsys, solution, title, label_energy; plotGr
                 solpsi = view(solution[data.index_psi, :], subg)
                 solcc = view(solution[icc, :], subg)
 
-                ## Note that this implies a 1D plot, for multidimensional plots, you may work with
-                ## GridVisualize.jl or write your own code.
                 scalarplot!(
                     visualizer,
                     subg,
@@ -309,6 +343,16 @@ function plot_energies!(visualizer, ctsys, label_BEE)
     cellregions = grid[CellRegions]
     cellnodes = grid[CellNodes]
 
+
+    limits = [Inf, -Inf]
+    for icc in 1:params.numberOfCarriers, i in eachindex(cellregions)
+        cellValue = (params.bandEdgeEnergy[icc, cellregions[i]] + paramsnodal.bandEdgeEnergy[icc, i]) / q
+        limits[1] = min(limits[1], cellValue)
+        limits[2] = max(limits[2], cellValue)
+    end
+
+    xlimits = extrema(coord)
+
     if size(coord, 1) != 1
         error("plot_energies is so far only implemented in 1D")
     end
@@ -331,6 +375,8 @@ function plot_energies!(visualizer, ctsys, label_BEE)
                 visualizer,
                 coord[cellnodes[:, i]][:],
                 fill(cellValue, numberLocalCellNodes);
+                xlimits,
+                limits,
                 title = "Band-edge energies",
                 xlabel = L"\text{space [m]}",
                 ylabel = L"\text{energy [eV]}",
@@ -409,6 +455,8 @@ function plot_doping!(visualizer, ctsys, label_density)
     (ymin, ymax) = 1.0e-6 .* extrema(params.doping)
     ymax *= 10
 
+    xlimits = extrema(coord)
+
     # plot different doping values in interior
     for icc in 1:params.numberOfCarriers
 
@@ -433,6 +481,7 @@ function plot_doping!(visualizer, ctsys, label_density)
                 xlabel = L"\text{space [m]}",
                 ylabel = L"doping [$\frac{1}{\text{cm}^3}$]",
                 limits = (ymin, ymax),
+                xlimits,
                 yscale = :symlog
             )
         end
@@ -589,10 +638,15 @@ function plot_solution!(visualizer, ctsys, solution, title, label_solution; plot
     colors = ["green", "red", "gold", "purple", "orange"]
     linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
+    xlimits = extrema(grid[Coordinates])
+    limits = extrema(solution)
+
     scalarplot!(
         visualizer,
         grid,
         solution[ipsi, :];
+        xlimits,
+        limits,
         clear = false,
         color = :blue,
         label = L"\psi",
