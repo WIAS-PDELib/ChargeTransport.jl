@@ -29,7 +29,7 @@ end
 
 # supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
+function main(; n = 3, Plotter = default_plotter(), verbose = false, test = false, unknown_storage = :sparse)
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K
