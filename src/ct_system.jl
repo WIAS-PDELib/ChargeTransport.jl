@@ -554,6 +554,16 @@ mutable struct Params
     ####                   number of regions                   ####
     ###############################################################
     """
+    Regions in which the Poisson equation is solved.
+    """
+    regionsPoisson::Array{Int64, 1}
+
+    """
+    Regions in which the continuity equations of the charge carriers are solved.
+    """
+    regionsContinuity::Array{Int64, 1}
+
+    """
     A region dependent dielectric constant.
     """
     dielectricConstant::Array{Float64, 1}
@@ -677,6 +687,9 @@ function Params(numberOfRegions, numberOfBoundaryRegions, numberOfCarriers)
     ###############################################################
     ####                   number of regions                   ####
     ###############################################################
+    params.regionsPoisson = collect(1:numberOfRegions)
+    params.regionsContinuity = collect(1:numberOfRegions)
+
     params.dielectricConstant = ones(Float64, numberOfRegions)
     params.dielectricConstantImageForce = zeros(Float64, numberOfRegions)
     params.generationUniform = zeros(Float64, numberOfRegions)
@@ -1447,7 +1460,8 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     # put all non-ionic and non-trap carriers present everywhere
     for icc in data.chargeCarrierList
         if (icc ∉ ionicCarrierListHelp) && (icc ∉ trapCarrierListHelp)
-            enable_species!(ctsys, icc, 1:data.params.numberOfRegions)
+            # enable_species!(ctsys, icc, 1:data.params.numberOfRegions) # old version, considers all regions
+            enable_species!(ctsys, icc, data.params.regionsContinuity)
         end
     end
 
@@ -1509,7 +1523,8 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     # we need no loop for interface carriers, since in this case there are not present.
 
     # enable lastly the electric potential on whole domain
-    enable_species!(ctsys, data.index_psi, 1:data.params.numberOfRegions)
+    # enable_species!(ctsys, data.index_psi, 1:data.params.numberOfRegions) # old version, considers all regions
+    enable_species!(ctsys, data.index_psi, data.params.regionsPoisson)
 
     ######################################
     # Fill in boundary parameters. By default, we set the boundary values the same as the adjacent inner cell.
