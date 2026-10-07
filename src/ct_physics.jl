@@ -322,7 +322,8 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     ipsi = data.index_psi
 
-    if bnode.cellregions[1] ∈ data.params.regionsContinuity
+    #if bnode.cellregions[1] ∈ data.params.regionsContinuity
+    if any(r -> r ∈ data.params.regionsContinuity, bnode.cellregions)
         # electrons and holes entering right hand-side for BC of ipsi
         for icc in data.electricCarrierList         # Array{Int64, 1}
 
@@ -354,6 +355,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
         end
 
     end
+
     # if trap carriers are present
     for iicc in data.trapCarrierList
         # add trap carriers only in defined regions (otherwise get NaN error)
@@ -380,7 +382,8 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     Δu = params.contactVoltage[bnode.region] + data.contactVoltageFunction[bnode.region](bnode.time)
 
-    if bnode.cellregions[1] ∈ data.params.regionsContinuity
+    # if bnode.cellregions[1] ∈ data.params.regionsContinuity
+    if any(r -> r ∈ data.params.regionsContinuity, bnode.cellregions)
         boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
         boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
     end
@@ -420,9 +423,13 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactDirichlet})
     Δu = params.contactVoltage[bnode.region] + data.contactVoltageFunction[bnode.region](bnode.time)
     ψ0 = params.bψEQ[bnode.region]
 
-    boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
-    boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
     boundary_dirichlet!(f, u, bnode, species = ipsi, region = bnode.region, value = ψ0 + Δu)
+
+
+    if any(r -> r ∈ params.regionsContinuity, bnode.cellregions)
+        boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
+        boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
+    end
     return
 
 end
@@ -905,7 +912,10 @@ the space charge density.
 """
 function RHSPoisson!(f, u, node, data, ipsi)
 
-    node.region ∈ data.params.regionsPoisson || return
+    # RHS = 0 if e and hole are not active
+    if node.region ∈ data.params.regionsPoisson && node.region ∉ data.params.regionsContinuity
+        return nothing
+    end
 
     ###########################################################
     ####         right-hand side of nonlinear Poisson      ####
@@ -918,7 +928,8 @@ function RHSPoisson!(f, u, node, data, ipsi)
         icc = data.chargeCarrierList[icc]     # Array{QType, 1}
         f[ipsi] = f[ipsi] - data.params.chargeNumbers[icc] * data.params.doping[icc, node.region]  # subtract doping
 
-        if node.region ∈ data.params.regionsContinuity
+        # add charge carrier only in regions where continuity equations are solved
+        if node.region ∈ data.params.regionsPoisson && node.region ∈ data.params.regionsContinuity
             ncc = get_density!(u, node, data, icc)
             f[ipsi] = f[ipsi] + data.params.chargeNumbers[icc] * ncc   # add charge carrier
         end
@@ -1008,7 +1019,7 @@ function reaction!(f, u, node, data, ::Type{OutOfEquilibrium})
     end
 
     # Then, add RHS of continuity equations based on user information
-    if node.region ∈ data.params.regionsContinuity
+    if data.params.regionsPoisson && node.region ∈ data.params.regionsContinuity
         RHSContinuityEquations!(f, u, node, data) # RHS of Charge Carriers with special treatment of recombination
     end
 
@@ -1105,14 +1116,12 @@ function storage!(f, u, node, data, ::Type{OutOfEquilibrium})
     ipsi = data.index_psi
     q = data.constants.q
 
-    if node.region ∈ data.params.regionsContinuity
-        for icc in data.electricCarrierList       # Array{Int64, 1}
+    for icc in data.electricCarrierList       # Array{Int64, 1}
 
-            icc = data.chargeCarrierList[icc] # get correct index in chargeCarrierList
-            ncc = get_density!(u, node, data, icc)
-            f[icc] = q * params.chargeNumbers[icc] * ncc
+        icc = data.chargeCarrierList[icc] # get correct index in chargeCarrierList
+        ncc = get_density!(u, node, data, icc)
+        f[icc] = q * params.chargeNumbers[icc] * ncc
 
-        end
     end
 
     for iicc in data.ionicCarrierList # ∈ Array{IonicCarrier, 1}
@@ -1124,6 +1133,7 @@ function storage!(f, u, node, data, ::Type{OutOfEquilibrium})
         ncc = get_density!(u, node, data, icc)
         f[icc] = q * params.chargeNumbers[icc] * ncc
     end
+
     for iicc in data.trapCarrierList
         icc = iicc.trapCarrier            # species number chosen by user
         icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
@@ -1206,7 +1216,7 @@ function flux!(f, u, edge, data, ::Type{OutOfEquilibrium})
         displacementFlux!(f, u, edge, data)
     end
 
-    if edge.region ∈ data.params.regionsContinuity
+    if edge.region ∈ data.params.regionsContinuity && edge.region ∈ data.params.regionsPoisson
         for icc in data.electricCarrierList   # correct index of electric carriers of Type Int64
             chargeCarrierFlux!(f, u, edge, data, icc, data.fluxApproximation[icc])
         end
