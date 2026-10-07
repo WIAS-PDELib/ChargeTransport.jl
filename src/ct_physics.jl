@@ -322,8 +322,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     ipsi = data.index_psi
 
-    #if bnode.cellregions[1] ∈ data.params.regionsContinuity
-    if any(r -> r ∈ data.params.regionsContinuity, bnode.cellregions)
+    if bnode.cellregions ∈ data.params.regionsContinuity && bnode.cellregions ∈ data.params.regionsPoisson
         # electrons and holes entering right hand-side for BC of ipsi
         for icc in data.electricCarrierList         # Array{Int64, 1}
 
@@ -373,8 +372,10 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
         end
     end
 
-    f[ipsi] = f[ipsi] - paramsnodal.doping[bnode.index]
-    f[ipsi] = - data.λ1 * 1 / tiny_penalty_value * data.constants.q * f[ipsi]
+    if bnode.cellregions ∈ data.params.regionsContinuity && bnode.cellregions ∈ data.params.regionsPoisson
+        f[ipsi] = f[ipsi] - paramsnodal.doping[bnode.index]
+        f[ipsi] = - data.λ1 * 1 / tiny_penalty_value * data.constants.q * f[ipsi]
+    end
 
     # electrons and holes boundary condition
     iphin = data.bulkRecombination.iphin # integer index of φ_n
@@ -382,8 +383,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     Δu = params.contactVoltage[bnode.region] + data.contactVoltageFunction[bnode.region](bnode.time)
 
-    # if bnode.cellregions[1] ∈ data.params.regionsContinuity
-    if any(r -> r ∈ data.params.regionsContinuity, bnode.cellregions)
+    if bnode.cellregions ∈ data.params.regionsContinuity && bnode.cellregions ∈ data.params.regionsPoisson
         boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
         boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
     end
@@ -426,7 +426,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactDirichlet})
     boundary_dirichlet!(f, u, bnode, species = ipsi, region = bnode.region, value = ψ0 + Δu)
 
 
-    if any(r -> r ∈ params.regionsContinuity, bnode.cellregions)
+    if bnode.cellregions ∈ params.regionsContinuity && bnode.cellregions ∈ params.regionsPoisson
         boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
         boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
     end
@@ -1019,7 +1019,7 @@ function reaction!(f, u, node, data, ::Type{OutOfEquilibrium})
     end
 
     # Then, add RHS of continuity equations based on user information
-    if data.params.regionsPoisson && node.region ∈ data.params.regionsContinuity
+    if node.region ∈ data.params.regionsPoisson && node.region ∈ data.params.regionsContinuity
         RHSContinuityEquations!(f, u, node, data) # RHS of Charge Carriers with special treatment of recombination
     end
 
