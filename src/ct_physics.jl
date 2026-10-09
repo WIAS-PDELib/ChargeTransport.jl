@@ -322,7 +322,8 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     ipsi = data.index_psi
 
-    if bnode.cellregions ∈ data.params.regionsContinuity && bnode.cellregions ∈ data.params.regionsPoisson
+
+    if bnode.cellregions[1] ∈ data.params.regionsContinuity
         # electrons and holes entering right hand-side for BC of ipsi
         for icc in data.electricCarrierList         # Array{Int64, 1}
 
@@ -372,7 +373,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
         end
     end
 
-    if bnode.cellregions ∈ data.params.regionsContinuity && bnode.cellregions ∈ data.params.regionsPoisson
+    if bnode.cellregions[1] ∈ data.params.regionsContinuity
         f[ipsi] = f[ipsi] - paramsnodal.doping[bnode.index]
         f[ipsi] = - data.λ1 * 1 / tiny_penalty_value * data.constants.q * f[ipsi]
     end
@@ -383,7 +384,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactRobin})
 
     Δu = params.contactVoltage[bnode.region] + data.contactVoltageFunction[bnode.region](bnode.time)
 
-    if bnode.cellregions ∈ data.params.regionsContinuity && bnode.cellregions ∈ data.params.regionsPoisson
+    if bnode.cellregions[1] ∈ data.params.regionsContinuity
         boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
         boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
     end
@@ -426,7 +427,7 @@ function breaction!(f, u, bnode, data, ::Type{OhmicContactDirichlet})
     boundary_dirichlet!(f, u, bnode, species = ipsi, region = bnode.region, value = ψ0 + Δu)
 
 
-    if bnode.cellregions ∈ params.regionsContinuity && bnode.cellregions ∈ params.regionsPoisson
+    if bnode.cellregions[1] ∈ params.regionsContinuity
         boundary_dirichlet!(f, u, bnode, species = iphin, region = bnode.region, value = Δu)
         boundary_dirichlet!(f, u, bnode, species = iphip, region = bnode.region, value = Δu)
     end
@@ -924,13 +925,13 @@ function RHSPoisson!(f, u, node, data, ipsi)
 
     # only add the carrier charge where the carriers exist
     for icc in data.electricCarrierList       # Array{Int64, 1}
-
-        icc = data.chargeCarrierList[icc]     # Array{QType, 1}
-        f[ipsi] = f[ipsi] - data.params.chargeNumbers[icc] * data.params.doping[icc, node.region]  # subtract doping
-
         # add charge carrier only in regions where continuity equations are solved
-        if node.region ∈ data.params.regionsPoisson && node.region ∈ data.params.regionsContinuity
+        if node.region ∈ data.params.regionsContinuity
+
+            icc = data.chargeCarrierList[icc]     # Array{QType, 1}
             ncc = get_density!(u, node, data, icc)
+
+            f[ipsi] = f[ipsi] - data.params.chargeNumbers[icc] * data.params.doping[icc, node.region]  # subtract doping
             f[ipsi] = f[ipsi] + data.params.chargeNumbers[icc] * ncc   # add charge carrier
         end
     end
