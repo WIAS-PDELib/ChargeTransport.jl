@@ -1048,6 +1048,14 @@ end
 
 generation(data, node, ::Type{GenerationNone}) = 0.0
 
+# The generation rate ``G`` given by the user function `data.customGeneration(node, data)`.
+# The function can depend on space (`node.coord[node.index]`), region (`node.region`) and
+# time (`node.time`). As for the predefined models, the value is multiplied by the embedding
+# parameter `data.λ2`, which is ramped up in `equilibrium_solve!` and equal to one afterwards.
+# For a time-dependent generation in a transient solve, set `data.generationModel = GenerationNone`
+# before `equilibrium_solve!` and switch to `GenerationCustom` afterwards.
+generation(data, node, ::Type{GenerationCustom}) = data.λ2 * data.customGeneration(node, data)
+
 """
 $(SIGNATURES)
 Beer-Lambert function for the visualization of this type of photogeneration profile.
