@@ -1163,6 +1163,13 @@ mutable struct Data{
     """
     customReaction!::TCustomReaction
 
+    """
+    Custom user defined generation rate `(node, data) -> G`, used for
+    `generationModel = GenerationCustom`. Zero by default. The field is not part of the
+    type parameters, so the function can be replaced after the construction of Data.
+    """
+    customGeneration::Function
+
     ###############################################################
     Data{TFuncs, TVoltageFunc, TGenerationData, TParamsUser, TCustomReaction}() where {TFuncs, TVoltageFunc, TGenerationData, TParamsUser, TCustomReaction} = new()
 
@@ -1186,6 +1193,7 @@ function Data(
         statfunctions::Type{TFuncs} = StandardFuncSet,
         paramsuser = nothing,
         customReaction! = (y, u, node, data) -> nothing,
+        customGeneration = (node, data) -> 0.0,
         numberOfEigenvalues = 0
     ) where {TFuncs}
 
@@ -1283,6 +1291,7 @@ function Data(
     data.paramsoptical = ParamsOptical(grid, numberOfCarriers, numberOfEigenvalues)
     data.paramsuser = paramsuser
     data.customReaction! = customReaction!
+    data.customGeneration = customGeneration
     ###############################################################
 
     data.constants = constants

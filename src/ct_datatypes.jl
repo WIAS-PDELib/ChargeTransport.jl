@@ -272,6 +272,12 @@ Abstract type for user defined generation.
 """
 abstract type GenerationUserDefined end
 
+"""
+$(TYPEDEF)
+Abstract type for a generation rate given by the user function `data.customGeneration`.
+"""
+abstract type GenerationCustom end
+
 ##########################################################
 """
 Possible types for generation model.
@@ -279,6 +285,7 @@ Possible types for generation model.
 const GenerationModelType = Union{
     Type{GenerationUniform}, Type{GenerationBeerLambert},
     Type{GenerationNone}, Type{GenerationUserDefined},
+    Type{GenerationCustom},
 }
 ##########################################################
 ##########################################################

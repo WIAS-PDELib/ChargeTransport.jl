@@ -78,7 +78,7 @@ export ExcessChemicalPotentialDiffusive, ConcentrationGradient, DensityProduct
 export InEquilibrium, OutOfEquilibrium
 
 export GenerationModelType
-export GenerationNone, GenerationBeerLambert, GenerationUniform, GenerationUserDefined
+export GenerationNone, GenerationBeerLambert, GenerationUniform, GenerationUserDefined, GenerationCustom
 export LaserModelType, LaserModelOff, LaserModelOn
 export BarrierLoweringType
 export BarrierLoweringOn, BarrierLoweringOff
