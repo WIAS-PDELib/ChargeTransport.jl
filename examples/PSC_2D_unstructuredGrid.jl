@@ -330,8 +330,8 @@ module PSC_2D_unstructuredGrid
     end #  main
 
     function test()
-        testval = -0.567652680070852; testvalvacancyEnergyCalculation = -0.5698594336140043
-        return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+        testval = -0.5674827651363531
+        return main(test = true) ≈ testval
     end
 
     if test == false

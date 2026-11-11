@@ -924,7 +924,7 @@ module Ex201_PSC_Textured
 
     function test()
         testval = -0.5987199947920246
-        return main(test = true) ≈ testval
+        return main(test = true, vacancyEnergyCalculation = true) ≈ testval
     end
 
 end # module

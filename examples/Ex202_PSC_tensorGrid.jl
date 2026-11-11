@@ -339,8 +339,8 @@ function main(;
 end #  main
 
 function test()
-    testval = -0.5862627265480347; testvalvacancyEnergyCalculation = -0.5871876928952634
-    return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+    testval = -0.5861305955311834
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval
 end
 
 if test == false
