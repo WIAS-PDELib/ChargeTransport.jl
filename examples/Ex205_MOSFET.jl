@@ -223,7 +223,9 @@ function main(;
 
     # callback executed before each embedding step (gate bias)
     control.pre = (solution, biasValue_gate) -> begin
-        println("bias value at gate: Δu = ", biasValue_gate, "V")
+        if test == false
+            println("bias value at gate: Δu = ", biasValue_gate, "V")
+        end
         set_contact!(ctsys, p.bregion_gate, Δu = biasValue_gate)
         nothing
     end
@@ -245,7 +247,9 @@ function main(;
 
     # callback executed before each embedding step (drain bias)
     control.pre = (solution, biasValue_drain) -> begin
-        println("bias value at drain: Δu = ", biasValue_drain, "V")
+        if test == false
+            println("bias value at drain: Δu = ", biasValue_drain, "V")
+        end
         set_contact!(ctsys, p.bregion_drain, Δu = biasValue_drain)
         nothing
     end
