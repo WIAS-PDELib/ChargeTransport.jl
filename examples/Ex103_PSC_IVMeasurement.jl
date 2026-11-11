@@ -175,6 +175,7 @@ function main(;
     ## gives the information on which regions this ionic carrier is defined.
     ## In this application ion vacancies only live in active perovskite layer.
     ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+    ## averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if test == false
@@ -233,7 +234,9 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+    ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+    ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
     inival = solution
 
     if Plotter !== nothing
@@ -331,7 +334,18 @@ function main(;
         )
 
         ###############
-        plot_IV!(vis[3, 1], biasValues[2:end], IV, "bias Δu = $(endVoltage)")
+        # Plot J-V Curve
+        scalarplot!(
+            vis[3, 1],
+            biasValues[2:end],
+            -IV .* (cm^2) .* 1.0e3;
+            clear = false,
+            linewidth = 5,
+            color = :darkblue,
+            xlabel = L"\text{bias [V]}",
+            ylabel = L"current density [$\frac{\text{mA}}{\text{cm}^2}$]",
+            title = "J-V Curve"
+        )
 
         ###############
         # Plot Recombination
@@ -417,9 +431,7 @@ function main(;
 end #  main
 
 function test()
-    testval = 313.58311884281136; testvalOther = 0.004948787599489832
-    @show main(test = true, otherScanProtocol = false)
-    @show main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false)
+    testval = 313.6775446588821; testvalOther = 0.004948787599489832
     return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
 end
 

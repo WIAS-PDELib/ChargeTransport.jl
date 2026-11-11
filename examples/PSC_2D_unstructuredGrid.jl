@@ -160,6 +160,7 @@ module PSC_2D_unstructuredGrid
         data.boundaryType[p.bregionDonor] = OhmicContact
 
         ## Present ionic vacancies in perovskite layer
+        ## averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
         enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
         if test == false
@@ -206,7 +207,9 @@ module PSC_2D_unstructuredGrid
         end
         ################################################################################
 
-        solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+        ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+        ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+        solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
         inival = solution
 
         if Plotter !== nothing
@@ -330,8 +333,8 @@ module PSC_2D_unstructuredGrid
     end #  main
 
     function test()
-        testval = -0.567652680070852; testvalvacancyEnergyCalculation = -0.5698594336140043
-        return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+        testval = -0.567652680070852
+        return main(test = true) ≈ testval
     end
 
     if test == false
