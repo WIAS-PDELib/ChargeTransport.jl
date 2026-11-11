@@ -1154,7 +1154,7 @@ mutable struct Data{
     constants::Constants
 
     """
-    A struct for user defined parameters. `nothing` by default.    
+    A struct for user defined parameters. `nothing` by default.
     """
     paramsuser::TParamsUser
 
@@ -1822,10 +1822,19 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation::Bool = false, verbose::Bool = false, yabstol::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last three are extended-only keywords for vacancyEnergyCalculation = true
+function equilibrium_solve!(
+        ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0),
+        control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0,
+        vacancyEnergyCalculation::Bool = false, verbose::Bool = false,
+        yabstol::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15, verboseEnergy = false
+    ) # last three are extended-only keywords for vacancyEnergyCalculation = true
 
-    ## by default vacancyEnergyCalculation is false.
-    return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+    ## by default vacancyEnergyCalculation is false as it is only needed for ionic carriers
+    return _equilibrium_solve!(
+        Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control,
+        nonlinear_steps = nonlinear_steps, verbose = verbose,
+        yabstol = yabstol, ytol = ytol, maxiter = maxiter, verboseEnergy = verboseEnergy
+    )
 
 end
 
@@ -1836,7 +1845,10 @@ $(TYPEDSIGNATURES)
 Base implementation of equilibrium_solve: vacancyEnergyCalculation = false
 
 """
-function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonlinear_steps, verbose = verbose, yabstol, ytol, maxiter)
+function _equilibrium_solve!(
+        ::Val{false}, ctsys::System; inival, control, nonlinear_steps,
+        verbose = verbose, yabstol, ytol, maxiter, verboseEnergy
+    )
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1989,36 +2001,46 @@ Calculates the energy value for the vacancies via the secant method.
 We will use this method to calculate suitable values for vacancy energy levels and internally modify the corresponding parameter.
 
 """
-function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlinear_steps, verbose, yabstol, ytol, maxiter)
+function _equilibrium_solve!(
+        ::Val{true}, ctsys::System; inival, control, nonlinear_steps,
+        verbose, yabstol, ytol, maxiter, verboseEnergy
+    )
 
     # do once the equilibrium_solve to have a proper initial value.
-    inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+    inival = _equilibrium_solve!(
+        Val(false), ctsys; inival = inival, control = control,
+        nonlinear_steps = nonlinear_steps, verbose,
+        yabstol = yabstol, ytol = ytol, maxiter = maxiter, verboseEnergy = verboseEnergy
+    )
 
-    # --- define save function evaluation for the function, we want to find root of ---
-    function safely_eval_F!(F, E, icc, ireg)
+    # define save function evaluation for the function, we want to find root of
+    # returns energy, value of target function and solution
+    function safely_eval_TargetFunction!(Target_F, E, icc, ireg)
 
         params.bandEdgeEnergy[icc, ireg] = E
 
-        ii = 0
-        y = 1.0
+        ii = 0; y = 1.0
+        sol = nothing
         Eafix = false
         while !Eafix && ii <= 5
             try
                 ii = ii + 1
-                sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+                sol = _equilibrium_solve!(
+                    Val(false), ctsys; inival = inival, control = control,
+                    nonlinear_steps = nonlinear_steps, verbose = verbose,
+                    yabstol = yabstol, ytol = ytol, maxiter = maxiter, verboseEnergy = verboseEnergy
+                )
                 Eafix = true
                 E = params.bandEdgeEnergy[icc, ireg] # save E, in case it was adjusted due to catch
-                y = F(sol)
+                y = Target_F(sol)
             catch
-                # --- solve with specific value not working? slightly adjust ---
-                E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
+                # solve with specific value not working? -> slightly adjust
+                # shift by 1 meV, so E stays on the meV grid
+                E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-3), digits = 3) * q
                 params.bandEdgeEnergy[icc, ireg] = E_new
-                # println("        save solve")
-                # println("            ", E_new / q)
-
             end
         end
-        return E, y
+        return E, y, sol
     end
 
     data = ctsys.fvmsys.physics.data
@@ -2029,19 +2051,26 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
     T = params.temperature
     (; k_B, q) = data.constants
 
+    dE = 1.0e-3 * q   # 1 meV grid spacing of the energies
+
     for iicc in data.ionicCarrierList
 
         for ireg in iicc.regions
 
             icc = iicc.ionicCarrier # species number chosen by user
 
-            # --- define function to be minimized ---
+            # Define target function which needs to be minimized ##
             mOmega = data.regionVolumes[ireg]
             Avgncc(sol) = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg) / mOmega
-            Ca = params.doping[icc, ireg]
 
-            # difference between integral and doping, where we want to find the zero
-            F(sol) = (Avgncc(sol) - Ca) / Ca
+            Ca = params.doping[icc, ireg]
+            Na = params.densityOfStates[icc, ireg]
+            za = params.chargeNumbers[icc]
+
+            # Before: relative error (Avgncc - Ca) / Ca nonlinear dependent on Ea
+            # Now: Target function which is linear in Ea and has slope za / (k_B T)
+            Finv(u) = log(u / (1 - u))               # inverse of Fermi-Dirac of order -1
+            Target_F(sol) = Finv(Avgncc(sol) / Na) - Finv(Ca / Na) # = za / (k_B T) * (Ea - Ea*)
 
             # --- for initial values for Ea ---
             Ec = params.bandEdgeEnergy[iphin, ireg - 1]
@@ -2060,56 +2089,66 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
             Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
             psiR = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
 
-            Na = params.densityOfStates[icc, ireg]
-            za = params.chargeNumbers[icc]
-
-            # E0, E1 in eV
+            # E0 in eV
             E0 = k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * 0.5 * (psiL + psiR) # in eV
             E0 = round(E0 / q, digits = 3) * q
 
-            # --- Find one correct pair E0, y0 ---
-            E0, y0 = safely_eval_F!(F, E0, icc, ireg)
+            ## Find one correct pair E0, y0 ##
+            E0, y0, sol0 = safely_eval_TargetFunction!(Target_F, E0, icc, ireg)
 
-            # --- Second guess E1 slightly shifted ---
-            E1 = E0 + 0.01 * q
-            E1, y1 = safely_eval_F!(F, E1, icc, ireg)
-
-            if verbose
-                @show E0 / q, y0
-                @show E1 / q, y1
+            # Second point from a Newton step with the analytic slope za / (k_B T) (comes from derivative of Target_F w.t. Ea)
+            sl_ana = za / (k_B * T)
+            E1 = round((E0 - y0 / sl_ana) / q, digits = 3) * q
+            if E1 == E0   # same values? go at least 1 meV towards the root
+                E1 = round((E0 - sign(y0 / sl_ana) * dE) / q, digits = 3) * q
             end
+            E1, y1, sol1 = safely_eval_TargetFunction!(Target_F, E1, icc, ireg)
 
             for k in 1:maxiter
 
-                # stopping criterion when energies coincide
-                if E1 == E0 && abs(y1) < yabstol # these are 1.0 % error
+                # stopping criteria, final energy and its solution were already computed
+                if abs(y1) < ytol # then accurate enough
                     params.bandEdgeEnergy[icc, ireg] = E1
-
-                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
-                    return sol
+                    return sol1
+                elseif abs(E1 - E0) < 1.5 * dE && y0 * y1 <= 0 # neighbouring meV values AND sign change of G -> root lies in between
+                    # take the energy whose value is smaller
+                    if abs(y1) <= abs(y0)
+                        params.bandEdgeEnergy[icc, ireg] = E1
+                        return sol1
+                    else
+                        params.bandEdgeEnergy[icc, ireg] = E0 # params currently holds E1, set back
+                        return sol0
+                    end
                 end
 
-                # Secant update
-                E_new = E1 - y1 * (E1 - E0) / (y1 - y0)
-                E_new = round(E_new / q, digits = 3) * q
-
-                E_new, y_new = safely_eval_F!(F, E_new, icc, ireg)
-
-                if verbose
-                    println("Energy calculation: iter $k: E_new=$(E_new / q), y_new=$y_new")
+                # secant slope of Target_F
+                s = sl_ana
+                if E1 != E0
+                    s_meas = (y1 - y0) / (E1 - E0)
+                    # accept only if 0 < s / sl_ana <= 1
+                    # otherwise use analytic slope
+                    # > 0  : same sign as analytic slope (Target_F is monotone in Ea)
+                    # <= 1 : not steeper than analytic slope
+                    if 0 < s_meas / sl_ana <= 1
+                        s = s_meas
+                    end
                 end
 
-                # stopping criterion
-                if abs(y_new) < ytol
-                    params.bandEdgeEnergy[icc, ireg] = E_new
+                ## Secant update with slope s, rounded to meV ##
+                E_new = round((E1 - y1 / s) / q, digits = 3) * q
+                if E_new == E1   # if step rounds to zero -> go at least one meV towards the root
+                    E_new = round((E1 - sign(y1 / s) * dE) / q, digits = 3) * q
+                end
 
-                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
-                    return sol
+                E_new, y_new, sol_new = safely_eval_TargetFunction!(Target_F, E_new, icc, ireg)
+
+                if verboseEnergy
+                    println("Energy calculation: iter $k: E_new=$(E_new / q), y_new=$y_new, s/sl_ana=$(s / sl_ana)")
                 end
 
                 # shift for next secant step
-                E0, y0 = E1, y1
-                E1, y1 = E_new, y_new
+                E0, y0, sol0 = E1, y1, sol1
+                E1, y1, sol1 = E_new, y_new, sol_new
             end
 
             error("Max iteration exceeded")
@@ -2121,7 +2160,6 @@ function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlin
     return
 
 end
-
 ###########################################################
 ###########################################################
 
