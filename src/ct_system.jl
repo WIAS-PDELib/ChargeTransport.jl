@@ -115,6 +115,11 @@ mutable struct IonicCarrier
     """
     regions::Array{Int64, 1}
 
+    """
+    Corresponding average densities for the ionic charge carrier in each region where it is assumed to be present.
+    """
+    averageDensity::Union{Nothing, Array{Float64, 1}}
+
     IonicCarrier() = new()
 
 end
@@ -152,13 +157,28 @@ $(SIGNATURES)
 
 This method takes the user information concerning present ionic charge carriers,
 builds a struct of Type IonicCarrier and add this struct to the ionicCarrierList.
+
+The optional keyword `averageDensity` prescribes the mean density of the ionic carrier,
+with one entry per region in `regions`. If it is not given, the doping of this carrier is used.
+It is only used for the calculation of the ionic band-edge energies, i.e. for
+`equilibrium_solve!` with `vacancyEnergyCalculation = true`.
 """
-function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 1})
+function enable_ionic_carrier!(data; ionicCarrier::Int64, regions::Array{Int64, 1}, averageDensity::Union{Nothing, Array{Float64, 1}} = nothing)
 
     enableIons = IonicCarrier()
 
     enableIons.ionicCarrier = ionicCarrier
     enableIons.regions = regions
+    # mean density of the ions is optional:
+    # nothing -> later the doping (background charge) is used
+    if isnothing(averageDensity)
+        enableIons.averageDensity = nothing
+    else
+        if length(averageDensity) != length(regions)
+            error("averageDensity needs one entry per region, where ions exist.")
+        end
+        enableIons.averageDensity = averageDensity
+    end
 
     # set by default for the ionic carrier the Fermi Dirac integral of order -1 as statistics function
     data.F[ionicCarrier] = FermiDiracMinusOne
@@ -1156,7 +1176,7 @@ mutable struct Data{
     constants::Constants
 
     """
-    A struct for user defined parameters. `nothing` by default.    
+    A struct for user defined parameters. `nothing` by default.
     """
     paramsuser::TParamsUser
 
@@ -1428,7 +1448,9 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     ctsys.fvmsys = VoronoiFVM.System(grid, physics; kwargs...)
 
     data = ctsys.fvmsys.physics.data
-
+    params = data.params
+    T = params.temperature
+    (; k_B, q) = data.constants
     ######################################
     # continuous case = integer indexing
     data.chargeCarrierList = collect(1:data.params.numberOfCarriers)
@@ -1453,10 +1475,6 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         end
     end
 
-    q = data.constants.q
-    k_B = data.constants.k_B
-    T = data.params.temperature
-
     # if ionic carriers are present
     for iicc in data.ionicCarrierList
         enable_species!(ctsys, iicc.ionicCarrier, iicc.regions)
@@ -1468,33 +1486,22 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
             iphip = data.bulkRecombination.iphip # integer index of φ_p
 
             ## in case user did not define any energy, give some suitable initial guess
-            if data.params.bandEdgeEnergy[icc, ireg] == 0.0 && ireg > 1
+            if data.params.bandEdgeEnergy[icc, ireg] == 0.0
 
-                ## give some initial value of ionic energy level
-                En1 = data.params.bandEdgeEnergy[iphin, ireg - 1]
-                Ep1 = data.params.bandEdgeEnergy[iphip, ireg - 1]
-                Nn1 = data.params.densityOfStates[iphin, ireg - 1]
-                Np1 = data.params.densityOfStates[iphip, ireg - 1]
-                C1 = data.params.doping[iphin, ireg - 1] - data.params.doping[iphip, ireg - 1]
-                Nintr1 = sqrt(Nn1 * Np1 * exp((En1 - Ep1) / (-k_B * T)))
+                Finv(u) = log(u / (1 - u))               # inverse of Fermi-Dirac of order -1
+                Ca = params.doping[icc, ireg]
+                Na = params.densityOfStates[icc, ireg]
+                za = params.chargeNumbers[icc]
+                Ec = params.bandEdgeEnergy[iphin, ireg]
+                Ev = params.bandEdgeEnergy[iphip, ireg]
+                Nc = params.densityOfStates[iphin, ireg]
+                Nv = params.densityOfStates[iphip, ireg]
+                C = params.doping[iphin, ireg] - params.doping[iphip, ireg]
+                Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
 
-                psi1 = (En1 + Ep1) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn1 / Np1) + (k_B * T / q) * asinh(C1 / (2 * Nintr1))
-                ###
-                En2 = data.params.bandEdgeEnergy[iphin, ireg + 1]
-                Ep2 = data.params.bandEdgeEnergy[iphip, ireg + 1]
-                Nn2 = data.params.densityOfStates[iphin, ireg + 1]
-                Np2 = data.params.densityOfStates[iphip, ireg + 1]
-                C2 = data.params.doping[iphin, ireg + 1] - data.params.doping[iphip, ireg + 1]
-                Nintr2 = sqrt(Nn2 * Np2 * exp((En2 - Ep2) / (-k_B * T)))
-
-                psi2 = (En2 + Ep2) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn2 / Np2) + (k_B * T / q) * asinh(C2 / (2 * Nintr2))
-
-                Na = data.params.densityOfStates[icc, ireg]
-                za = data.params.chargeNumbers[icc]
-                Ca = data.params.doping[icc, ireg]
-
-                Ea = trunc((k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * (psi1 + psi2) / 2) / q, digits = 3) * q
-
+                psi_reg = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+                Ea = k_B * T / za * Finv(Ca / Na) + q * psi_reg
+                Ea = round(Ea / q, digits = 3) * q
                 data.params.bandEdgeEnergy[icc, ireg] = Ea
 
             end
@@ -1508,7 +1515,6 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         enable_species!(ctsys, iicc.trapCarrier, iicc.regions)
     end
 
-    # we need no loop for interface carriers, since in this case there are not present.
 
     # enable lastly the electric potential on whole domain
     enable_species!(ctsys, data.index_psi, 1:data.params.numberOfRegions)
@@ -1824,10 +1830,19 @@ Function which calculates the equilibrium solution in case of non-present fluxes
 
 """
 
-function equilibrium_solve!(ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0), control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0, vacancyEnergyCalculation::Bool = false, verbose::Bool = false, yabstol::Float64 = 1.0e-2, ytol::Float64 = 1.0e-4, maxiter::Int64 = 15) # last three are extended-only keywords for vacancyEnergyCalculation = true
+function equilibrium_solve!(
+        ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0),
+        control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0,
+        vacancyEnergyCalculation::Bool = false, verbose::Bool = false,
+        maxiter::Int64 = 15, energyDigits::Int64 = 4, verboseEnergy = false
+    ) # last ones are extended-only keywords for vacancyEnergyCalculation = true
 
-    ## by default vacancyEnergyCalculation is false.
-    return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
+    ## by default vacancyEnergyCalculation is false as it is only needed for ionic carriers
+    return _equilibrium_solve!(
+        Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control,
+        nonlinear_steps = nonlinear_steps, verbose = verbose,
+        maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
+    )
 
 end
 
@@ -1838,7 +1853,10 @@ $(TYPEDSIGNATURES)
 Base implementation of equilibrium_solve: vacancyEnergyCalculation = false
 
 """
-function _equilibrium_solve!(::Val{false}, ctsys::System; inival, control, nonlinear_steps, verbose = verbose, yabstol, ytol, maxiter)
+function _equilibrium_solve!(
+        ::Val{false}, ctsys::System; inival, control, nonlinear_steps,
+        verbose = verbose, maxiter, energyDigits, verboseEnergy
+    )
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
     grid = ctsys.fvmsys.grid
@@ -1987,143 +2005,202 @@ end
 $(TYPEDSIGNATURES)
 
 Extended implementation of equilibrium_solve: vacancyEnergyCalculation = true.
-Calculates the energy value for the vacancies via the secant method.
+Calculates the energy value for the vacancies via Broyden's method (the secant method for one ionic carrier).
 We will use this method to calculate suitable values for vacancy energy levels and internally modify the corresponding parameter.
 
 """
-function _equilibrium_solve!(::Val{true}, ctsys::System; inival, control, nonlinear_steps, verbose, yabstol, ytol, maxiter)
-
-    # do once the equilibrium_solve to have a proper initial value.
-    inival = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
-
-    # --- define save function evaluation for the function, we want to find root of ---
-    function safely_eval_F!(F, E, icc, ireg)
-
-        params.bandEdgeEnergy[icc, ireg] = E
-
-        ii = 0
-        y = 1.0
-        Eafix = false
-        while !Eafix && ii <= 5
-            try
-                ii = ii + 1
-                sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
-                Eafix = true
-                E = params.bandEdgeEnergy[icc, ireg] # save E, in case it was adjusted due to catch
-                y = F(sol)
-            catch
-                # --- solve with specific value not working? slightly adjust ---
-                E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-4), digits = 4) * q
-                params.bandEdgeEnergy[icc, ireg] = E_new
-                # println("        save solve")
-                # println("            ", E_new / q)
-
-            end
-        end
-        return E, y
-    end
+function _equilibrium_solve!(
+        ::Val{true}, ctsys::System; inival, control, nonlinear_steps,
+        verbose, maxiter, energyDigits, verboseEnergy
+    )
 
     data = ctsys.fvmsys.physics.data
     params = data.params
 
-    iphin = data.bulkRecombination.iphin # integer index of φ_n
-    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    # if no ionic carriers defined -> return equilibrium solution
+    if isempty(data.ionicCarrierList)
+        return _equilibrium_solve!(
+            Val(false), ctsys; inival = inival, control = control,
+            nonlinear_steps = nonlinear_steps, verbose = verbose,
+            maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
+        )
+    end
+
+    #####################################################################################################
+    ## collect all (carrier, region) pairs, i = 1, ..., npairs ##
+    # each pair has one unknown energy E[i] = bandEdgeEnergy[pair_icc[i], pair_ireg[i]].
+    # Newton needs all unknowns in one vector E with one index i, this is the lookup table.
+    #
+    # Example: two carriers icc = 3 and icc = 4, both only in region 2,
+    #   enable_ionic_carrier!(data, ionicCarrier = 3, regions = [2], averageDensity = [1.0e24])
+    #   enable_ionic_carrier!(data, ionicCarrier = 4, regions = [2], averageDensity = [1.0e24])
+    #
+    #   pair_icc  = [3, 4]
+    #   pair_ireg = [2, 2]
+    #   pair_nbar = [1.0e24, 1.0e24]
+    # i.e. E[1] <-> bandEdgeEnergy[3, 2] and E[2] <-> bandEdgeEnergy[4, 2]
+    pair_icc = Int64[]    # carrier of pair i
+    pair_ireg = Int64[]   # region of pair i
+    pair_nbar = Float64[] # target mean density of pair i
+
+    for iicc in data.ionicCarrierList
+        for (ii, ireg) in enumerate(iicc.regions) # ii = position of ireg in regions of this carrier
+
+            icc = iicc.ionicCarrier
+
+            # target mean density: given by user, otherwise the background charge
+            if isnothing(iicc.averageDensity)
+                nbar = params.doping[icc, ireg]
+            else
+                nbar = iicc.averageDensity[ii]
+            end
+
+            # a zero target density cannot be reached, since F⁻¹(0) = -∞
+            if nbar <= 0.0
+                error("Mean density of ionic carrier $icc in region $ireg is zero. Set averageDensity in enable_ionic_carrier! or a doping for this carrier.")
+            end
+
+            push!(pair_icc, icc)
+            push!(pair_ireg, ireg)
+            push!(pair_nbar, nbar)
+        end
+    end
+    npairs = length(pair_icc)
+
+    iphin = data.bulkRecombination.iphin # integer index of φ_n, for initial guess
+    iphip = data.bulkRecombination.iphip # integer index of φ_p, for initial guess
     T = params.temperature
     (; k_B, q) = data.constants
 
-    for iicc in data.ionicCarrierList
+    dE = 10.0^(-energyDigits) * q                        # grid spacing of the energies
+    roundE(E) = round(E / q, digits = energyDigits) * q  # round energy to grid
+    Finv(u) = log(u / (1 - u))                           # inverse of Fermi-Dirac of order -1
 
-        for ireg in iicc.regions
-
-            icc = iicc.ionicCarrier # species number chosen by user
-
-            # --- define function to be minimized ---
-            mOmega = data.regionVolumes[ireg]
-            Avgncc(sol) = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg) / mOmega
-            Ca = params.doping[icc, ireg]
-
-            # difference between integral and doping, where we want to find the zero
-            F(sol) = (Avgncc(sol) - Ca) / Ca
-
-            # --- for initial values for Ea ---
-            Ec = params.bandEdgeEnergy[iphin, ireg - 1]
-            Ev = params.bandEdgeEnergy[iphip, ireg - 1]
-            Nc = params.densityOfStates[iphin, ireg - 1]
-            Nv = params.densityOfStates[iphip, ireg - 1]
-            C = params.doping[iphin, ireg - 1] - params.doping[iphip, ireg - 1]
-            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
-            psiL = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
-            ####################
-            Ec = params.bandEdgeEnergy[iphin, ireg + 1]
-            Ev = params.bandEdgeEnergy[iphip, ireg + 1]
-            Nc = params.densityOfStates[iphin, ireg + 1]
-            Nv = params.densityOfStates[iphip, ireg + 1]
-            C = params.doping[iphin, ireg + 1] - params.doping[iphip, ireg + 1]
-            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
-            psiR = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
-
+    # target function for all pairs at once, one entry per pair i:
+    # same zero as (n̄_i - nbar_i) / nbar_i, but nearly linear in E_i
+    function Target_F(sol)
+        res = zeros(npairs)
+        for i in 1:npairs
+            icc = pair_icc[i]; ireg = pair_ireg[i]
             Na = params.densityOfStates[icc, ireg]
-            za = params.chargeNumbers[icc]
+            Avgncc = integrated_density(ctsys, sol = sol, icc = icc, ireg = ireg) / data.regionVolumes[ireg]
+            res[i] = Finv(Avgncc / Na) - Finv(pair_nbar[i] / Na)
+        end
+        return res
+    end
 
-            # E0, E1 in eV
-            E0 = k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * 0.5 * (psiL + psiR) # in eV
-            E0 = round(E0 / q, digits = 3) * q
+    # define save function evaluation for the function, we want to find root of.
+    # sets all energies at once, solves once and returns energies, target values and solution.
+    # if the solve fails: halve the step from the last working energies E_last
+    function safely_eval_TargetFunction!(E, E_last)
 
-            # --- Find one correct pair E0, y0 ---
-            E0, y0 = safely_eval_F!(F, E0, icc, ireg)
+        for attempt in 1:6
 
-            # --- Second guess E1 slightly shifted ---
-            E1 = E0 + 0.01 * q
-            E1, y1 = safely_eval_F!(F, E1, icc, ireg)
-
-            if verbose
-                @show E0 / q, y0
-                @show E1 / q, y1
+            for i in 1:npairs
+                params.bandEdgeEnergy[pair_icc[i], pair_ireg[i]] = E[i]
             end
 
-            for k in 1:maxiter
-
-                # stopping criterion when energies coincide
-                if E1 == E0 && abs(y1) < yabstol # these are 1.0 % error
-                    params.bandEdgeEnergy[icc, ireg] = E1
-
-                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
-                    return sol
+            try
+                sol_try = _equilibrium_solve!(
+                    Val(false), ctsys; inival = inival, control = control,
+                    nonlinear_steps = nonlinear_steps, verbose = verbose,
+                    maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
+                )
+                return E, Target_F(sol_try), sol_try
+            catch err
+                if verboseEnergy
+                    println("        solve failed for Ea = $(round.(E ./ q, digits = energyDigits)) eV: ", err)
                 end
-
-                # Secant update
-                E_new = E1 - y1 * (E1 - E0) / (y1 - y0)
-                E_new = round(E_new / q, digits = 3) * q
-
-                E_new, y_new = safely_eval_F!(F, E_new, icc, ireg)
-
-                if verbose
-                    println("Energy calculation: iter $k: E_new=$(E_new / q), y_new=$y_new")
+                if isnothing(E_last)
+                    # no working energies known yet -> shift all by one grid step
+                    E = roundE.(E .- dE)
+                else
+                    # go halfway back to the last working energies
+                    E_half = roundE.(E_last .+ 0.5 .* (E .- E_last))
+                    if E_half == E || E_half == E_last
+                        error("        solve fails at Ea = $(round.(E ./ q, digits = energyDigits)) eV, step cannot be reduced further.")
+                    end
+                    E = E_half
                 end
-
-                # stopping criterion
-                if abs(y_new) < ytol
-                    params.bandEdgeEnergy[icc, ireg] = E_new
-
-                    sol = _equilibrium_solve!(Val(false), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, yabstol = yabstol, ytol = ytol, maxiter = maxiter)
-                    return sol
-                end
-
-                # shift for next secant step
-                E0, y0 = E1, y1
-                E1, y1 = E_new, y_new
             end
+        end
 
-            error("Max iteration exceeded")
+        error("        Equilibrium solve failed 6 times, last Ea = $(round.(E ./ q, digits = energyDigits)) eV")
+    end
 
-        end # each present region for carrier
+    #####################################################################################################
+    ## initial values for all E_i ##
+    E = zeros(npairs)
+    for i in 1:npairs
+        icc = pair_icc[i]; ireg = pair_ireg[i]
 
-    end # ionic carrier list
+        # psi from local charge neutrality of electrons and holes in region ireg
+        Ec = params.bandEdgeEnergy[iphin, ireg]
+        Ev = params.bandEdgeEnergy[iphip, ireg]
+        Nc = params.densityOfStates[iphin, ireg]
+        Nv = params.densityOfStates[iphip, ireg]
+        C = params.doping[iphin, ireg] - params.doping[iphip, ireg]
+        Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
+        psi_reg = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
 
-    return
+        za = params.chargeNumbers[icc]
+        Na = params.densityOfStates[icc, ireg]
+        E[i] = roundE(k_B * T / za * Finv(pair_nbar[i] / Na) + q * psi_reg)
+    end
+
+    h = 1.0e-2 * q # finite difference step for the Jacobian, fixed 10 meV (independent of the grid)
+
+    ## first evaluation ##
+    E, y, sol = safely_eval_TargetFunction!(E, nothing)
+
+    if verboseEnergy
+        println("iter 1: Ea = $(round.(E ./ q, digits = energyDigits)) eV, y = $(round.(y, sigdigits = 5))")
+    end
+
+    ## Jacobian J[i, j] = ∂y_i / ∂E_j by forward differences, only once at the start ##
+    ## we only do it at start as it would cost one extra PDE solve per iteration
+    J = zeros(npairs, npairs)
+    for j in 1:npairs
+        E_pert = copy(E)
+        E_pert[j] = E[j] + h # perturb only energy j
+        E_pert, y_pert, _ = safely_eval_TargetFunction!(E_pert, E)
+        # column j; divide by the actual step, the fallback may have reduced h
+        J[:, j] = (y_pert .- y) ./ (E_pert[j] - E[j])
+    end
+
+    for k in 1:maxiter
+
+        ## Newton update for all energies, rounded to the energy grid ##
+        E_new = roundE.(E .- J \ y) # J \ y solves J x = y with an LU factorization
+
+        # Newton step rounds to zero for all pairs -> best grid values reached
+        if E_new == E
+            # params may hold perturbed energies -> set back to the final ones
+            for i in 1:npairs
+                params.bandEdgeEnergy[pair_icc[i], pair_ireg[i]] = E[i]
+            end
+            return sol
+        end
+
+        ## evaluate the new energies ##
+        E_new, y_new, sol = safely_eval_TargetFunction!(E_new, E)
+
+        ## update J from the last two points instead of new finite differences (Broyden) ##
+        # one carrier: J becomes the secant slope (y_new - y) / (E_new - E)
+        s = E_new .- E
+        J = J .+ ((y_new .- y) .- J * s) * s' ./ (s' * s)
+
+        E = E_new
+        y = y_new
+
+        if verboseEnergy
+            println("iter $(k + 1): Ea = $(round.(E ./ q, digits = energyDigits)) eV, y = $(round.(y, sigdigits = 5))")
+        end
+    end
+
+    error("Energy calculation: max iteration exceeded")
 
 end
-
 ###########################################################
 ###########################################################
 
