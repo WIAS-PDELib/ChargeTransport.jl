@@ -1426,7 +1426,9 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
     ctsys.fvmsys = VoronoiFVM.System(grid, physics; kwargs...)
 
     data = ctsys.fvmsys.physics.data
-
+    params = data.params
+    T = params.temperature
+    (; k_B, q) = data.constants
     ######################################
     # continuous case = integer indexing
     data.chargeCarrierList = collect(1:data.params.numberOfCarriers)
@@ -1451,10 +1453,6 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         end
     end
 
-    q = data.constants.q
-    k_B = data.constants.k_B
-    T = data.params.temperature
-
     # if ionic carriers are present
     for iicc in data.ionicCarrierList
         enable_species!(ctsys, iicc.ionicCarrier, iicc.regions)
@@ -1466,33 +1464,22 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
             iphip = data.bulkRecombination.iphip # integer index of φ_p
 
             ## in case user did not define any energy, give some suitable initial guess
-            if data.params.bandEdgeEnergy[icc, ireg] == 0.0 && ireg > 1
+            if data.params.bandEdgeEnergy[icc, ireg] == 0.0
 
-                ## give some initial value of ionic energy level
-                En1 = data.params.bandEdgeEnergy[iphin, ireg - 1]
-                Ep1 = data.params.bandEdgeEnergy[iphip, ireg - 1]
-                Nn1 = data.params.densityOfStates[iphin, ireg - 1]
-                Np1 = data.params.densityOfStates[iphip, ireg - 1]
-                C1 = data.params.doping[iphin, ireg - 1] - data.params.doping[iphip, ireg - 1]
-                Nintr1 = sqrt(Nn1 * Np1 * exp((En1 - Ep1) / (-k_B * T)))
+                Finv(u) = log(u / (1 - u))               # inverse of Fermi-Dirac of order -1
+                Ca = params.doping[icc, ireg]
+                Na = params.densityOfStates[icc, ireg]
+                za = params.chargeNumbers[icc]
+                Ec = params.bandEdgeEnergy[iphin, ireg]
+                Ev = params.bandEdgeEnergy[iphip, ireg]
+                Nc = params.densityOfStates[iphin, ireg]
+                Nv = params.densityOfStates[iphip, ireg]
+                C = params.doping[iphin, ireg] - params.doping[iphip, ireg]
+                Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
 
-                psi1 = (En1 + Ep1) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn1 / Np1) + (k_B * T / q) * asinh(C1 / (2 * Nintr1))
-                ###
-                En2 = data.params.bandEdgeEnergy[iphin, ireg + 1]
-                Ep2 = data.params.bandEdgeEnergy[iphip, ireg + 1]
-                Nn2 = data.params.densityOfStates[iphin, ireg + 1]
-                Np2 = data.params.densityOfStates[iphip, ireg + 1]
-                C2 = data.params.doping[iphin, ireg + 1] - data.params.doping[iphip, ireg + 1]
-                Nintr2 = sqrt(Nn2 * Np2 * exp((En2 - Ep2) / (-k_B * T)))
-
-                psi2 = (En2 + Ep2) / (2 * q) - 0.5 * (k_B * T / q) * log(Nn2 / Np2) + (k_B * T / q) * asinh(C2 / (2 * Nintr2))
-
-                Na = data.params.densityOfStates[icc, ireg]
-                za = data.params.chargeNumbers[icc]
-                Ca = data.params.doping[icc, ireg]
-
-                Ea = trunc((k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * (psi1 + psi2) / 2) / q, digits = 3) * q
-
+                psi_reg = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+                Ea = k_B * T / za * Finv(Ca / Na) + q * psi_reg
+                Ea = round(Ea / q, digits = 3) * q
                 data.params.bandEdgeEnergy[icc, ireg] = Ea
 
             end
@@ -1506,7 +1493,6 @@ function build_system(grid, data, ::Type{ContQF}; kwargs...)
         enable_species!(ctsys, iicc.trapCarrier, iicc.regions)
     end
 
-    # we need no loop for interface carriers, since in this case there are not present.
 
     # enable lastly the electric potential on whole domain
     enable_species!(ctsys, data.index_psi, 1:data.params.numberOfRegions)
@@ -2006,12 +1992,21 @@ function _equilibrium_solve!(
         verbose, yabstol, ytol, maxiter, verboseEnergy
     )
 
+
     # do once the equilibrium_solve to have a proper initial value.
     inival = _equilibrium_solve!(
         Val(false), ctsys; inival = inival, control = control,
         nonlinear_steps = nonlinear_steps, verbose,
         yabstol = yabstol, ytol = ytol, maxiter = maxiter, verboseEnergy = verboseEnergy
     )
+
+    data = ctsys.fvmsys.physics.data
+    params = data.params
+
+    # if no ionic carriers defined -> return equilibrium solution
+    if isempty(data.ionicCarrierList)
+        return inival
+    end
 
     # define save function evaluation for the function, we want to find root of
     # returns energy, value of target function and solution
@@ -2033,7 +2028,8 @@ function _equilibrium_solve!(
                 Eafix = true
                 E = params.bandEdgeEnergy[icc, ireg] # save E, in case it was adjusted due to catch
                 y = Target_F(sol)
-            catch
+            catch err
+                println("        solve failed for Ea = $(params.bandEdgeEnergy[icc, ireg] / q) eV: ", err)
                 # solve with specific value not working? -> slightly adjust
                 # shift by 1 meV, so E stays on the meV grid
                 E_new = round(((params.bandEdgeEnergy[icc, ireg] / q) - 1.0e-3), digits = 3) * q
@@ -2043,13 +2039,10 @@ function _equilibrium_solve!(
         return E, y, sol
     end
 
-    data = ctsys.fvmsys.physics.data
-    params = data.params
-
-    iphin = data.bulkRecombination.iphin # integer index of φ_n
-    iphip = data.bulkRecombination.iphip # integer index of φ_p
     T = params.temperature
     (; k_B, q) = data.constants
+    grid = ctsys.fvmsys.grid
+    ipsi = data.index_psi
 
     dE = 1.0e-3 * q   # 1 meV grid spacing of the energies
 
@@ -2072,25 +2065,13 @@ function _equilibrium_solve!(
             Finv(u) = log(u / (1 - u))               # inverse of Fermi-Dirac of order -1
             Target_F(sol) = Finv(Avgncc(sol) / Na) - Finv(Ca / Na) # = za / (k_B T) * (Ea - Ea*)
 
-            # --- for initial values for Ea ---
-            Ec = params.bandEdgeEnergy[iphin, ireg - 1]
-            Ev = params.bandEdgeEnergy[iphip, ireg - 1]
-            Nc = params.densityOfStates[iphin, ireg - 1]
-            Nv = params.densityOfStates[iphip, ireg - 1]
-            C = params.doping[iphin, ireg - 1] - params.doping[iphip, ireg - 1]
-            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
-            psiL = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
-            ####################
-            Ec = params.bandEdgeEnergy[iphin, ireg + 1]
-            Ev = params.bandEdgeEnergy[iphip, ireg + 1]
-            Nc = params.densityOfStates[iphin, ireg + 1]
-            Nv = params.densityOfStates[iphip, ireg + 1]
-            C = params.doping[iphin, ireg + 1] - params.doping[iphip, ireg + 1]
-            Nintr = sqrt(Nc * Nv * exp((Ec - Ev) / (-k_B * T)))
-            psiR = (Ec + Ev) / (2 * q) - 0.5 * (k_B * T / q) * log(Nc / Nv) + (k_B * T / q) * asinh(C / (2 * Nintr))
+            ## for initial value for Ea ##
+            subg = subgrid(grid, [ireg])                  # subgrid of region ireg
+            psi_reg = view(inival[ipsi, :], subg)         # psi projected onto the nodes of region ireg
+            psi_avg = sum(psi_reg) / length(psi_reg)      # average psi in region ireg
 
             # E0 in eV
-            E0 = k_B * T / za * log((Ca / Na) / (1 - Ca / Na)) + q * 0.5 * (psiL + psiR) # in eV
+            E0 = k_B * T / za * Finv(Ca / Na) + q * psi_avg
             E0 = round(E0 / q, digits = 3) * q
 
             ## Find one correct pair E0, y0 ##
@@ -2157,7 +2138,7 @@ function _equilibrium_solve!(
 
     end # ionic carrier list
 
-    return
+    return inival
 
 end
 ###########################################################

@@ -417,7 +417,7 @@ function main(;
 end #  main
 
 function test()
-    testval = 313.58311884281136; testvalOther = 0.004948787599489832
+    testval = 313.5357204852947; testvalOther = 0.004948787599489832
     return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
 end
 
