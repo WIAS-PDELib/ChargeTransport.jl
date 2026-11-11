@@ -57,11 +57,44 @@ function plot_densities!(visualizer, ctsys, solution, title, label_density, ; pl
     colors = ["green", "red", "gold", "purple", "orange"]
     linestyles = [:solid, :dot, :dash, :dashdot, :solid]
 
-    for icc in 1:params.numberOfCarriers
+    for icc in data.electricCarrierList # Array{Int64, 1}
+        icc = data.chargeCarrierList[icc] # Array{QType 1}
 
         label_is_plotted = false
 
         for ireg in 1:numberOfRegions
+            subg = subgrid(grid, [ireg])
+            ncc = get_density(solution, ireg, ctsys, icc)
+
+            ## Note that this implies a 1D plot, for multidimensional plots, you may work with
+            ## GridVisualize.jl or write your own code.
+            scalarplot!(
+                visualizer,
+                subg,
+                1.0e-6 .* ncc;
+                clear = false,
+                color = colors[icc],
+                label = label_is_plotted ? nothing : label_density[icc],
+                legend = :cc,
+                linestyle = linestyles[icc],
+                linewidth = 3,
+                title = title,
+                xlabel = L"\text{space [m]}",
+                ylabel = L"density [$\frac{1}{\text{cm}^3}$]",
+                yscale = :log
+            )
+            label_is_plotted = true
+
+        end
+    end
+
+    for iicc in data.ionicCarrierList
+
+        icc = iicc.ionicCarrier # species number chosen by user
+
+        label_is_plotted = false
+
+        for ireg in iicc.regions
             subg = subgrid(grid, [ireg])
             ncc = get_density(solution, ireg, ctsys, icc)
 
