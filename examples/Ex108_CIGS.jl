@@ -99,7 +99,6 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
     bfacemask!(grid, [h_ndoping + h_pdoping_left], [h_ndoping + h_pdoping_left], bregionALeftATrap, tol = 1.0e-18)
     bfacemask!(grid, [h_ndoping + h_pdoping_left + h_pdoping_trap], [h_ndoping + h_pdoping_left + h_pdoping_trap], bregionATrapARight, tol = 1.0e-18)
 
-    # TODO MO: Hier habe ich die Legende weggelassen, sonst werden die Bilder nicht richtig angezeigt bei PythonPlot
     if Plotter !== nothing
         vis = GridVisualizer(; Plotter, layout = (3, 4), size = (1550, 800))
         gridplot!(vis[1, 1], grid; Plotter, legend = :none, title = "Grid", xlabel = L"\text{space [m]}", show = true)

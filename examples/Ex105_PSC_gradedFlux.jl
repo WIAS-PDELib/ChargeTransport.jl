@@ -433,7 +433,6 @@ function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown
 
         plot_energies!(vis[1, 2], ctsys, solution, "Equilibrium", label_energy)
         plot_densities!(vis[2, 1], ctsys, solution, "Equilibrium", label_density)
-        # TODO MO: phip wird nicht angezeigt, auch mit dem ursprünglichen Plotting, stimmt das so?
         plot_solution!(vis[2, 2], ctsys, solution, "Equilibrium", label_solution)
     end
 
