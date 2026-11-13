@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Warning if the mean ionic charge in a region is not compensated.
 - Keyword `energyDigits` in `equilibrium_solve!` to set the rounding of the ionic band-edge energies.
 - Keyword `verboseEnergy` in `equilibrium_solve!` to print the iterations of the ionic energy calculation.
+- Example with two ionic carriers for PSCs
 
 ### Changed
 - Ionic band-edge energies are now computed simultaneously with a Newton method (finite-difference Jacobian).
