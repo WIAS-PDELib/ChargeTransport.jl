@@ -331,7 +331,18 @@ function main(;
         )
 
         ###############
-        plot_IV!(vis[3, 1], biasValues[2:end], IV, "bias Δu = $(endVoltage)")
+        # Plot J-V Curve
+        scalarplot!(
+            vis[3, 1],
+            biasValues[2:end],
+            -IV .* (cm^2) .* 1.0e3;
+            clear = false,
+            linewidth = 5,
+            color = :darkblue,
+            xlabel = L"\text{bias [V]}",
+            ylabel = L"current density [$\frac{\text{mA}}{\text{cm}^2}$]",
+            title = "J-V Curve"
+        )
 
         ###############
         # Plot Recombination
@@ -417,7 +428,7 @@ function main(;
 end #  main
 
 function test()
-    testval = 313.5357204852947; testvalOther = 0.004948787599489832
+    testval = 313.6775446588821; testvalOther = 0.004948787599489832
     return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
 end
 

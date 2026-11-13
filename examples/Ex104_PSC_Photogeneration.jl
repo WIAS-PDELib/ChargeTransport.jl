@@ -389,13 +389,13 @@ function main(;
         scalarplot!(
             vis[4, 1],
             biasValues[2:end],
-            -IV;
+            -IV .* (cm^2) .* 1.0e3;
             linewidth = 2,
             label = "forward",
             legend = :cc,
             color = "blue",
             xlabel = L"\text{applied bias [V]}",
-            ylabel = L"\text{total current [A]}",
+            ylabel = L"current density [$\frac{\text{mA}}{\text{cm}^2}$]",
             title = "Total current",
             clear = false
         )
@@ -403,7 +403,7 @@ function main(;
         scalarplot!(
             vis[4, 1],
             biasValuesReverse[2:end],
-            -IVReverse;
+            -IVReverse .* (cm^2) .* 1.0e3;
             linewidth = 2,
             label = "reverse",
             legend = :cc,
@@ -498,7 +498,7 @@ function main(;
 end #  main
 
 function test()
-    testval = -1.0451771259505067; testvalvacancyEnergyCalculation = -1.046195159158462
+    testval = -1.043650206468409; testvalvacancyEnergyCalculation = -1.046195159158462
     return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation && main(test = true, userdefinedGeneration = true) ≈ testval
 end
 

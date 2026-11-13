@@ -19,7 +19,7 @@ function main(;
         n = 6, Plotter = nothing,                   # supported Plotters are GLMakie and PythonPlot
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
-        vacancyEnergyCalculation = false,           # assume the vacancy energy level is either given or not
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
     )
 
     ################################################################################
@@ -237,7 +237,6 @@ function main(;
 
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
-    # TODO MO: Ergibt das Sinn? Habe ich für die Title gemacht.
     maxBias = biasValues[end]
 
     if Plotter !== nothing
@@ -250,7 +249,6 @@ function main(;
         plot_solution!(vis[2, 1], ctsys, solution, "Applied voltage Δu = $maxBias", label_solution)
 
         ###########
-        #TODO MO: Im Referenceplot mit PyPlot sind mehr Schritte, wieso?
         scalarplot!(
             vis[2, 2],
             tvalues,
@@ -300,7 +298,7 @@ function main(;
 end # main
 
 function test()
-    testval = -0.5964159235212628; testvalvacancyEnergyCalculation = -0.5966729068541846
+    testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
     return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
 end
 

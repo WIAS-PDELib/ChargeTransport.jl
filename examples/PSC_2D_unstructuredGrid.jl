@@ -330,7 +330,7 @@ module PSC_2D_unstructuredGrid
     end #  main
 
     function test()
-        testval = -0.5674827651363531
+        testval = -0.567652680070852
         return main(test = true) ≈ testval
     end
 

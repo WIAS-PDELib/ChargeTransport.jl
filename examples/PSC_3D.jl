@@ -199,7 +199,7 @@ function main(;
     sol1D = equilibrium_solve!(ctsys1D, control = control, vacancyEnergyCalculation = true)
 
     # We already did the calculations to find the correct energy for the vacancies. Due to that, we just copied the value here.
-    ctsys3D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = -4.461 * data3D.constants.q
+    ctsys3D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = -4.455 * data3D.constants.q
     # In case you want that the solver also calculates this value, simply set vacancyEnergyCalculation = true.
     sol3D = equilibrium_solve!(ctsys3D, control = control, vacancyEnergyCalculation = false)
 
@@ -258,7 +258,7 @@ end # main
 
 
 function test()
-    testval = -2.2243780913168383
+    testval = -2.2226420905731863
     return main(test = true) ≈ testval
 end
 
