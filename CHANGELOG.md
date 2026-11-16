@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.10.0
+
+### Added
+- `generationData` can now also be a function `(node, data) -> G` used with `GenerationUserDefined`, e.g. for a space-, region- or time-dependent generation rate (`node.time`); previously only arrays of nodal values were supported
+- new example `Ex111_PSC_Degradation.jl`: perovskite solar cell with a degradation/recovery model between holes and anion vacancies, implemented via `data.customReaction!`
+
 ## v1.9.0
 
 ### Added
