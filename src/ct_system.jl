@@ -991,9 +991,11 @@ mutable struct Data{
     bulkRecombination::BulkRecombination
 
     """
-    A function/array containing the user-specific photogeneration rate.
-    It can be a function which is specified in the user example
-    or an array which is read in and calculated with,
+    A function/array containing the user-specific photogeneration rate,
+    used for `generationModel = GenerationUserDefined`.
+    It can be a function `(node, data) -> G` which is specified in the user example
+    and may depend on space, region and time (`node.time`),
+    or an array of nodal values which is read in and calculated with,
     e.g., an external software.
     """
     generationData::TGenerationData

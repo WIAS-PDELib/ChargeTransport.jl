@@ -1038,13 +1038,19 @@ end
 
 
 # The generation rate ``G``, which occurs in the right-hand side of the
-# continuity equations with a user defined generation rate.
-# only works in 1D till now; adjust node, when multidimensions
+# continuity equations with a user defined generation rate. `data.generationData` is either
+# an array of nodal values or a function `(node, data) -> G`, which can depend on space
+# (`node.coord[node.index]`), region (`node.region`) and time (`node.time`).
+# For a time-dependent generation in a transient solve, set `data.generationModel = GenerationNone`
+# before `equilibrium_solve!` and switch to `GenerationUserDefined` afterwards.
 function generation(data, node, ::Type{GenerationUserDefined})
 
-    return data.λ2 .* data.generationData[node.index]
+    return data.λ2 .* user_generation(data.generationData, node, data)
 
 end
+
+user_generation(G::AbstractArray, node, data) = G[node.index]
+user_generation(G::Function, node, data) = G(node, data)
 
 generation(data, node, ::Type{GenerationNone}) = 0.0
 

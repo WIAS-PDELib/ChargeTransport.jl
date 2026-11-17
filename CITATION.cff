@@ -27,6 +27,10 @@ authors:
     family-names: Jaap
     email: patrick.jaap@wias-berlin.de
     affiliation: Weierstrass Institute Berlin
+  - given-names: Bingjie
+    family-names: Li
+    email: bingjie.li@wias-berlin.de
+    affiliation: Weierstrass Institute Berlin
     orcid: 'https://orcid.org/0000-0001-8567-9988'
   - given-names: Michael
     family-names: O'{D}onovan
@@ -36,7 +40,7 @@ authors:
   - given-names: Marieke
     family-names: Osewold
   - given-names: Jan Philipp
-    family-names: Thiele 
+    family-names: Thiele
 doi: "10.5281/zenodo.6257906"
 license: AGPL-3.0
 repository-code: "https://github.com/WIAS-PDELib/ChargeTransport.jl"
