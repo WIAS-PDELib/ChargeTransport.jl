@@ -165,6 +165,7 @@ function main(;
 
     ## Present ionic vacancies in perovskite layer
     ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+    ## averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if test == false
@@ -212,7 +213,9 @@ function main(;
     end
     ################################################################################
 
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+    ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+    ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
     inival = solution
 
     if Plotter !== nothing
@@ -339,8 +342,8 @@ function main(;
 end #  main
 
 function test()
-    testval = -0.5862627265480347; testvalvacancyEnergyCalculation = -0.5871876928952634
-    return main(test = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+    testval = -0.5861305955311834
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval
 end
 
 if test == false

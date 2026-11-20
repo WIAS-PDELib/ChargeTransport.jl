@@ -583,7 +583,9 @@ module Ex201_PSC_Textured
         #   1) Poisson problem is solved,
         #   2) Full system is solved in equilibrium with photogeneration turned on,
         #   Since vacancyEnergyCalculation = true, we repeat 1) and 2) until Ea is found (which corresponds to given initial vacancy density p.Ca)
-        solEQ = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+        ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+        ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+        solEQ = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
         inival = solEQ
 
         if test == false
@@ -803,7 +805,7 @@ module Ex201_PSC_Textured
             IEdgeOld = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, inival)
 
             push!(IVn, IEdge[p.iphin]); push!(IVp, IEdge[p.iphip])
-            push!(IVψ, (IEdge[p.ipsi] - IEdgeOld[p.ipsi]) / Δt)
+            push!(IVψ, (IEdge[data.index_psi] - IEdgeOld[data.index_psi]) / Δt)
 
             push!(IVa, IEdge[p.iphia])
             push!(IV, IVψ[istep - 1] + IVn[istep - 1] + IVp[istep - 1] + IVa[istep - 1])
@@ -924,7 +926,7 @@ module Ex201_PSC_Textured
 
     function test()
         testval = -0.5987199947920246
-        return main(test = true) ≈ testval
+        return main(test = true, vacancyEnergyCalculation = true) ≈ testval
     end
 
 end # module

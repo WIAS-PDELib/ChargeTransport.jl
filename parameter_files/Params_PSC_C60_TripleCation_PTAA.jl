@@ -29,9 +29,13 @@
     iphin = 1 # electron quasi Fermi potential
     iphip = 2 # hole quasi Fermi potential
     iphia = 3 # anion vacancy quasi Fermi potential
-    ipsi = 4
 
-    numberOfCarriers = 3 # electrons, holes and anion vacancies
+    ## cation vacancies are optional (used in Ex112), switch on with cationVacancies = true
+    cationVacancies = false
+    iphic = 4 # cation vacancy quasi Fermi potential (only used if cationVacancies = true)
+
+    numberOfCarriers = cationVacancies ? 4 : 3 # electrons, holes, anion (and cation) vacancies
+    ## the electric potential always has the index numberOfCarriers + 1
 
     ########## device geometry ##########
 
@@ -65,6 +69,7 @@
     zn = -1
     zp = 1
     za = 1
+    zc = -1
 
     ## temperature
     T = 300.0 * K
@@ -80,12 +85,14 @@
     Nn = [1.0e26, 2.2e24, 1.0e26] ./ (m^3)
     Np = [1.0e26, 2.2e24, 1.0e26] ./ (m^3)
     Na = [0.0, 1.0e27, 0.0] ./ (m^3)
+    Nc = [0.0, 1.0e27, 0.0] ./ (m^3)
 
     Da = 5.0e-14
     ## mobilities
     μn = [1.0e-6, 1.0e-4, 1.0e-8] .* (m^2) / (V * s)
     μp = [1.0e-6, 1.0e-4, 1.0e-8] .* (m^2) / (V * s)
     μa = [0.0, Da / (k_B * T / q), 0.0] .* (m^2) / (V * s) # 1.9e-12
+    μc = [0.0, Da / (k_B * T / q), 0.0] .* (m^2) / (V * s) # 1.9e-12
 
     ## relative dielectric permittivity
     ε = [5.0, 22.0, 3.5] .* 1.0
@@ -156,6 +163,12 @@ function Params(p::Params_PSC_C60_TripleCation_PTAA)
     params.mobility[p.iphip, :] = p.μp
     params.mobility[p.iphia, :] = p.μa
 
+    ## optional cation vacancies (see cationVacancies above)
+    if p.cationVacancies
+        params.chargeNumbers[p.iphic] = p.zc
+        params.densityOfStates[p.iphic, :] = p.Nc
+        params.mobility[p.iphic, :] = p.μc
+    end
 
     for ireg in 1:p.numberOfRegions ## interior region data
         ## recombination parameters
@@ -180,7 +193,7 @@ function Params(p::Params_PSC_C60_TripleCation_PTAA)
     params.bBandEdgeEnergy[p.iphin, p.bregionJ2] = p.En[p.regionPero]
     params.bBandEdgeEnergy[p.iphip, p.bregionJ2] = p.Ep[p.regionHTL]
 
-    ############# DA:: AB HIER WEITER SCHAUEN!!!!
+    #############
     ## for surface recombination
 
     params.bRecombinationSRHTrapDensity[p.iphin, p.bregionJ1] = params.recombinationSRHTrapDensity[p.iphin, p.regionETL]
@@ -200,7 +213,11 @@ function Params(p::Params_PSC_C60_TripleCation_PTAA)
     ## interior doping
     params.doping[p.iphin, p.regionETL] = p.Cn
     params.doping[p.iphip, p.regionHTL] = p.Cp
-    params.doping[p.iphia, p.regionPero] = p.Ca
+    ## with cation vacancies, both ionic carriers compensate each other and their
+    ## mean densities are prescribed via averageDensity (input of enable_ionic_carrier!), i.e. no ionic doping
+    if !p.cationVacancies
+        params.doping[p.iphia, p.regionPero] = p.Ca
+    end
 
     # parameter which passes the shift information in the Beer-Lambert generation
     params.generationPeak = p.generationPeak

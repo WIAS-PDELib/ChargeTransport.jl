@@ -272,6 +272,7 @@ function main(;
     data.boundaryType[p.bregionJ2] = InterfaceRecombination
 
     ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+    ## averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionPero])
 
     ## dark during the equilibrium solve; the light is switched on afterwards
@@ -325,7 +326,9 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = true)
+    ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+    ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = true, energyDigits = 3)
     inival = solution
     solutionEQ = inival
 
