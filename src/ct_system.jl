@@ -2183,7 +2183,7 @@ function integrated_density(ctsys; sol, icc, ireg)
     saveType = deepcopy(ctsys.data.modelType)
     ctsys.data.modelType = Transient
 
-    integral = ctsys.data.params.chargeNumbers[icc] * ChargeTransport.integrate(ctsys, storage!, sol)[icc, ireg] / ctsys.data.constants.q
+    integral = ChargeTransport.integrate(ctsys, storage!, sol)[icc, ireg] / (ctsys.data.params.chargeNumbers[icc] * ctsys.data.constants.q)
 
     ctsys.data.modelType = saveType
 
