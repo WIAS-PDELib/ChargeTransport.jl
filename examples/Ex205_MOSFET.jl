@@ -87,6 +87,7 @@ function main(;
         Plotter = nothing,
         test = false,
         grid_refinement = 0,
+        poissonOnly = false,
         parameter_set = Params_MOSFET_Si
     )
 
@@ -203,7 +204,7 @@ function main(;
     end
     ################################################################################
 
-    solution_eq = equilibrium_solve!(ctsys, control = control)
+    solution_eq = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
 
     if test == false
         println("*** done\n")
@@ -284,7 +285,8 @@ end # main
 # function for testing
 function test()
     testval = 0.49923991140092033
-    return main(test = true) ≈ testval
+    return main(test = true) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 

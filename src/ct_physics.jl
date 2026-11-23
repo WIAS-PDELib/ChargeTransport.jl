@@ -278,6 +278,29 @@ zeroVoltage(t) = 0.0
 
 ##########################################################
 ##########################################################
+#---------------------------------------------------------------------------------------
+# Used for poissonOnly = true, ipsi = 1 in that case
+#---------------------------------------------------------------------------------------
+poisson_breaction!(f, u, bnode, data) = poisson_breaction!(f, u, bnode, data, data.boundaryType[bnode.region])
+
+# ψ0 from electro-neutrality, stored in params.bψEQ before the solve (same entry that OhmicContactDirichlet reads)
+function poisson_breaction!(f, u, bnode, data, ::Type{OhmicContact})
+    boundary_dirichlet!(f, u, bnode, species = 1, region = bnode.region, value = data.params.bψEQ[bnode.region])
+    return
+end
+
+function poisson_breaction!(f, u, bnode, data, ::Type{GateContact})
+    params = data.params
+    f[1] = (params.dielectricConstantOxideGate[bnode.region] / params.thicknessOxideGate[bnode.region]) *
+        (u[1] - params.contactVoltage[bnode.region]) - params.surfaceChargeDensityGate[bnode.region]
+    return
+end
+
+# no condition on ψ: natural homogeneous Neumann
+poisson_breaction!(f, u, bnode, data, ::Type{InterfaceNone}) = nothing
+#---------------------------------------------------------------------------------------
+
+
 """
 $(TYPEDSIGNATURES)
 Master breaction! function. This is the function which enters VoronoiFVM and hands over
@@ -891,6 +914,29 @@ function addGeneration!(f, u, node, data)
     return
 end
 
+# Used for poissonOnly = true, ipsi = 1 in that case
+function poisson_reaction!(f, u, node, data)
+    (; k_B, q) = data.constants
+    params = data.params
+
+    for icc in data.electricCarrierList
+        icc = data.chargeCarrierList[icc]
+        get_DOS!(icc, node, data) # density of states
+        get_BEE!(icc, node, data) # band edge energies
+
+        # φ = 0 in equilibrium, u[1] = ψ (index_psi would be 3 in the full system)
+        eta = params.chargeNumbers[icc] / (k_B * params.temperature) * (data.tempBEE1[icc] - q * u[1])
+        ncc = data.tempDOS1[icc] * data.F[icc](eta)
+
+        f[1] = f[1] - params.chargeNumbers[icc] * params.doping[icc, node.region]
+        f[1] = f[1] + params.chargeNumbers[icc] * ncc
+    end
+
+    f[1] = f[1] - data.paramsnodal.doping[node.index]
+    f[1] = -q * f[1]            # λ1 = 1 here, no embedding needed
+    return
+end
+
 """
 $(TYPEDSIGNATURES)
 Function which builds right-hand side of Poisson equation, i.e. which builds
@@ -1158,12 +1204,11 @@ flux!(f, u, edge, data) = flux!(f, u, edge, data, data.calculationType)
 
 
 # Finite difference discretization of the displacement flux.
-function displacementFlux!(f, u, edge, data)
+function displacementFlux!(f, u, edge, data, ipsi = data.index_psi)
 
     params = data.params
     paramsnodal = data.paramsnodal
 
-    ipsi = data.index_psi
     nodel = edge.node[2]   # left node
     nodek = edge.node[1]   # right node
     ireg = edge.region
@@ -1182,6 +1227,8 @@ function displacementFlux!(f, u, edge, data)
 
 end
 
+# Used for poissonOnly = true, ipsi = 1 in that case
+poisson_flux!(f, u, edge, data) = displacementFlux!(f, u, edge, data, 1)
 
 function flux!(f, u, edge, data, ::Type{InEquilibrium})
     ## discretization of the displacement flux (LHS of Poisson equation)

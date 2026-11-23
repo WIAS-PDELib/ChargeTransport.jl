@@ -29,7 +29,7 @@ end
 
 # supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
+function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse, poissonOnly = false)
 
     # unit factors and constants
     @local_unitfactors μm cm s ns V K
@@ -275,7 +275,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
     inival = solution
 
     if test == false
@@ -340,7 +340,9 @@ end #  main
 
 function test()
     testval = 1.5068426833371802
-    return main(test = true, unknown_storage = :dense) ≈ testval && main(test = true, unknown_storage = :sparse) ≈ testval
+    return main(test = true, unknown_storage = :dense) ≈ testval &&
+        main(test = true, unknown_storage = :sparse) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 if test == false

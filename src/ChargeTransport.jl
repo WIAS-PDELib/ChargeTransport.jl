@@ -92,6 +92,7 @@ export zeroVoltage
 export BeerLambert
 export storage!
 export reaction!, SRHRecombination!, RadiativeRecombination!, SRRecombination!, Photogeneration!
+export poisson_flux!, poisson_reaction!, poisson_breaction!
 ##################################################################
 
 include("ct_system.jl")
@@ -113,6 +114,7 @@ export gridplot
 export set_contact!
 export compute_open_circuit_voltage
 export electroNeutralSolution
+export electroNeutralSolutionBisection, rhs_poisson_region
 export show_params, show_paramsoptical, trap_density
 export get_current_val, charge_density, integrated_density
 

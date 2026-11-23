@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.12.0
+
+### Added
+- `equilibrium_solve!(ctsys; poissonOnly = true)`: alternative equilibrium computation via a reduced Poisson-only system (φ_n = φ_p = 0), using the electroneutral potential as initial guess and as Dirichlet value at Ohmic contacts. Currently supports electrons and holes with `OhmicContact`, `GateContact` and `InterfaceNone` boundaries; other cases raise an error.
+- optional keyword `psi0Values` for `equilibrium_solve!` to pass the electroneutral potential per cell region (used with `poissonOnly = true`)
+- `electroNeutralSolutionBisection` and `rhs_poisson_region`: electroneutral potential per region computed by bisection, valid for arbitrary statistics functions `data.F`
+- tests for `poissonOnly = true` in `Ex101_PIN.jl` and `Ex205_MOSFET.jl`
+
 ## v1.11.0
 
 ### Added
@@ -25,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Case without ionic carriers and energy calculation for several ionic carriers.
 - Density plots: vacancy densities are now only plotted in the regions where they are defined.
+
 
 ## v1.10.1
 
