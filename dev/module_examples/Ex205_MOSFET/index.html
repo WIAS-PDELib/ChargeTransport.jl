@@ -142,7 +142,9 @@ function main(;
 
     inival = copy(solution_eq)
     solution = copy(solution_eq)</code></pre><p>gate bias: start at 0 V and increase up to 5 V</p><pre><code class="language-julia hljs">    biasValue_gate_range = (0.0, 5.0)</code></pre><p>callback executed before each embedding step (gate bias)</p><pre><code class="language-julia hljs">    control.pre = (solution, biasValue_gate) -&gt; begin
-        println(&quot;bias value at gate: Δu = &quot;, biasValue_gate, &quot;V&quot;)
+        if test == false
+            println(&quot;bias value at gate: Δu = &quot;, biasValue_gate, &quot;V&quot;)
+        end
         set_contact!(ctsys, p.bregion_gate, Δu = biasValue_gate)
         nothing
     end</code></pre><p>solve with parameter embedding (gate bias)</p><pre><code class="language-julia hljs">    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_gate_range)
@@ -152,7 +154,9 @@ function main(;
     biasValues_drain = Float64[]
     factory = VoronoiFVM.TestFunctionFactory(ctsys.fvmsys)
     tf = VoronoiFVM.testfunction(factory, [p.bregion_drain], [p.bregion_source])</code></pre><p>callback executed before each embedding step (drain bias)</p><pre><code class="language-julia hljs">    control.pre = (solution, biasValue_drain) -&gt; begin
-        println(&quot;bias value at drain: Δu = &quot;, biasValue_drain, &quot;V&quot;)
+        if test == false
+            println(&quot;bias value at drain: Δu = &quot;, biasValue_drain, &quot;V&quot;)
+        end
         set_contact!(ctsys, p.bregion_drain, Δu = biasValue_drain)
         nothing
     end</code></pre><p>callback executed after each embedding step (drain bias)</p><pre><code class="language-julia hljs">    control.post = (solution, oldsolution, biasValue_drain, Δp) -&gt; begin</code></pre><p>get IV data (drain bias)</p><pre><code class="language-julia hljs">        IEdge = VoronoiFVM.integrate_∇TxFlux(ctsys.fvmsys, tf, solution)
@@ -312,4 +316,4 @@ end</code></pre><p>function for plotting</p><pre><code class="language-julia hlj
     return display(current_figure)
 end # plotting
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex204_Laser_simple/">« Simple laser structure with 5 layers.</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Tuesday 24 November 2026 07:45">Tuesday 24 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex204_Laser_simple/">« Simple laser structure with 5 layers.</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Tuesday 24 November 2026 09:37">Tuesday 24 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

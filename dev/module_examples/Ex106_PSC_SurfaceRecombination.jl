@@ -19,7 +19,7 @@ function main(;
         n = 6, Plotter = nothing,                   # supported Plotters are GLMakie and PythonPlot
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
-        vacancyEnergyCalculation = false,           # assume the vacancy energy level is either given or not
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
     )
 
     ################################################################################
@@ -149,6 +149,7 @@ function main(;
 
     ## Present ionic vacancies in perovskite layer
     ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+    ## averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if test == false
@@ -194,7 +195,9 @@ function main(;
     end
     ################################################################################
 
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+    ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+    ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
     inival = solution
 
     if test == false
@@ -237,7 +240,6 @@ function main(;
 
     biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
 
-    # TODO MO: Ergibt das Sinn? Habe ich für die Title gemacht.
     maxBias = biasValues[end]
 
     if Plotter !== nothing
@@ -250,7 +252,6 @@ function main(;
         plot_solution!(vis[2, 1], ctsys, solution, "Applied voltage Δu = $maxBias", label_solution)
 
         ###########
-        #TODO MO: Im Referenceplot mit PyPlot sind mehr Schritte, wieso?
         scalarplot!(
             vis[2, 2],
             tvalues,

@@ -10,7 +10,7 @@ function main(;
         n = 6, Plotter = nothing,                   # supported Plotters are GLMakie and PythonPlot
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
-        vacancyEnergyCalculation = false,           # assume the vacancy energy level is either given or not
+        vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
     )
 
     ################################################################################
@@ -137,6 +137,7 @@ function main(;
 
     # Present ionic vacancies in perovskite layer
     # by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+    # averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if test == false
@@ -182,7 +183,9 @@ function main(;
     end
     ################################################################################
 
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+    # energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+    # We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
     inival = solution
 
     if test == false
@@ -223,7 +226,9 @@ function main(;
 
     solution = sol.u[end]
 
-    biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)</code></pre><p>TODO MO: Ergibt das Sinn? Habe ich für die Title gemacht.</p><pre><code class="language-julia hljs">    maxBias = biasValues[end]
+    biasValues = contactVoltageFunction[p.bregionAcceptor].(tvalues)
+
+    maxBias = biasValues[end]
 
     if Plotter !== nothing
         label_solution, label_density, label_energy, label_BEE = set_plotting_labels(data)
@@ -235,7 +240,6 @@ function main(;
         plot_solution!(vis[2, 1], ctsys, solution, &quot;Applied voltage Δu = $maxBias&quot;, label_solution)
 
         ###########
-        #TODO MO: Im Referenceplot mit PyPlot sind mehr Schritte, wieso?
         scalarplot!(
             vis[2, 2],
             tvalues,
@@ -290,4 +294,4 @@ function test()
 end
 
 
-end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex105_PSC_gradedFlux/">« Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a class="docs-footer-nextpage" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Tuesday 24 November 2026 07:45">Tuesday 24 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end # module</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Ex105_PSC_gradedFlux/">« Three-layer PSC device with graded interfaces &amp; Ohmic contacts (1D).</a><a class="docs-footer-nextpage" href="../Ex107_MoS2_withIons_BarrierLowering/">MoS2 with moving defects and Schottky Barrier Lowering. »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Tuesday 24 November 2026 09:37">Tuesday 24 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
