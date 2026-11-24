@@ -200,6 +200,7 @@ function main(;
     data.boundaryType[p.bregionDonor] = OhmicContact
 
     ## by default the statistics function is set to FermiDiracMinusOne to limit ion depletion
+    ## averageDensity is not given, so the mean ionic density is taken from the doping of this carrier (params.doping)
     enable_ionic_carrier!(data, ionicCarrier = p.iphia, regions = [p.regionIntrinsic])
 
     if userdefinedGeneration
@@ -253,7 +254,9 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation)
+    ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
+    ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
     inival = solution
     solutionEQ = inival
 
@@ -389,13 +392,13 @@ function main(;
         scalarplot!(
             vis[4, 1],
             biasValues[2:end],
-            -IV;
+            -IV .* (cm^2) .* 1.0e3;
             linewidth = 2,
             label = "forward",
             legend = :cc,
             color = "blue",
             xlabel = L"\text{applied bias [V]}",
-            ylabel = L"\text{total current [A]}",
+            ylabel = L"current density [$\frac{\text{mA}}{\text{cm}^2}$]",
             title = "Total current",
             clear = false
         )
@@ -403,7 +406,7 @@ function main(;
         scalarplot!(
             vis[4, 1],
             biasValuesReverse[2:end],
-            -IVReverse;
+            -IVReverse .* (cm^2) .* 1.0e3;
             linewidth = 2,
             label = "reverse",
             legend = :cc,
@@ -498,7 +501,7 @@ function main(;
 end #  main
 
 function test()
-    testval = -1.0451771259505067; testvalvacancyEnergyCalculation = -1.046195159158462
+    testval = -1.043650206468409; testvalvacancyEnergyCalculation = -1.046195159158462
     return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation && main(test = true, userdefinedGeneration = true) ≈ testval
 end
 

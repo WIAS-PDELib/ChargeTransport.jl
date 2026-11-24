@@ -7,10 +7,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
+## v1.11.0
+
+### Added
+- Optional keyword `averageDensity` in `enable_ionic_carrier!` to prescribe the mean ionic
+  density per region (e.g. for compensating carriers without background charge).
+- Keyword `energyDigits` in `equilibrium_solve!` to set the rounding of the ionic band-edge energies (default 4, i.e. 0.1 meV).
+- Keyword `verboseEnergy` in `equilibrium_solve!` to print the iterations of the ionic energy calculation.
+- Example with two ionic carriers for PSCs
+
+### Changed
+- Ionic band-edge energies are now computed simultaneously with Broyden's method (secant method for one ionic carrier).
+
+### Deprecated
+- Keywords `ytol` and `yabstol` of `equilibrium_solve!` are no longer used.
+
+### Fixed
+- Case without ionic carriers and energy calculation for several ionic carriers.
+- Density plots: vacancy densities are now only plotted in the regions where they are defined.
+
 ## v1.10.1
 
 ### Fixed
 - integrated_density so it will work for general charge numbers
+
 
 ## v1.10.0
 
