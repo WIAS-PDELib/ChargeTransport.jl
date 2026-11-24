@@ -185,9 +185,9 @@ function main(;
     control.abstol = 1.0e-8
     control.reltol = 1.0e-8
 
-    control.Δp = 0.2
+    control.Δp = 0.1
     control.Δp_min = 1.0e-3
-    control.Δp_max = 1.0
+    control.Δp_max = 0.25
     control.Δp_grow = 1.2
     control.Δp_decrease = 0.5
     control.Δu_opt = 1.5
