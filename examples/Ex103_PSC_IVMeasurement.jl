@@ -24,6 +24,7 @@ function main(;
         parameter_set = Params_PSC_TiO2_MAPI_spiro, # choose the parameter set
         otherScanProtocol = false,                  # you can choose between two scan protocols
         vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
+        poissonOnly = false
     )
 
     @local_unitfactors μm cm s ns V K ps Hz
@@ -236,7 +237,7 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3, poissonOnly = poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -432,7 +433,9 @@ end #  main
 
 function test()
     testval = 313.6775446588821; testvalOther = 0.004948787599489832
-    return main(test = true, otherScanProtocol = false) ≈ testval && abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7
+    return main(test = true, otherScanProtocol = false) ≈ testval &&
+        abs(main(test = true, otherScanProtocol = true, vacancyEnergyCalculation = false) - testvalOther) / testvalOther < 1.0e-7 &&
+        main(test = true, otherScanProtocol = false, poissonOnly = true) ≈ testval
 end
 
 if test == false

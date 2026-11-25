@@ -29,6 +29,7 @@ function main(;
         ########################
         userdefinedGeneration = false,              # you can choose between predefined and user-defined generation profiles
         vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
+        poissonOnly = false
     )
 
     @local_unitfactors μm cm s ns V K ps Hz W m
@@ -256,7 +257,7 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3, poissonOnly = poissonOnly)
     inival = solution
     solutionEQ = inival
 
@@ -502,7 +503,12 @@ end #  main
 
 function test()
     testval = -1.043650206468409; testvalvacancyEnergyCalculation = -1.046195159158462
-    return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation && main(test = true, userdefinedGeneration = true) ≈ testval
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval &&
+        main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation &&
+        main(test = true, userdefinedGeneration = true) ≈ testval &&
+        main(test = true, vacancyEnergyCalculation = true, poissonOnly = true) ≈ testval &&
+        main(test = true, vacancyEnergyCalculation = false, poissonOnly = true) ≈ testvalvacancyEnergyCalculation &&
+        main(test = true, userdefinedGeneration = true, poissonOnly = true) ≈ testval
 end
 
 end # module

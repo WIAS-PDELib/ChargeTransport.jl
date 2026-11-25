@@ -31,6 +31,7 @@ function main(;
         ########################
         cationVacancies = true, # switch on cation vacancies
         vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
+        poissonOnly = false
     )
 
     @local_unitfactors μm cm s ns V K ps Hz W m
@@ -224,7 +225,7 @@ function main(;
 
     ## calculate equilibrium solution and as initial guess
     ## We recommend calculating the energies for ions in case of two carriers for 5 digits or more for better accuracy.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 5, verboseEnergy = false)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 5, verboseEnergy = false, poissonOnly = poissonOnly)
     inival = solution
     solutionEQ = inival
     if Plotter !== nothing
@@ -490,7 +491,8 @@ end #  main
 
 function test()
     testval = -1.0528608503725772
-    return main(test = true, vacancyEnergyCalculation = true) ≈ testval
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval &&
+        main(test = true, vacancyEnergyCalculation = true, poissonOnly = true) ≈ testval
 end
 
 end # module

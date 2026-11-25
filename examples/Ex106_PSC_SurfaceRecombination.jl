@@ -20,6 +20,7 @@ function main(;
         verbose = false, test = false,
         parameter_set = Params_PSC_PCBM_MAPI_Pedot, # choose the parameter set
         vacancyEnergyCalculation = true,            # assume the vacancy energy level is either given or not
+        poissonOnly = false
     )
 
     ################################################################################
@@ -197,7 +198,7 @@ function main(;
 
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
+    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3, poissonOnly = poissonOnly)
     inival = solution
 
     if test == false
@@ -302,7 +303,10 @@ end # main
 
 function test()
     testval = -0.5965444263524541; testvalvacancyEnergyCalculation = -0.5966729068541846
-    return main(test = true, vacancyEnergyCalculation = true) ≈ testval && main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation
+    return main(test = true, vacancyEnergyCalculation = true) ≈ testval &&
+        main(test = true, vacancyEnergyCalculation = false) ≈ testvalvacancyEnergyCalculation &&
+        main(test = true, vacancyEnergyCalculation = true, poissonOnly = true) ≈ testval &&
+        main(test = true, vacancyEnergyCalculation = false, poissonOnly = true) ≈ testvalvacancyEnergyCalculation
 end
 
 

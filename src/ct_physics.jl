@@ -279,16 +279,37 @@ zeroVoltage(t) = 0.0
 ##########################################################
 ##########################################################
 #---------------------------------------------------------------------------------------
-# Used for poissonOnly = true, ipsi = 1 in that case
-#---------------------------------------------------------------------------------------
+# Boundary conditions for the Poisson-only equilibrium system (poissonOnly = true).
+# The system has only one species, u[1] = ψ, and assumes φ = 0 for all carriers.
+# Each method imposes the same condition on ψ as the corresponding breaction! in
+# equilibrium; conditions on the quasi Fermi potentials are dropped, since they are
+# satisfied automatically for φ = 0.
+#---------------------------------------------------------------------------------------#---------------------------------------------------------------------------------------
 poisson_breaction!(f, u, bnode, data) = poisson_breaction!(f, u, bnode, data, data.boundaryType[bnode.region])
 
-# ψ0 from electro-neutrality, stored in params.bψEQ before the solve (same entry that OhmicContactDirichlet reads)
+# Dirichlet: ψ = ψ0 from electroneutrality (params.bψEQ)
 function poisson_breaction!(f, u, bnode, data, ::Type{OhmicContact})
     boundary_dirichlet!(f, u, bnode, species = 1, region = bnode.region, value = data.params.bψEQ[bnode.region])
     return
 end
 
+# Dirichlet: ψ = (E_c - φ_S)/q (U = 0 in equilibrium)
+function poisson_breaction!(f, u, bnode, data, ::Type{SchottkyContact})
+    params = data.params
+    iphin = data.bulkRecombination.iphin
+    Ec = params.bBandEdgeEnergy[iphin, bnode.region]
+
+    boundary_dirichlet!(f, u, bnode, species = 1, region = bnode.region, value = (- (params.SchottkyBarrier[bnode.region] - Ec) / data.constants.q))
+    return
+end
+
+# same ψ condition as SchottkyContact, differs only in φ (= 0 in equilibrium)
+poisson_breaction!(f, u, bnode, data, ::Type{MixedOhmicSchottkyContact}) = poisson_breaction!(f, u, bnode, data, SchottkyContact)
+
+# only acts on φ, off in equilibrium
+poisson_breaction!(f, u, bnode, data, ::Type{InterfaceRecombination}) = nothing
+
+# Robin: oxide capacitance and surface charge
 function poisson_breaction!(f, u, bnode, data, ::Type{GateContact})
     params = data.params
     f[1] = (params.dielectricConstantOxideGate[bnode.region] / params.thicknessOxideGate[bnode.region]) *
@@ -915,25 +936,61 @@ function addGeneration!(f, u, node, data)
 end
 
 # Used for poissonOnly = true, ipsi = 1 in that case
+# φ = 0 in equilibrium, u[1] = ψ (index_psi would be 3 in the full system)
 function poisson_reaction!(f, u, node, data)
     (; k_B, q) = data.constants
     params = data.params
+    T = params.temperature
 
     for icc in data.electricCarrierList
         icc = data.chargeCarrierList[icc]
         get_DOS!(icc, node, data) # density of states
         get_BEE!(icc, node, data) # band edge energies
 
-        # φ = 0 in equilibrium, u[1] = ψ (index_psi would be 3 in the full system)
-        eta = params.chargeNumbers[icc] / (k_B * params.temperature) * (data.tempBEE1[icc] - q * u[1])
+        eta = params.chargeNumbers[icc] / (k_B * T) * (data.tempBEE1[icc] - q * u[1])
         ncc = data.tempDOS1[icc] * data.F[icc](eta)
 
-        f[1] = f[1] - params.chargeNumbers[icc] * params.doping[icc, node.region]
-        f[1] = f[1] + params.chargeNumbers[icc] * ncc
+        f[1] = f[1] - params.chargeNumbers[icc] * params.doping[icc, node.region] # subtract doping
+        f[1] = f[1] + params.chargeNumbers[icc] * ncc # add charge carrier
+    end
+
+    for iicc in data.ionicCarrierList # ∈ Array{IonicCarrier, 1}
+        # add ionic carriers only in defined regions (otherwise get NaN error)
+        if node.region ∈ iicc.regions
+            icc = iicc.ionicCarrier           # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+            get_DOS!(icc, node, data) # density of states
+            get_BEE!(icc, node, data) # band edge energies
+
+            eta = params.chargeNumbers[icc] / (k_B * T) * (data.tempBEE1[icc] - q * u[1])
+            ncc = data.tempDOS1[icc] * data.F[icc](eta)
+
+            f[1] = f[1] - params.chargeNumbers[icc] * params.doping[icc, node.region] # subtract doping
+            f[1] = f[1] + params.chargeNumbers[icc] * ncc # add charge carrier
+        end
+    end
+
+    for iicc in data.trapCarrierList
+        # add trap carriers only in defined regions (otherwise get NaN error)
+        if node.region ∈ iicc.regions
+
+            icc = iicc.trapCarrier           # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+            get_DOS!(icc, node, data) # density of states
+            get_BEE!(icc, node, data) # band edge energies
+
+            eta = params.chargeNumbers[icc] / (k_B * T) * (data.tempBEE1[icc] - q * u[1])
+            ncc = data.tempDOS1[icc] * data.F[icc](eta)
+
+            f[1] = f[1] - params.chargeNumbers[icc] * params.doping[icc, node.region] # subtract doping
+            f[1] = f[1] + params.chargeNumbers[icc] * ncc # add charge carrier
+        end
     end
 
     f[1] = f[1] - data.paramsnodal.doping[node.index]
-    f[1] = -q * f[1]            # λ1 = 1 here, no embedding needed
+    f[1] = -q * f[1]
     return
 end
 
@@ -972,6 +1029,7 @@ function RHSPoisson!(f, u, node, data, ipsi)
             f[ipsi] = f[ipsi] + data.params.chargeNumbers[icc] * ncc   # add charge carrier
         end
     end
+
     for iicc in data.trapCarrierList
         # add trap carriers only in defined regions (otherwise get NaN error)
         if node.region ∈ iicc.regions

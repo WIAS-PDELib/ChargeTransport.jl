@@ -15,7 +15,7 @@ using LaTeXStrings
 
 # supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; Plotter = nothing, verbose = false, test = false, barrierLowering = true)
+function main(; Plotter = nothing, verbose = false, test = false, barrierLowering = true, poissonOnly = false)
 
 
     ################################################################################
@@ -279,7 +279,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
 
 
     ## initialize solution and starting vectors
-    solEQ = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0)
+    solEQ = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0, poissonOnly = poissonOnly)
     inival = copy(solEQ)
 
 
@@ -389,6 +389,7 @@ end #  main
 
 function test()
     return main(; verbose = "", test = true) ≈ -6894.342164365617
+    main(test = true, verbose = "", poissonOnly = true) ≈ -6894.342164365617
 end
 
 end # Module

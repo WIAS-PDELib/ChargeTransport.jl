@@ -106,7 +106,8 @@ function main(;
         Plotter = nothing,
         verbose = false, test = false, unknown_storage = :sparse,
         numberOfEigenvalues = 1,
-        parameter_set = Params_Laser_simple # choose the parameter set
+        parameter_set = Params_Laser_simple, # choose the parameter set
+        poissonOnly = false
     )
 
     # parameter
@@ -221,7 +222,7 @@ function main(;
     inival[1, :] = inival[2, :] .= 0.0
     inival[3, :] = psi0Vector
 
-    solution = equilibrium_solve!(ctsys, inival = inival, control = control, nonlinear_steps = 20.0)
+    solution = equilibrium_solve!(ctsys, inival = inival, control = control, nonlinear_steps = 20.0, poissonOnly = poissonOnly)
     inival = solution
 
     if test == false
@@ -301,7 +302,8 @@ end # main
 
 function test()
     testval = 0.5122451923673309
-    return main(test = true) ≈ testval
+    return main(test = true) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 if test == false

@@ -40,7 +40,7 @@ end
 
 # supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; n = 3, Plotter = nothing, verbose = false, test = false)
+function main(; n = 3, Plotter = nothing, verbose = false, test = false, poissonOnly = false)
 
     ################################################################################
     if test == false
@@ -294,7 +294,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false)
     ################################################################################
 
     ## solve thermodynamic equilibrium and update initial guess
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -397,7 +397,8 @@ end #  main
 function test()
     testval = 1.3561479172035813
 
-    return main(test = true) ≈ testval
+    return main(test = true) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 if test == false
