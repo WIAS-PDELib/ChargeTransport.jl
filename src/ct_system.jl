@@ -2563,8 +2563,8 @@ function electroNeutralSolutionBisection(ctsys)
     params = data.params
 
     # interval limits for bisection method
-    a = -(2 * maximum(abs(params.bandEdgeEnergy))) / q
-    b = (2 * maximum(abs(params.bandEdgeEnergy))) / q
+    a = -(2 * maximum(abs.(params.bandEdgeEnergy))) / q
+    b = (2 * maximum(abs.(params.bandEdgeEnergy))) / q
 
     # storage for psi0
     psi0Values = zeros(num_cellregions(grid))
