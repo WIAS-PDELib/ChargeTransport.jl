@@ -388,8 +388,8 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
 end #  main
 
 function test()
-    return main(; verbose = "", test = true) ≈ -6894.342164365617
-    main(test = true, verbose = "", poissonOnly = true) ≈ -6894.342164365617
+    return main(; verbose = "", test = true) ≈ -6894.342164365617 &&
+        main(test = true, verbose = "", poissonOnly = true) ≈ -6894.342164365617
 end
 
 end # Module
