@@ -1945,7 +1945,19 @@ function _equilibrium_solve_poisson!(ctsys::System; control = control, verbose =
     inival[1, :] .= psi0Vector
 
     # solution for the small system
-    eqsol = VoronoiFVM.solve(eqsys; inival = inival, control = control)
+    eqsol = try
+        VoronoiFVM.solve(eqsys; inival, control)
+    catch err
+        # only retry if the Newton iteration itself failed
+        if !(err isa Union{VoronoiFVM.AssemblyError, VoronoiFVM.ConvergenceError})
+            rethrow() # throw error, if not from Newton iteration
+        end
+
+        # retry with more damping, e.g. needed for some examples with ionic vacancies
+        damped_control = deepcopy(control)    # original control unchanged for full system solves
+        damped_control.damp_initial = min(control.damp_initial, 0.01)
+        VoronoiFVM.solve(eqsys; inival, control = damped_control)
+    end
 
     # extend the solution to the full 3N system
     sol = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0)   # φn = φp = 0
@@ -2558,20 +2570,24 @@ function electroNeutralSolutionBisection(ctsys)
 
     grid = ctsys.fvmsys.grid
     data = ctsys.fvmsys.physics.data
-    (; q) = data.constants
-
+    (; k_B, q) = data.constants
     params = data.params
+    UT = k_B * params.temperature / q
 
-    # interval limits for bisection method
-    a = -(2 * maximum(abs.(params.bandEdgeEnergy))) / q
-    b = (2 * maximum(abs.(params.bandEdgeEnergy))) / q
-
-    # storage for psi0
     psi0Values = zeros(num_cellregions(grid))
 
-    # solve roots problem for every region
     for ireg in 1:num_cellregions(grid)
-        psi0Values[ireg] = find_zero(ψ -> rhs_poisson_region(ctsys, ireg, ψ), (a, b), Roots.Bisection())
+        f = ψ -> rhs_poisson_region(ctsys, ireg, ψ)
+        Emin, Emax = extrema(view(params.bandEdgeEnergy, :, ireg)) ./ q
+
+        # widen the interval until it encloses a sign change
+        Δ = 10 * UT
+        for _ in 1:20
+            f(Emin - Δ) * f(Emax + Δ) <= 0 && break
+            Δ *= 2
+        end
+
+        psi0Values[ireg] = find_zero(f, (Emin - Δ, Emax + Δ), Roots.Bisection())
     end
 
     return psi0Values
