@@ -257,7 +257,7 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, vacancyEnergyCalculation, energyDigits = 3, poissonOnly)
     inival = solution
     solutionEQ = inival
 
@@ -286,7 +286,7 @@ function main(;
     ctsys.fvmsys.boundary_factors[p.iphia, p.bregionJ2] = 0.0
     ctsys.fvmsys.boundary_values[p.iphia, p.bregionJ2] = 0.0
 
-    sol = solve(ctsys, inival = inival, times = (0.0, tend), control = control)
+    sol = solve(ctsys; inival, times = (0.0, tend), control)
 
     if Plotter !== nothing
         tsol = sol(tend)
@@ -305,7 +305,7 @@ function main(;
     end
     ################################################################################
     inivalReverse = sol(tend)
-    solReverse = solve(ctsys, inival = inivalReverse, times = (tend, 2 * tend), control = control)
+    solReverse = solve(ctsys; inival = inivalReverse, times = (tend, 2 * tend), control)
 
     if test == false
         println("*** done\n")

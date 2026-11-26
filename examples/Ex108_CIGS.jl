@@ -294,7 +294,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false, poisson
     ################################################################################
 
     ## solve thermodynamic equilibrium and update initial guess
-    solution = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -334,7 +334,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false, poisson
         end
 
         ## solve time step problems with timestep Δt
-        solution = solve(ctsys, inival = inival, control = control)
+        solution = solve(ctsys; inival, control)
         inival = solution
 
         ## save IV data

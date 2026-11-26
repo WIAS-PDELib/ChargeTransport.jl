@@ -425,7 +425,7 @@ function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown
     end
     ################################################################################
 
-    solution = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -456,7 +456,7 @@ function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown
         ## set non equilibrium boundary conditions
         set_contact!(ctsys, bregionAcceptor, Δu = Δu)
 
-        solution = solve(ctsys, inival = inival, control = control)
+        solution = solve(ctsys; inival, control)
         inival = solution
 
     end # bias loop

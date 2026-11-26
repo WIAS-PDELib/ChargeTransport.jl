@@ -244,7 +244,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
     ################################################################################
 
     ## initialize solution and starting vectors
-    solEQ = equilibrium_solve!(ctsys, control = control, nonlinear_steps = 0, poissonOnly = poissonOnly)
+    solEQ = equilibrium_solve!(ctsys; control, nonlinear_steps = 0, poissonOnly)
     inival = solEQ
 
     if Plotter !== nothing
@@ -266,7 +266,7 @@ function main(; Plotter = nothing, verbose = false, test = false, barrierLowerin
     end
     ################################################################################
 
-    sol = solve(ctsys, inival = inival, times = (0.0, endTime), control = control)
+    sol = solve(ctsys; inival, times = (0.0, endTime), control)
 
     if test == false
         println("*** done\n")

@@ -199,12 +199,12 @@ function main(;
 
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    sol1D = equilibrium_solve!(ctsys1D, control = control, vacancyEnergyCalculation = true, energyDigits = 3)
+    sol1D = equilibrium_solve!(ctsys1D; control, vacancyEnergyCalculation = true, energyDigits = 3)
 
     # We already did the calculations to find the correct energy for the vacancies. Due to that, we just copied the value here.
     ctsys3D.data.params.bandEdgeEnergy[p.iphia, p.regionIntrinsic] = -4.455 * data3D.constants.q
     # In case you want that the solver also calculates this value, simply set vacancyEnergyCalculation = true.
-    sol3D = equilibrium_solve!(ctsys3D, control = control, vacancyEnergyCalculation = false)
+    sol3D = equilibrium_solve!(ctsys3D; control, vacancyEnergyCalculation = false)
 
     if Plotter !== nothing
         #################################################

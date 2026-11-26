@@ -279,7 +279,7 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    inival2 = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
+    inival2 = equilibrium_solve!(ctsys; control, poissonOnly)
 
     if parseInival
         inival2 = inival
@@ -312,7 +312,7 @@ function main(;
     end
 
     set_contact!(ctsys, 2, Δu = DirichletVal)
-    sol = ChargeTransport.solve(ctsys, inival = inival2, control = control)
+    sol = ChargeTransport.solve(ctsys; inival = inival2, control)
 
     if enableIons && test == false
         integral = integrated_density(ctsys, sol = sol, icc = iphia, ireg = region2)

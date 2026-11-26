@@ -275,7 +275,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, poissonOnly)
     inival = solution
 
     if test == false
@@ -300,7 +300,7 @@ function main(; n = 3, Plotter = nothing, verbose = false, test = false, unknown
         ## set non equilibrium boundary conditions
         set_contact!(ctsys, bregionAcceptor, Δu = Δu)
 
-        solution = solve(ctsys; inival = inival, control = control)
+        solution = solve(ctsys; inival, control)
         inival .= solution
 
         ## get I-V data

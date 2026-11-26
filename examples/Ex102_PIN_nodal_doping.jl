@@ -222,7 +222,7 @@ function main(; Plotter = nothing, verbose = false, test = false, unknown_storag
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    solution = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -256,7 +256,7 @@ function main(; Plotter = nothing, verbose = false, test = false, unknown_storag
         ## set non equilibrium boundary conditions
         set_contact!(ctsys, bregionAcceptor, Δu = Δu)
 
-        solution = solve(ctsys; inival = inival, control = control)
+        solution = solve(ctsys; inival, control)
         inival .= solution
 
         ## get IV curve

@@ -225,7 +225,7 @@ function main(;
 
     ## calculate equilibrium solution and as initial guess
     ## We recommend calculating the energies for ions in case of two carriers for 5 digits or more for better accuracy.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 5, verboseEnergy = false, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, vacancyEnergyCalculation, energyDigits = 5, verboseEnergy = false, poissonOnly)
     inival = solution
     solutionEQ = inival
     if Plotter !== nothing
@@ -263,7 +263,7 @@ function main(;
         set_contact!(ctsys, p.bregionRight, Δu = biasLoop[istep])
 
         ## keep some big time stepping here, so we preserve the vacancy density
-        sol0p0 = ChargeTransport.solve(ctsys, inival = inival, control = control, tstep = 1.0e3)
+        sol0p0 = ChargeTransport.solve(ctsys; inival, control, tstep = 1.0e3)
         inival = sol0p0
 
     end # bias loop
@@ -284,7 +284,7 @@ function main(;
     control.Δt_max = 5.0e-4
     control.Δt_grow = 1.1
 
-    solPrecond = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tPrecond), control = control)
+    solPrecond = ChargeTransport.solve(ctsys; inival, times = (0.0, tPrecond), control)
 
     if !test
         println("*** done\n")
@@ -301,7 +301,7 @@ function main(;
     control.Δt_max = 6.0e-2 / scanrate
     control.Δt_grow = 1.15
 
-    solRev = ChargeTransport.solve(ctsys, inival = solPrecond.u[end], times = (tPrecond, tPrecond + tend), control = control)
+    solRev = ChargeTransport.solve(ctsys; inival = solPrecond.u[end], times = (tPrecond, tPrecond + tend), control)
 
     if !test
         println("*** done\n")
@@ -313,7 +313,7 @@ function main(;
     end
     ################################################################################
 
-    solForw = ChargeTransport.solve(ctsys, inival = solRev.u[end], times = (tPrecond + tend, tPrecond + 2 * tend), control = control)
+    solForw = ChargeTransport.solve(ctsys; inival = solRev.u[end], times = (tPrecond + tend, tPrecond + 2 * tend), control)
 
     if Plotter !== nothing
 

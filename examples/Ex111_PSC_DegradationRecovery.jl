@@ -329,7 +329,7 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = true, energyDigits = 3, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, vacancyEnergyCalculation = true, energyDigits = 3, poissonOnly)
     inival = solution
     solutionEQ = inival
 
@@ -354,7 +354,7 @@ function main(;
     control.Δt_grow = 1.13
     control.Δu_opt = Inf
 
-    sol = solve(ctsys, inival = inival, times = tout, control = control)
+    sol = solve(ctsys; inival, times = tout, control)
     ## VoronoiFVM only warns when a step fails; stop instead of continuing silently
     sol.t[end] ≈ tend || error("light phase stopped at t = $(sol.t[end]) s")
 

@@ -237,7 +237,7 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3, poissonOnly = poissonOnly)
+    solution = equilibrium_solve!(ctsys; control, vacancyEnergyCalculation, energyDigits = 3, poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -265,7 +265,7 @@ function main(;
     end
 
     ## calculation of solution
-    sol = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tend), control = control)
+    sol = ChargeTransport.solve(ctsys; inival, times = (0.0, tend), control)
 
     tvalues = sol.t
     number_tsteps = length(tvalues)

@@ -204,7 +204,7 @@ function main(;
     end
     ################################################################################
 
-    solution_eq = equilibrium_solve!(ctsys, control = control, poissonOnly = poissonOnly)
+    solution_eq = equilibrium_solve!(ctsys; control, poissonOnly)
 
     if test == false
         println("*** done\n")
@@ -232,7 +232,7 @@ function main(;
     end
 
     # solve with parameter embedding (gate bias)
-    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_gate_range)
+    solution_all_biases = ChargeTransport.solve(ctsys; inival, control, embed = biasValue_gate_range)
     solution = solution_all_biases.u[end]
 
     inival .= solution
@@ -266,7 +266,7 @@ function main(;
     end
 
     # solve with parameter embedding (drain)
-    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_drain_range)
+    solution_all_biases = ChargeTransport.solve(ctsys; inival, control, embed = biasValue_drain_range)
     solution = solution_all_biases.u[end]
 
     if test == false
