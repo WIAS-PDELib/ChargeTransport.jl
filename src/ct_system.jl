@@ -1684,6 +1684,28 @@ function build_system(grid, data, ::Type{DiscontQF}; kwargs...)
 
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+System constructor for the poisson system. This system is used within the alternative base implementation of equilibrium_solve, where poissonOnly = true.
+
+"""
+function poisson_system(ctsys; kwargs...)
+
+    grid = ctsys.fvmsys.grid
+    data = ctsys.fvmsys.physics.data
+
+    sys = VoronoiFVM.System(
+        grid;
+        flux = poisson_flux!, reaction = poisson_reaction!, breaction = poisson_breaction!,
+        data = data,
+        species = [1],
+        kwargs...
+    )
+
+    return sys
+end
+
 ###########################################################
 ###########################################################
 
@@ -1828,22 +1850,209 @@ $(TYPEDSIGNATURES)
 
 Function which calculates the equilibrium solution in case of non-present fluxes and zero bias.
 
-"""
+If `poissonOnly = true`, the equilibrium is computed from a reduced Poisson-only system
+(φ_n = φ_p = 0) with the electroneutral potential as initial guess and Dirichlet value
+at Ohmic contacts. `psi0Values` (one value per cell region) can be passed to skip the
+bisection in [`electroNeutralSolutionBisection`](@ref).
 
+"""
 function equilibrium_solve!(
         ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0),
         control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0,
-        vacancyEnergyCalculation::Bool = false, verbose::Bool = false,
-        maxiter::Int64 = 15, energyDigits::Int64 = 4, verboseEnergy = false
+        vacancyEnergyCalculation::Bool = false,
+        poissonOnly::Bool = false, psi0Values = nothing,
+        verbose::Bool = false, maxiter::Int64 = 15, energyDigits::Int64 = 4, verboseEnergy = false
     ) # last ones are extended-only keywords for vacancyEnergyCalculation = true
 
-    ## by default vacancyEnergyCalculation is false as it is only needed for ionic carriers
-    return _equilibrium_solve!(
-        Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control,
-        nonlinear_steps = nonlinear_steps, verbose = verbose,
-        maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
-    )
+    if poissonOnly
+        # check, if poissonOnly is applicable
+        data = ctsys.fvmsys.physics.data
+        for ibreg in eachindex(data.boundaryType)
+            if data.boundaryType[ibreg] ∉ (OhmicContact, SchottkyContact, MixedOhmicSchottkyContact, GateContact, InterfaceNone, InterfaceRecombination)
+                error("poissonOnly = true is not yet implemented for boundary type $(data.boundaryType[ibreg]). Use poissonOnly = false.")
+            end
+        end
 
+        paramsnodal = data.paramsnodal
+        if !iszero(paramsnodal.doping) || !iszero(paramsnodal.densityOfStates) || !iszero(paramsnodal.bandEdgeEnergy)
+            @warn "poissonOnly = true: the electroneutral initial guess and Dirichlet values ignore nodal parameters (doping, density of states, band-edge energies)."
+        end
+
+        # without energy calculation, one Poisson-only solve is enough
+        if !vacancyEnergyCalculation
+            return _equilibrium_solve_poisson!(ctsys; control = control, verbose = verbose, psi0Values = psi0Values)
+        end
+    end
+
+    # by default vacancyEnergyCalculation is false
+    # argument poissonOnly is provided, so that it can be used for vacancyEnergyCalculation = true
+    return _equilibrium_solve!(Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control, nonlinear_steps = nonlinear_steps, verbose = verbose, maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy, poissonOnly = poissonOnly)
+
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Alternative base implementation of equilibrium_solve: poissonOnly = true.
+Also used for each energy evaluation if vacancyEnergyCalculation = true.
+
+"""
+function _equilibrium_solve_poisson!(ctsys::System; control = control, verbose = verbose, psi0Values = nothing)
+
+    grid = ctsys.fvmsys.grid
+    data = ctsys.fvmsys.physics.data
+    params = ctsys.fvmsys.physics.data.params
+    paramsnodal = ctsys.fvmsys.physics.data.paramsnodal
+    bnode = grid[BFaceNodes]
+    iphin = data.bulkRecombination.iphin # integer index of φ_n
+    iphip = data.bulkRecombination.iphip # integer index of φ_p
+    ipsi = data.index_psi
+    (; k_B, q) = data.constants
+
+    if isnothing(psi0Values)
+        psi0Values = electroNeutralSolutionBisection(ctsys)
+    end
+
+    # we set zero voltage for each charge carrier at all outer boundaries
+    for ibreg in grid[BFaceRegions]
+        set_contact!(ctsys, ibreg, Δu = 0.0)
+    end
+
+    # doping per region
+    dopingAbs = zeros(num_cellregions(grid))
+    for ireg in 1:num_cellregions(grid)
+        dopingAbs[ireg] = abs(params.doping[iphin, ireg] - params.doping[iphip, ireg])
+    end
+
+    # electroneutral solution per node -> initial value
+    cellnodes, cellregions = grid[CellNodes], grid[CellRegions]
+    psi0Vector = zeros(num_nodes(grid)) # size of \psi0
+    for ireg in sortperm(dopingAbs) # ascending: the strongest doping is written last
+        nodes = unique(cellnodes[:, cellregions .== ireg]) # no duplicates
+        psi0Vector[nodes] .= psi0Values[ireg]
+    end
+
+    # store psi0 for all boundary faces in params.bψEQ (read by poisson_breaction! for OhmicContact)
+    bfaceregions = grid[BFaceRegions]
+    for ibface in 1:ExtendableGrids.num_bfaces(grid)
+        params.bψEQ[bfaceregions[ibface]] = psi0Vector[bnode[1, ibface]]
+    end
+
+    # we use a smaller system with N unknowns for the equilibrium solution
+    eqsys = poisson_system(ctsys)
+
+    inival = VoronoiFVM.unknowns(eqsys)
+    inival[1, :] .= psi0Vector
+
+    # solution for the small system
+    eqsol = try
+        VoronoiFVM.solve(eqsys; inival, control)
+    catch err
+        # only retry if the Newton iteration itself failed
+        if !(err isa Union{VoronoiFVM.AssemblyError, VoronoiFVM.ConvergenceError})
+            rethrow() # throw error, if not from Newton iteration
+        end
+
+        # retry with more damping, e.g. needed for some examples with ionic vacancies
+        damped_control = deepcopy(control)    # original control unchanged for full system solves
+        damped_control.damp_initial = min(control.damp_initial, 0.01)
+        VoronoiFVM.solve(eqsys; inival, control = damped_control)
+    end
+
+    # extend the solution to the full 3N system
+    sol = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0)   # φn = φp = 0
+    sol[ipsi, :] .= eqsol[1, :]
+
+    for ibreg in grid[BFaceRegions]
+        # here we assume that in multidimensions, we receive a constant value of the electric potential at the boundary
+        # check for applications, where this is not the case
+        bψVal = view(sol[ipsi, :], subgrid(grid, [ibreg], boundary = true))[1]
+        params.bψEQ[ibreg] = bψVal
+    end
+
+    # calculate equilibrium densities (especially needed for Schottky boundary conditions)
+    for icc in data.electricCarrierList
+        for ibreg in grid[BFaceRegions]
+            Ncc = params.bDensityOfStates[icc, ibreg] + paramsnodal.densityOfStates[icc, bnode[ibreg]]
+            Ecc = params.bBandEdgeEnergy[icc, ibreg] + paramsnodal.bandEdgeEnergy[icc, bnode[ibreg]]
+
+            eta = params.chargeNumbers[icc] / (k_B * params.temperature / q) * ((sol[icc, bnode[ibreg]] - sol[ipsi, bnode[ibreg]]) + Ecc / q)
+            params.bDensityEQ[icc, ibreg] = Ncc * data.F[icc](eta)
+        end
+    end
+
+    # set now calculationType to OutOfEquilibrium for further calculations
+    data.calculationType = OutOfEquilibrium
+
+    # loop for generation
+    inival = sol # extended equilibrium solution as initial value for the full system
+    if data.generationModel != GenerationNone
+
+        # this flag is needed, when the user e.g. defines customized contactVoltageFunctions. Set it to false at the beginning
+        data.generationComplete = false
+
+        # since the constant which represents the constant quasi Fermi potential of anion vacancies is undetermined, we need
+        # to fix it in this loop, since we have no applied bias. Otherwise we get convergence errors
+        for iicc in data.ionicCarrierList
+            icc = iicc.ionicCarrier # species number chosen by user
+
+            for ibreg in 1:grid[NumBFaceRegions]
+                ctsys.fvmsys.boundary_factors[icc, ibreg] = 1.0e30
+                ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+            end
+        end
+        for iicc in data.trapCarrierList
+            icc = iicc.trapCarrier # species number chosen by user
+
+            for ibreg in 1:grid[NumBFaceRegions]
+                ctsys.fvmsys.boundary_factors[icc, ibreg] = 1.0e30
+                ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+            end
+        end
+
+        # these values are needed for putting the generation slightly on
+        I = collect(20:-1:0.0)
+        LAMBDA = 10 .^ (-I)
+
+        for istep in 1:(length(I) - 1)
+            # turn slowly generation on
+            ctsys.data.λ2 = LAMBDA[istep + 1]
+
+            if control.verbose == "n"
+                println("increase generation with λ2 = $(ctsys.data.λ2)")
+            end
+
+            sol = VoronoiFVM.solve(ctsys.fvmsys, inival = inival, control = control)
+            inival = sol
+        end
+    end # generation loop
+
+    # put here back the homogeneous Neumann boundary conditions.
+    for iicc in data.ionicCarrierList
+        icc = iicc.ionicCarrier # species number chosen by user
+
+        for ibreg in 1:grid[NumBFaceRegions]
+            ctsys.fvmsys.boundary_factors[icc, ibreg] = 0.0
+            ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+        end
+    end
+
+    for iicc in data.trapCarrierList
+        icc = iicc.trapCarrier # species number chosen by user
+
+        for ibreg in 1:grid[NumBFaceRegions]
+            ctsys.fvmsys.boundary_factors[icc, ibreg] = 0.0
+            ctsys.fvmsys.boundary_values[icc, ibreg] = 0.0
+        end
+    end
+
+    # this flag is needed, when the user e.g. defines customized contactVoltageFunctions
+    data.generationComplete = true
+
+    # save changes on fvmsys of VoronoiFVM likewise in ctsys.data
+    ctsys.data = ctsys.fvmsys.physics.data
+
+    return sol
 end
 
 
@@ -1855,7 +2064,7 @@ Base implementation of equilibrium_solve: vacancyEnergyCalculation = false
 """
 function _equilibrium_solve!(
         ::Val{false}, ctsys::System; inival, control, nonlinear_steps,
-        verbose = verbose, maxiter, energyDigits, verboseEnergy
+        verbose = verbose, maxiter, energyDigits, verboseEnergy, poissonOnly = false
     )
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
@@ -2011,19 +2220,24 @@ We will use this method to calculate suitable values for vacancy energy levels a
 """
 function _equilibrium_solve!(
         ::Val{true}, ctsys::System; inival, control, nonlinear_steps,
-        verbose, maxiter, energyDigits, verboseEnergy
+        verbose, maxiter, energyDigits, verboseEnergy, poissonOnly = false
     )
 
     data = ctsys.fvmsys.physics.data
     params = data.params
 
-    # if no ionic carriers defined -> return equilibrium solution
-    if isempty(data.ionicCarrierList)
-        return _equilibrium_solve!(
+    # base equilibrium solve, used for each energy evaluation
+    base_solve() = poissonOnly ?
+        _equilibrium_solve_poisson!(ctsys; control = control, verbose = verbose) :
+        _equilibrium_solve!(
             Val(false), ctsys; inival = inival, control = control,
             nonlinear_steps = nonlinear_steps, verbose = verbose,
             maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
         )
+
+    # if no ionic carriers defined -> return equilibrium solution
+    if isempty(data.ionicCarrierList)
+        return base_solve()
     end
 
     #####################################################################################################
@@ -2101,11 +2315,7 @@ function _equilibrium_solve!(
             end
 
             try
-                sol_try = _equilibrium_solve!(
-                    Val(false), ctsys; inival = inival, control = control,
-                    nonlinear_steps = nonlinear_steps, verbose = verbose,
-                    maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
-                )
+                sol_try = base_solve()
                 return E, Target_F(sol_try), sol_try
             catch err
                 if verboseEnergy
@@ -2341,6 +2551,121 @@ function electroNeutralSolution(ctsys)
     return psi0Vector
 
 end
+
+###########################################################
+###########################################################
+"""
+
+$(TYPEDSIGNATURES)
+
+Compute the electro-neutral solution ``\\psi_0`` for electrons and holes with a bisection approach.
+In each cell region, the root of [`rhs_poisson_region`](@ref) (space charge density as a function of ``\\psi``)
+is determined by bisection on the interval ``[-2E_c^{\\max}/q, \\, 2E_c^{\\max}/q]``.
+In contrast to [`electroNeutralSolution`](@ref), which uses an analytic expression, this works for
+arbitrary statistics functions `data.F`. Currently only electrons and holes are considered; ionic and trap carriers are not yet included.
+
+Returns a vector with one value per region.
+"""
+function electroNeutralSolutionBisection(ctsys)
+
+    grid = ctsys.fvmsys.grid
+    data = ctsys.fvmsys.physics.data
+    (; k_B, q) = data.constants
+    params = data.params
+    UT = k_B * params.temperature / q
+
+    psi0Values = zeros(num_cellregions(grid))
+
+    for ireg in 1:num_cellregions(grid)
+        f = ψ -> rhs_poisson_region(ctsys, ireg, ψ)
+        Emin, Emax = extrema(view(params.bandEdgeEnergy, :, ireg)) ./ q
+
+        # widen the interval until it encloses a sign change
+        Δ = 10 * UT
+        for _ in 1:20
+            f(Emin - Δ) * f(Emax + Δ) <= 0 && break
+            Δ *= 2
+        end
+
+        psi0Values[ireg] = find_zero(f, (Emin - Δ, Emax + Δ), Roots.Bisection())
+    end
+
+    return psi0Values
+
+end
+
+"""
+
+$(TYPEDSIGNATURES)
+
+Right-hand side of the Poisson equation, i.e. the space charge density, in the cell region `ireg`
+as a function of the electrostatic potential `ψ` under **equilibrium conditions**, i.e. for vanishing
+quasi Fermi potentials ``\\varphi_\\alpha = 0``:
+```math
+-q \\sum_\\alpha z_\\alpha \\Big( N_\\alpha \\, \\mathcal{F}_\\alpha(\\eta_\\alpha) - C_\\alpha \\Big),
+\\qquad \\eta_\\alpha = \\frac{z_\\alpha}{k_B T} (E_\\alpha - q \\psi).
+```
+The sum runs over electrons and holes and over the ionic and trap carriers present in region `ireg`.
+The statistics functions ``\\mathcal{F}_\\alpha`` are taken from `data.F`.
+The root of this function in ``\\psi`` is the electro-neutral potential of the region, which is
+used in [`electroNeutralSolutionBisection`](@ref) and for the Dirichlet values of the equilibrium
+Poisson problem.
+"""
+function rhs_poisson_region(ctsys, ireg, ψ)
+
+    data = ctsys.fvmsys.physics.data
+    (; k_B, q) = data.constants
+    params = data.params
+    T = params.temperature
+
+    # initialize rhs
+    rhs = 0.0 # will be a function of ψ
+
+    # electrons and holes
+    for icc in data.electricCarrierList
+        icc = data.chargeCarrierList[icc]
+        eta = params.chargeNumbers[icc] / (k_B * T) * (params.bandEdgeEnergy[icc, ireg] - q * ψ)  # compute eta without quasi Fermi potentials
+
+        rhs = rhs - params.chargeNumbers[icc] * params.doping[icc, ireg]  # subtract doping
+        rhs = rhs + params.chargeNumbers[icc] * params.densityOfStates[icc, ireg] * data.F[icc](eta)  # add charge carrier
+    end
+
+    # if ionic carriers are present
+    for iicc in data.ionicCarrierList # ∈ Array{IonicCarrier, 1}
+        # add ionic carriers only in defined regions
+        if ireg ∈ iicc.regions
+            icc = iicc.ionicCarrier           # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+            eta = params.chargeNumbers[icc] / (k_B * T) * (params.bandEdgeEnergy[icc, ireg] - q * ψ)  # compute eta without quasi Fermi potentials
+
+            rhs = rhs - params.chargeNumbers[icc] * params.doping[icc, ireg]  # subtract doping
+            rhs = rhs + params.chargeNumbers[icc] * params.densityOfStates[icc, ireg] * data.F[icc](eta)  # add charge carrier
+        end
+    end
+
+    # if trap carriers are present
+    for iicc in data.trapCarrierList
+        # add trap carriers only in defined regions (otherwise get NaN error)
+        if ireg ∈ iicc.regions
+            icc = iicc.trapCarrier            # species number chosen by user
+            icc = data.chargeCarrierList[icc] # find correct index within chargeCarrierList (Array{QType, 1})
+
+            eta = params.chargeNumbers[icc] / (k_B * T) * (params.bandEdgeEnergy[icc, ireg] - q * ψ)  # compute eta without quasi Fermi potentials
+
+            rhs = rhs - params.chargeNumbers[icc] * params.doping[icc, ireg]  # subtract doping
+            rhs = rhs + params.chargeNumbers[icc] * params.densityOfStates[icc, ireg] * data.F[icc](eta)  # add charge carrier
+        end
+    end
+
+    # multiply everything with elementary charge
+    rhs = - q * rhs
+
+    return rhs
+end
+
+###########################################################
+###########################################################
 
 """
 

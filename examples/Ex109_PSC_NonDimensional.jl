@@ -69,7 +69,8 @@ function main(;
         parseInival = false, inival = Array{Float64, 2},
         #################################
         Plotter = nothing,
-        verbose = false, test = false
+        verbose = false, test = false,
+        poissonOnly = false
     )
 
     if Plotter !== nothing && (nameof(Plotter) ∉ [:PythonPlot, :PyPlot])
@@ -278,7 +279,7 @@ function main(;
     ################################################################################
 
     ## calculate equilibrium solution and as initial guess
-    inival2 = equilibrium_solve!(ctsys, control = control)
+    inival2 = equilibrium_solve!(ctsys; control, poissonOnly)
 
     if parseInival
         inival2 = inival
@@ -311,7 +312,7 @@ function main(;
     end
 
     set_contact!(ctsys, 2, Δu = DirichletVal)
-    sol = ChargeTransport.solve(ctsys, inival = inival2, control = control)
+    sol = ChargeTransport.solve(ctsys; inival = inival2, control)
 
     if enableIons && test == false
         integral = integrated_density(ctsys, sol = sol, icc = iphia, ireg = region2)
@@ -697,7 +698,8 @@ end
 
 function test()
     testval = 0.9289261210695825
-    return main(test = true) ≈ testval
+    return main(test = true) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 end # module

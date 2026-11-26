@@ -49,7 +49,7 @@ end
 
 # supported Plotters are GLMakie and PythonPlot
 # you can set verbose also to true to display some solver information
-function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse)
+function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown_storage = :sparse, poissonOnly = false)
 
     ################################################################################
     if test == false
@@ -425,7 +425,7 @@ function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown
     end
     ################################################################################
 
-    solution = equilibrium_solve!(ctsys, control = control)
+    solution = equilibrium_solve!(ctsys; control, poissonOnly)
     inival = solution
 
     if Plotter !== nothing
@@ -456,7 +456,7 @@ function main(; n = 2, Plotter = nothing, verbose = false, test = false, unknown
         ## set non equilibrium boundary conditions
         set_contact!(ctsys, bregionAcceptor, Δu = Δu)
 
-        solution = solve(ctsys, inival = inival, control = control)
+        solution = solve(ctsys; inival, control)
         inival = solution
 
     end # bias loop
@@ -481,7 +481,9 @@ end #  main
 
 function test()
     testval = -3.982748467515117
-    return main(test = true, unknown_storage = :dense) ≈ testval && main(test = true, unknown_storage = :sparse) ≈ testval
+    return main(test = true, unknown_storage = :dense) ≈ testval &&
+        main(test = true, unknown_storage = :sparse) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 if test == false

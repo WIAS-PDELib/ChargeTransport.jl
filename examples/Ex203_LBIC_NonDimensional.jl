@@ -350,7 +350,7 @@ function main(;
     inival = ChargeTransport.unknowns(ctsys)
     inival .= 0.0
 
-    sol = ChargeTransport.solve(ctsys, inival = inival, control = control)
+    sol = ChargeTransport.solve(ctsys; inival, control)
 
     if parameterStudy
         return sol, ctsys

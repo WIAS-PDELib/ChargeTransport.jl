@@ -87,6 +87,7 @@ function main(;
         Plotter = nothing,
         test = false,
         grid_refinement = 0,
+        poissonOnly = false,
         parameter_set = Params_MOSFET_Si
     )
 
@@ -203,7 +204,7 @@ function main(;
     end
     ################################################################################
 
-    solution_eq = equilibrium_solve!(ctsys, control = control)
+    solution_eq = equilibrium_solve!(ctsys; control, poissonOnly)
 
     if test == false
         println("*** done\n")
@@ -231,7 +232,7 @@ function main(;
     end
 
     # solve with parameter embedding (gate bias)
-    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_gate_range)
+    solution_all_biases = ChargeTransport.solve(ctsys; inival, control, embed = biasValue_gate_range)
     solution = solution_all_biases.u[end]
 
     inival .= solution
@@ -265,7 +266,7 @@ function main(;
     end
 
     # solve with parameter embedding (drain)
-    solution_all_biases = ChargeTransport.solve(ctsys; inival = inival, control = control, embed = biasValue_drain_range)
+    solution_all_biases = ChargeTransport.solve(ctsys; inival, control, embed = biasValue_drain_range)
     solution = solution_all_biases.u[end]
 
     if test == false
@@ -284,7 +285,8 @@ end # main
 # function for testing
 function test()
     testval = 0.49923991140092033
-    return main(test = true) ≈ testval
+    return main(test = true) ≈ testval &&
+        main(test = true, poissonOnly = true) ≈ testval
 end
 
 

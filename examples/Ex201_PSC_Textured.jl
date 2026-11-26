@@ -372,6 +372,7 @@ module Ex201_PSC_Textured
             vacancyEnergyCalculation = false,                 # assume the vacancy energy level is either given or not
             vETL = 2000 * ufac"cm" / ufac"s",                 # surface reco velocity at ETL
             vHTL = 500 * ufac"cm" / ufac"s",                  # surface reco velocity at HTL
+            poissonOnly = false
         )
 
         if Plotter !== nothing && (nameof(Plotter) ∉ [:PyPlot, :PythonPlot])
@@ -585,7 +586,7 @@ module Ex201_PSC_Textured
         #   Since vacancyEnergyCalculation = true, we repeat 1) and 2) until Ea is found (which corresponds to given initial vacancy density p.Ca)
         ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
         ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-        solEQ = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = vacancyEnergyCalculation, energyDigits = 3)
+        solEQ = equilibrium_solve!(ctsys; control, vacancyEnergyCalculation, energyDigits = 3, poissonOnly)
         inival = solEQ
 
         if test == false
@@ -606,7 +607,7 @@ module Ex201_PSC_Textured
             set_contact!(ctsys, p.bregionRight, Δu = biasLoop[istep])
 
             ## keep some big time stepping here, so we preserve the vacancy density
-            sol0p0 = ChargeTransport.solve(ctsys, inival = inival, control = control, tstep = 1.0e3)
+            sol0p0 = ChargeTransport.solve(ctsys; inival, control, tstep = 1.0e3)
             inival = sol0p0
 
         end # bias loop
@@ -627,7 +628,7 @@ module Ex201_PSC_Textured
         control.Δt_max = 5.0e-4
         control.Δt_grow = 1.1
 
-        solPrecond = ChargeTransport.solve(ctsys, inival = inival, times = (0.0, tPrecond), control = control)
+        solPrecond = ChargeTransport.solve(ctsys; inival, times = (0.0, tPrecond), control)
 
         if !test
             println("*** done\n")
@@ -644,7 +645,7 @@ module Ex201_PSC_Textured
         control.Δt_max = 6.0e-2 / scanrate
         control.Δt_grow = 1.15
 
-        solRev = ChargeTransport.solve(ctsys, inival = solPrecond.u[end], times = (tPrecond, tPrecond + tend), control = control)
+        solRev = ChargeTransport.solve(ctsys; inival = solPrecond.u[end], times = (tPrecond, tPrecond + tend), control)
 
         if !test
             println("*** done\n")
@@ -656,7 +657,7 @@ module Ex201_PSC_Textured
         end
         ################################################################################
 
-        solForw = ChargeTransport.solve(ctsys, inival = solRev.u[end], times = (tPrecond + tend, tPrecond + 2 * tend), control = control)
+        solForw = ChargeTransport.solve(ctsys; inival = solRev.u[end], times = (tPrecond + tend, tPrecond + 2 * tend), control)
 
         if Plotter !== nothing
             subg = subgrid(grid, [p.regionPero])
@@ -926,7 +927,8 @@ module Ex201_PSC_Textured
 
     function test()
         testval = -0.5987199947920246
-        return main(test = true, vacancyEnergyCalculation = true) ≈ testval
+        return main(test = true, vacancyEnergyCalculation = true) ≈ testval &&
+            main(test = true, vacancyEnergyCalculation = true, poissonOnly = true) ≈ testval
     end
 
 end # module

@@ -39,6 +39,7 @@ function main(;
         ########################
         tend = 1800.0,                                   # duration of the light phase [s]
         ΔV_scan = 10.0e-3,                                # voltage grid of the J-V scans [V]
+        poissonOnly = false
     )
 
     @local_unitfactors μm cm s ns V K ps Hz W m
@@ -328,7 +329,7 @@ function main(;
     ## calculate equilibrium solution and as initial guess
     ## energyDigits sets the resolution of the ionic energies (3: 1 meV, default 4: 0.1 meV).
     ## We use 3 here to stay consistent with previous versions; check the density error with verboseEnergy = true.
-    solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = true, energyDigits = 3)
+    solution = equilibrium_solve!(ctsys; control, vacancyEnergyCalculation = true, energyDigits = 3, poissonOnly)
     inival = solution
     solutionEQ = inival
 
@@ -353,7 +354,7 @@ function main(;
     control.Δt_grow = 1.13
     control.Δu_opt = Inf
 
-    sol = solve(ctsys, inival = inival, times = tout, control = control)
+    sol = solve(ctsys; inival, times = tout, control)
     ## VoronoiFVM only warns when a step fails; stop instead of continuing silently
     sol.t[end] ≈ tend || error("light phase stopped at t = $(sol.t[end]) s")
 
@@ -460,7 +461,8 @@ end #  main
 function test()
     ## [mean of the solution at t = 1 s, PCE [%] of the scan at the end of the light ramp]
     testval = [-0.6617963929130383, 15.316387193199626]
-    return main(test = true, tend = 1.0, ΔV_scan = 10.0e-3) ≈ testval
+    return main(test = true, tend = 1.0, ΔV_scan = 10.0e-3) ≈ testval &&
+        main(test = true, tend = 1.0, ΔV_scan = 10.0e-3, poissonOnly = true) ≈ testval
 end
 
 end # module
