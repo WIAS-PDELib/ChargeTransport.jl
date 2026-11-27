@@ -11,7 +11,7 @@ const TrapFunctionSet = Union{
 }
 const StandardFuncSet = Union{
     typeof(Boltzmann), typeof(Blakemore), typeof(FermiDiracMinusOne),
-    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA),
+    typeof(FermiDiracOneHalfBednarczyk), typeof(FermiDiracOneHalfTeSCA), typeof(FermiDiracZero),
     TrapFunctionSet,
 }
 ##########################################################

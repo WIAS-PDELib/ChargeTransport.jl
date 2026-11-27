@@ -7,9 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -----------------------------------------------------------------------------------------------
-## Unreleased
+## v1.12.0
 
 ### Added
+- Statistics function `FermiDiracZero` corresponding to a 2-D density of states.
 - Keyword `ionDensityTol` in `equilibrium_solve!` (default 0.0, i.e. off): additional stopping criterion for the ionic energy calculation, `maximum(abs, y) < ionDensityTol`, with `y` as the deviation of the mean ionic densities from their targets. Useful for several ionic carriers, where the rounded energies may oscillate in the last digit and never satisfy `E_new == E`.
 
 ## v1.11.0
