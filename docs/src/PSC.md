@@ -132,12 +132,13 @@ J_{k+1} = \frac{G(E^{k+1}) - G(E^k)}{E^{k+1} - E^k}.
 ```
 
 **Stopping.** We round all energies to `energyDigits` decimal places (in eV), e.g. to 1 meV for `energyDigits = 3`. The iteration stops once the Newton correction is below this resolution, i.e. when rounding gives back the same energies, $\mathbf{E}^{k+1} = \mathbf{E}^k$.
-A stopping criterion on the density would not be practical, since the reachable accuracy of the density is itself limited by the energy resolution and may be not reached.
+Additionally, it stops once all mean densities are close enough to their targets, $\max_\alpha |G_\alpha(\mathbf{E}^k)| <$ `ionDensityTol` (default 0.0, i.e. off; e.g. $5 \cdot 10^{-5}$ corresponds to a relative density deviation of about 0.005 %).
+For several ionic carriers, the rounded energies may otherwise jump around the solution in the last digit without reaching $\mathbf{E}^{k+1} = \mathbf{E}^k$.
 
 ## Usage
 
 To make use of this feature, add the flag `vacancyEnergyCalculation = true` in the equilibrium solve.
-`energyDigits` sets the resolution of the energy grid (default 4, i.e. 0.1 meV) and `verboseEnergy = true` prints the iterations.
+`energyDigits` sets the resolution of the energy grid (default 4, i.e. 0.1 meV), `ionDensityTol` the tolerance on the mean densities (default 0.0, i.e. off) and `verboseEnergy = true` prints the iterations.
 
 ```julia
 solution = equilibrium_solve!(ctsys, control = control, vacancyEnergyCalculation = true)

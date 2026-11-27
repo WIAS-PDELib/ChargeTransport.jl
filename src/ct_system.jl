@@ -1834,14 +1834,14 @@ function equilibrium_solve!(
         ctsys::System; inival = VoronoiFVM.unknowns(ctsys.fvmsys, inival = 0.0),
         control = VoronoiFVM.NewtonControl(), nonlinear_steps = 20.0,
         vacancyEnergyCalculation::Bool = false, verbose::Bool = false,
-        maxiter::Int64 = 15, energyDigits::Int64 = 4, verboseEnergy = false
+        maxiter::Int64 = 15, energyDigits::Int64 = 4, ionDensityTol::Float64 = 0.0, verboseEnergy = false
     ) # last ones are extended-only keywords for vacancyEnergyCalculation = true
 
     ## by default vacancyEnergyCalculation is false as it is only needed for ionic carriers
     return _equilibrium_solve!(
         Val(vacancyEnergyCalculation), ctsys; inival = inival, control = control,
         nonlinear_steps = nonlinear_steps, verbose = verbose,
-        maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
+        maxiter = maxiter, energyDigits = energyDigits, ionDensityTol = ionDensityTol, verboseEnergy = verboseEnergy
     )
 
 end
@@ -1855,7 +1855,7 @@ Base implementation of equilibrium_solve: vacancyEnergyCalculation = false
 """
 function _equilibrium_solve!(
         ::Val{false}, ctsys::System; inival, control, nonlinear_steps,
-        verbose = verbose, maxiter, energyDigits, verboseEnergy
+        verbose = verbose, maxiter, energyDigits, ionDensityTol, verboseEnergy
     )
 
     ctsys.fvmsys.physics.data.calculationType = InEquilibrium
@@ -2011,7 +2011,7 @@ We will use this method to calculate suitable values for vacancy energy levels a
 """
 function _equilibrium_solve!(
         ::Val{true}, ctsys::System; inival, control, nonlinear_steps,
-        verbose, maxiter, energyDigits, verboseEnergy
+        verbose, maxiter, energyDigits, ionDensityTol, verboseEnergy
     )
 
     data = ctsys.fvmsys.physics.data
@@ -2022,7 +2022,7 @@ function _equilibrium_solve!(
         return _equilibrium_solve!(
             Val(false), ctsys; inival = inival, control = control,
             nonlinear_steps = nonlinear_steps, verbose = verbose,
-            maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
+            maxiter = maxiter, energyDigits = energyDigits, ionDensityTol = ionDensityTol, verboseEnergy = verboseEnergy
         )
     end
 
@@ -2104,7 +2104,7 @@ function _equilibrium_solve!(
                 sol_try = _equilibrium_solve!(
                     Val(false), ctsys; inival = inival, control = control,
                     nonlinear_steps = nonlinear_steps, verbose = verbose,
-                    maxiter = maxiter, energyDigits = energyDigits, verboseEnergy = verboseEnergy
+                    maxiter = maxiter, energyDigits = energyDigits, ionDensityTol = ionDensityTol, verboseEnergy = verboseEnergy
                 )
                 return E, Target_F(sol_try), sol_try
             catch err
@@ -2157,6 +2157,13 @@ function _equilibrium_solve!(
         println("iter 1: Ea = $(round.(E ./ q, digits = energyDigits)) eV, y = $(round.(y, sigdigits = 5))")
     end
 
+    # additional stopping criterion: mean densities deviate from their targets by less than ionDensityTol
+    # (useful for several ionic carriers, where the rounded energies may oscillate in the last digit
+    # and never satisfy E_new == E; never true for the default ionDensityTol = 0.0)
+    if maximum(abs, y) < ionDensityTol
+        return sol
+    end
+
     ## Jacobian J[i, j] = ∂y_i / ∂E_j by forward differences, only once at the start ##
     ## we only do it at start as it would cost one extra PDE solve per iteration
     J = zeros(npairs, npairs)
@@ -2195,6 +2202,12 @@ function _equilibrium_solve!(
 
         if verboseEnergy
             println("iter $(k + 1): Ea = $(round.(E ./ q, digits = energyDigits)) eV, y = $(round.(y, sigdigits = 5))")
+        end
+
+        # additional stopping criterion: mean densities deviate from their targets by less than ionDensityTol
+        # (useful for several ionic carriers, where the rounded energies may oscillate in the last digit)
+        if maximum(abs, y) < ionDensityTol
+            return sol
         end
     end
 
