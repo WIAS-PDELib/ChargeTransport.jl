@@ -51,7 +51,7 @@ export tiny_penalty_value
 
 include("ct_distributions.jl")
 
-export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch, GaussFermiSimpson13
+export Boltzmann, Blakemore, FermiDiracMinusOne, FermiDiracOneHalfBednarczyk, GaussFermiPaasch, GaussFermiSimpson13, FermiDiracZero
 export FermiDiracOneHalfTeSCA
 ##################################################################
 

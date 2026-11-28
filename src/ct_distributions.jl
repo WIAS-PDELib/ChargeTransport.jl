@@ -158,6 +158,18 @@ end
 """
 $(TYPEDSIGNATURES)
 
+Statistics function for a 2-D density of states.
+"""
+function FermiDiracZero(x::Real)
+    if (x < -20)
+        return Boltzmann(x)
+    else
+        return log(1 + exp(x))
+    end
+end
+"""
+$(TYPEDSIGNATURES)
+
 
 Plot different distribution integrals.
 """
@@ -177,6 +189,7 @@ function plotDistributions(; Plotter = nothing)
     Plotter.semilogy(x, GaussFermiSimpson13(1, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 1", linestyle = "dotted")
     Plotter.semilogy(x, GaussFermiPaasch(10).(x), label = "Gauss-Fermi (Paasch), ŝ = 10")
     Plotter.semilogy(x, GaussFermiSimpson13(10, 0, 1, 1000).(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle = "dotted")
+    Plotter.semilogy(x, FermiDiracZero.(x), label = "\$F_{0}\$")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$\\mathcal{F}(\\eta)\$")
@@ -222,6 +235,9 @@ function plotDiffusionEnhancements(; Plotter = nothing)
 
     f = ChargeTransport.GaussFermiSimpson13(10, 0, 1, 1000); df = x -> ForwardDiff.derivative(f, x)
     Plotter.semilogy(x, f.(x) ./ df.(x), label = "Gauss-Fermi (Simpson 1/3), ŝ = 10", linestyle = "dotted")
+
+    f = ChargeTransport.FermiDiracZero; df = x -> ForwardDiff.derivative(f, x)
+    Plotter.semilogy(x, f.(x) ./ df.(x), label = "\$F_{0}\$")
 
     Plotter.xlabel("\$\\eta\$")
     Plotter.ylabel("\$g(\\eta)\$")

@@ -1234,7 +1234,7 @@ function Data(
 
     # Choose statistical relation between density and qF potential
     # options: Boltzmann, FermiDiracOneHalfBednarczyk,
-    #          FermiDiracOneHalfTeSCA FermiDiracMinusOne, Blakemore
+    #          FermiDiracOneHalfTeSCA FermiDiracMinusOne, Blakemore, FermiDiracZero, GaussFermiPaasch, GaussFermiSimpson13
     data.F = TFuncs[ Boltzmann for i in 1:numberOfCarriers]
     data.qFModel = ContQF
 
